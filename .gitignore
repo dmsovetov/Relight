@@ -26,3 +26,11 @@
 *.exe
 *.out
 *.app
+
+#
+output
+projects
+relight-512
+relight-1024
+run-512.command
+run-1024.command

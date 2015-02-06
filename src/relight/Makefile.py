@@ -1,0 +1,1 @@
+StaticLibrary( 'relight', sources = [ '.' ], include = [ '/usr/local/include' ] )
