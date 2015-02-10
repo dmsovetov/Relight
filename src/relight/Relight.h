@@ -51,7 +51,6 @@ namespace relight {
     struct SubMesh;
     class Face;
     class Mesh;
-    class Instance;
     class Lightmap;
         class Photonmap;
     struct Lumel;
@@ -63,6 +62,9 @@ namespace relight {
 
     //! Mesh vertex index.
     typedef unsigned short Index;
+
+    //! Face material.
+    typedef unsigned int Material;
 
     //! Mesh vertex buffer.
     typedef Array<struct Vertex>    VertexBuffer;

@@ -43,10 +43,11 @@ namespace relight {
             TotalUvLayers
         };
 
-        Vec3    m_position;
-        Vec3    m_normal;
-        Color   m_color;
-        Uv      m_uv[TotalUvLayers];
+        Vec3        m_position;
+        Vec3        m_normal;
+        Color       m_color;
+        Uv          m_uv[TotalUvLayers];
+        Material    m_material;
     };
 
     /*!
@@ -56,7 +57,10 @@ namespace relight {
     public:
 
                         //! Constructs a new Face instance.
-                        Face( const Vertex* a, const Vertex* b, const Vertex* c );
+                        Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c );
+
+        //! Returns a face id.
+        Index           faceIdx( void ) const;
 
         //! Returns true if a given UV coordinates are inside the face triangle.
         bool            isUvInside( const Uv& uv, Barycentric& barycentric, Vertex::UvLayer layer ) const;
@@ -81,44 +85,58 @@ namespace relight {
 
     private:
 
+        //! Face index.
+        Index           m_faceIdx;
+
         //! Face vertices.
         const Vertex*   m_a;
         const Vertex*   m_b;
         const Vertex*   m_c;
     };
 
-    //! A submesh data structure.
-    struct SubMesh {
-        int             m_totalFaces;   //!< Total submesh faces.
-        VertexBuffer    m_vertices;     //!< Submesh vertex buffer.
-        IndexBuffer     m_indices;      //!< Submesh index buffer.
-    };
-
     /*!
-     In the Relight all meshes are specified by an indexed triangle lists. Note, that a Mesh
-     is just a triangle data and not an instance. To actually place it in the world you have
-     to create an Instance, which is a Mesh + Transform + instance specific rendering settings.
+     In the Relight all meshes are specified by an indexed triangle lists.
      */
     class Mesh {
+    friend class Lightmap;
+    friend class Photonmap;
     public:
+
+        //! Returns a vertex buffer pointer.
+        const Vertex*       vertexBuffer( void ) const;
+
+        //! Returns an index buffer pointer.
+        const Index*        indexBuffer( void ) const;
 
         //! Returns a total number of vertices.
         int                 vertexCount( void ) const;
+
+        //! Returns a mesh vertex by index.
+        const Vertex&       vertex( int index ) const;
+
+        //! Returns a total number of indices.
+        int                 indexCount( void ) const;
+
+        //! Returns a vertex index.
+        Index               index( int index ) const;
 
         //! Returns a total number of faces.
         int                 faceCount( void ) const;
 
         //! Returns a face by index.
-        Face                face( int index ) const;
+        const Face&         face( int index ) const;
 
-        //! Returns a total number of submeshes.
-        int                 submeshCount( void ) const;
+        //! Adds a list of faces sharing a same material.
+        void                addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, int materialId = 0 );
 
-        //! Returns a submesh by index.
-        const SubMesh&      submesh( int index ) const;
+        //! Returns a target lightmap.
+        Lightmap*           lightmap( void ) const;
 
-        //! Adds a submesh.
-        void                addSubmesh( const VertexBuffer& vertices, const IndexBuffer& indices, int totalFaces );
+        //! Returns a target photonmap.
+        Photonmap*          photonmap( void ) const;
+
+        //! Creates a clone of this mesh with applied transform.
+        Mesh*               transformed( const Matrix4& transform ) const;
 
         /*!
          Creates a mesh data from a file. Only OBJ file format is supported.
@@ -130,45 +148,6 @@ namespace relight {
                             //! Constructs a new mesh.
                             Mesh( void );
 
-    private:
-
-        //! Mesh data.
-        Array<SubMesh>      m_meshes;
-    };
-
-    /*!
-     Instance class represents a mesh instance on the scene.
-     */
-    class Instance {
-    friend class Lightmap;
-    friend class Photonmap;
-    public:
-
-        //! Returns a mesh data for this instance.
-        const Mesh*         mesh( void ) const;
-
-        //! Returns an instance affine transform.
-        const Matrix4&      transform( void ) const;
-
-        //! Returns a target lightmap.
-        Lightmap*           lightmap( void ) const;
-
-        //! Returns a target photonmap.
-        Photonmap*          photonmap( void ) const;
-
-        /*!
-         Creates a new mesh Instance.
-         \param mesh A mesh data instance.
-         \param transform Instance affine transform.
-         \return New mesh Instance.
-         */
-        static Instance*    create( const Mesh* mesh, const Matrix4& transform );
-
-    private:
-
-                            //! Constructs a new mesh instance.
-                            Instance( const Mesh* mesh, const Matrix4& transform );
-
         //! Sets a target lightmap.
         void                setLightmap( Lightmap* value );
 
@@ -177,11 +156,14 @@ namespace relight {
 
     private:
 
-        //! A weak Mesh instance pointer.
-        const Mesh*         m_mesh;
+        //! Mesh vertex buffer.
+        VertexBuffer        m_vertices;
 
-        //! Instance affine transform.
-        Matrix4             m_transform;
+        //! Mesh index buffer.
+        IndexBuffer         m_indices;
+
+        //! Mesh faces.
+        Array<Face>         m_faces;
 
         //! Target lightmap.
         Lightmap*           m_lightmap;

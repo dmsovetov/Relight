@@ -39,6 +39,8 @@ namespace relight {
             Valid = 0x1,
         };
 
+        Index   m_faceIdx;      //!< Lumel face idx.
+
         Vec3    m_position;     //!< Lumel world space position.
         Vec3    m_normal;       //!< Lumel world space normal.
         Color   m_color;        //!< Baked color.
@@ -80,9 +82,9 @@ namespace relight {
         //! Adds an instance to this lightmap.
         /*!
          This function initializes all lumels corresponding to a given instance.
-         \param instance Instance to be added.
+         \param mesh Mesh to be added.
          */
-        virtual RelightStatus   addInstance( const Instance* instance, bool copyVertexColor = false );
+        virtual RelightStatus   addMesh( const Mesh* mesh, bool copyVertexColor = false );
 
         //! Saves a lightmap to file.
         bool                    save( const String& fileName ) const;
@@ -105,7 +107,7 @@ namespace relight {
         void                    initializeLumels( const Mesh* mesh, bool copyVertexColor );
 
         //! Initializes all lumels corresponsing to a given face.
-        void                    initializeLumels( const VertexBuffer& vertices, Index v0, Index v1, Index v2, bool copyVertexColor );
+        void                    initializeLumels( const Face& face, bool copyVertexColor );
 
         //! Initializes a given face lumel.
         void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor );
@@ -133,7 +135,7 @@ namespace relight {
         void                    gather( int radius );
 
         //! Adds an instance to this photonmap.
-        virtual RelightStatus   addInstance( const Instance* instance, bool copyVertexColor = false );
+        virtual RelightStatus   addMesh( const Mesh* mesh, bool copyVertexColor = false );
 
     private:
 

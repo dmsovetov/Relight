@@ -46,7 +46,7 @@ namespace rt {
         // ** ITracer
         virtual bool    traceSegment( const Vec3& start, const Vec3& end, Hit* result = NULL );
         virtual void    traceSegments( Segment segments[4] );
-        virtual void    addInstance( const Instance* instance );
+        virtual void    addMesh( const Mesh* mesh );
         virtual void    begin( void );
         virtual void    end( void );
 
@@ -63,10 +63,10 @@ namespace rt {
         };
 
         //! Embree scene.
-        RTCScene                m_scene;
+        RTCScene            m_scene;
 
-        //! Instance registry.
-        Array<const Instance*>  m_instances;
+        //! Mesh registry.
+        Array<const Mesh*>  m_meshes;
     };
 
 } // namespace rt

@@ -46,8 +46,8 @@ IndirectLight::IndirectLight( const Scene* scene, int samples, float maxDistance
 // ** IndirectLight::bake
 RelightStatus IndirectLight::bake( void )
 {
-    for( int i = 0; i < m_scene->instanceCount(); i++ ) {
-        if( Photonmap* photons = m_scene->instance( i )->photonmap() ) {
+    for( int i = 0; i < m_scene->meshCount(); i++ ) {
+        if( Photonmap* photons = m_scene->mesh( i )->photonmap() ) {
             photons->gather( m_radius );
         }
     }
@@ -69,7 +69,7 @@ void IndirectLight::bakeLumel( Lumel& lumel )
             continue;
         }
 
-        if( const Photonmap* photons = hit.m_instance->photonmap() ) {
+        if( const Photonmap* photons = hit.m_mesh->photonmap() ) {
             gathered += photons->lumel( hit.m_uv ).m_gathered;
         }
     }

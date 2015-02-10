@@ -43,7 +43,7 @@ namespace bake {
         virtual                 ~Baker( void ) {}
 
         //! Bakes a light data to an instance lightmap.
-        virtual RelightStatus   bakeInstance( const Instance* instance );
+        virtual RelightStatus   bakeMesh( const Mesh* mesh );
 
         //! Bakes all scene light data to a set of textures.
         virtual RelightStatus   bake( void );
@@ -54,7 +54,7 @@ namespace bake {
         virtual void            bakeLumel( Lumel& lumel );
 
         //! Bakes a data to lumels corresponding to this face.
-        void                    bakeFace( const Instance* instance, int index );
+        void                    bakeFace( const const Mesh* mesh, Index index );
 
     protected:
 

@@ -70,11 +70,11 @@ namespace relight {
         RelightStatus           end( void );
 
         /*!
-         Creates a new Instance and places it on scene.
-         \param mesh A mesh data to create an Instance from.
+         Creates a new Mesh and places it on scene.
+         \param mesh A mesh data to create an instance from.
          \param transform mesh instance transform.
          */
-        Instance*               addMesh( const Mesh* mesh, const Matrix4& transform );
+        Mesh*                   addMesh( const Mesh* mesh, const Matrix4& transform );
 
         /*!
          Adds a Light instance to a scene.
@@ -89,10 +89,10 @@ namespace relight {
         const Light*            light( int index ) const;
 
         //! Returns a total amount of mesh instances.
-        int                     instanceCount( void ) const;
+        int                     meshCount( void ) const;
 
-        //! Returns a Instance by index.
-        const Instance*         instance( int index ) const;
+        //! Returns a mesh by index.
+        const Mesh*             mesh( int index ) const;
 
         /*!
          Backes a lightmap to a texture.
@@ -118,7 +118,7 @@ namespace relight {
         };
 
         //! Scene mesh instances.
-        Array<const Instance*>  m_meshInstances;
+        Array<const Mesh*>      m_meshes;
 
         //! Scene lights.
         Array<const Light*>     m_lights;

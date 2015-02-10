@@ -46,7 +46,7 @@
 */
 
 // ** cTestLightmapper::Create
-void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& mesh )
+void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& _mesh )
 {
     using namespace relight;
 
@@ -69,11 +69,12 @@ void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& mesh )
     m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
 
     // ** Add mesh
-    Instance* instance = m_scene->addMesh( Mesh::createFromFile( fileName ), Matrix4::translation( 0, 0, 0 ) );
+    Mesh* mesh      = Mesh::createFromFile( fileName );
+    Mesh* instance  = m_scene->addMesh( mesh, Matrix4::translation( 0, 0, 0 ) );
     m_diffuse = m_scene->createLightmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
     m_photons = m_scene->createPhotonmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-    RelightStatus status = m_diffuse->addInstance( instance );
-    m_photons->addInstance( instance );
+    RelightStatus status = m_diffuse->addMesh( instance );
+    m_photons->addMesh( instance );
 
     m_scene->end();
 
@@ -213,8 +214,8 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
     rotation += 0.25f;
 	
 	if( renderDirect ) {
-        for( int i = 0; i < m_scene->instanceCount(); i++ ) {
-            renderInstance( m_scene->instance( i ) );
+        for( int i = 0; i < m_scene->meshCount(); i++ ) {
+            renderInstance( m_scene->mesh( i ) );
         }
 	}
 
@@ -253,40 +254,36 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
     glPopMatrix();
 }
 
-void cTestLightmapper::renderInstance( const relight::Instance* instance ) const
+void cTestLightmapper::renderInstance( const relight::Mesh* mesh ) const
 {
-    for( int i = 0; i < instance->mesh()->submeshCount(); i++ ) {
-        const relight::SubMesh& submesh  = instance->mesh()->submesh( i );
-        const relight::Vertex*  vertices = &submesh.m_vertices[i];
-        const relight::Index*   indices  = &submesh.m_indices[i];
-        int                     nFaces   = submesh.m_totalFaces;
+    const relight::Vertex*  vertices = mesh->vertexBuffer();
+    const relight::Index*   indices  = mesh->indexBuffer();
 
-        glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
+    glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
 
-        glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
-        glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);				// Enable texture coord arrays
-        glEnableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+    glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
+    glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);				// Enable texture coord arrays
+    glEnableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
 
-        glVertexPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_position.x );				// Vertex Pointer to triangle array
-        glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
-        glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
+    glVertexPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_position.x );				// Vertex Pointer to triangle array
+    glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
+    glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
 
-        glClientActiveTextureARB( GL_TEXTURE1_ARB );
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+    glClientActiveTextureARB( GL_TEXTURE1_ARB );
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
 
-        glClientActiveTextureARB( GL_TEXTURE0_ARB );
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+    glClientActiveTextureARB( GL_TEXTURE0_ARB );
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
 
-        glDrawElements( GL_TRIANGLES, nFaces * 3, GL_UNSIGNED_SHORT, indices );
+    glDrawElements( GL_TRIANGLES, mesh->indexCount(), GL_UNSIGNED_SHORT, indices );
 
-        glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
-        glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);				// Disable texture coord arrays
-        glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
-    }
+    glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
+    glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);				// Disable texture coord arrays
+    glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
 }
 
 // ** cTestLightmapper::KeyPressed

@@ -112,7 +112,7 @@ void MeshLoader::commit( void )
         vertices[i->second].m_uv[::relight::Vertex::Lightmap] = Uv( v.uv[0], v.uv[1] );
     }
 
-    m_mesh->addSubmesh( vertices, indices, m_totalSubmeshFaces );
+    m_mesh->addFaces( vertices, indices, 0 );
 
     m_totalSubmeshFaces = 0;
     m_flags = 0;

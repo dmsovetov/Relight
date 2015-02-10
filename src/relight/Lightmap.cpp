@@ -83,18 +83,18 @@ const Lumel& Lightmap::lumel( int x, int y ) const
     return m_lumels[y * m_width + x];
 }
 
-// ** Lightmap::addInstance
-RelightStatus Lightmap::addInstance( const Instance* instance, bool copyVertexColor )
+// ** Lightmap::addMesh
+RelightStatus Lightmap::addMesh( const Mesh* mesh, bool copyVertexColor )
 {
-    if( instance->lightmap() ) {
+    if( mesh->lightmap() ) {
         return RelightInvalidCall;
     }
 
     // ** Attach this lightmap to an instance
-    const_cast<Instance*>( instance )->setLightmap( this );
+    const_cast<Mesh*>( mesh )->setLightmap( this );
 
     // ** Initialize lumels
-    initializeLumels( instance->mesh(), copyVertexColor );
+    initializeLumels( mesh, copyVertexColor );
 
     return RelightSuccess;
 }
@@ -102,22 +102,15 @@ RelightStatus Lightmap::addInstance( const Instance* instance, bool copyVertexCo
 // ** Lightmap::initializeLumels
 void Lightmap::initializeLumels( const Mesh* mesh, bool copyVertexColor )
 {
-    // ** For each sub mesh
-    for( int i = 0; i < mesh->submeshCount(); i++ ) {
-        // ** Get a sub mesh by index
-        const SubMesh& sub = mesh->submesh( i );
-
-        // ** For each face in a sub mesh
-        for( int j = 0; j < sub.m_totalFaces; j++ ) {
-            initializeLumels( sub.m_vertices, sub.m_indices[j * 3 + 0], sub.m_indices[j * 3 + 1], sub.m_indices[j * 3 + 2], copyVertexColor );
-        }
+    // ** For each face in a sub mesh
+    for( int i = 0, n = mesh->faceCount(); i < n; i++ ) {
+        initializeLumels( mesh->face( i ), copyVertexColor );
     }
 }
 
 // ** Lightmap::initializeLumels
-void Lightmap::initializeLumels( const VertexBuffer& vertices, Index v0, Index v1, Index v2, bool copyVertexColor )
+void Lightmap::initializeLumels( const Face& face, bool copyVertexColor )
 {
-    Face face( &vertices[v0], &vertices[v1], &vertices[v2] );
     Uv   min, max;
 
     // ** Calculate UV bounds
@@ -148,6 +141,7 @@ void Lightmap::initializeLumels( const VertexBuffer& vertices, Index v0, Index v
 // ** Lightmap::initializeLumel
 void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor )
 {
+    lumel.m_faceIdx     = face.faceIdx();
     lumel.m_position    = face.positionAt( barycentric );
     lumel.m_normal      = face.normalAt( barycentric );
     lumel.m_color       = copyVertexColor ? face.vertex( 0 )->m_color : Color( 0, 0, 0 );
@@ -251,18 +245,18 @@ Photonmap::Photonmap( int width, int height ) : Lightmap( width, height )
 
 }
 
-// ** Photonmap::addInstance
-RelightStatus Photonmap::addInstance( const Instance* instance, bool copyVertexColor )
+// ** Photonmap::addMesh
+RelightStatus Photonmap::addMesh( const Mesh* mesh, bool copyVertexColor )
 {
-    if( instance->photonmap() ) {
+    if( mesh->photonmap() ) {
         return RelightInvalidCall;
     }
 
     // ** Attach this lightmap to an instance
-    const_cast<Instance*>( instance )->setPhotonmap( this );
+    const_cast<Mesh*>( mesh )->setPhotonmap( this );
 
     // ** Initialize lumels
-    initializeLumels( instance->mesh(), copyVertexColor );
+    initializeLumels( mesh, copyVertexColor );
 
     return RelightSuccess;
 }

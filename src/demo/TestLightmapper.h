@@ -81,7 +81,7 @@ public:
 private:
 
     unsigned int    createTextureFromLightmap( const relight::Lightmap* lightmap ) const;
-    void            renderInstance( const relight::Instance* instance ) const;
+    void            renderInstance( const relight::Mesh* mesh ) const;
 
 private:
 

@@ -31,7 +31,7 @@
 #include "../Lightmap.h"
 #include "../Scene.h"
 
-#define RELIGHT_BAKE_FACES  (0)
+#define RELIGHT_BAKE_FACES  (1)
 
 namespace relight {
 
@@ -43,10 +43,10 @@ Baker::Baker( const Scene* scene ) : m_scene( scene )
 
 }
 
-// ** Baker::bakeInstance
-RelightStatus Baker::bakeInstance( const Instance* instance )
+// ** Baker::bakeMesh
+RelightStatus Baker::bakeMesh( const Mesh* mesh )
 {
-    Lightmap* lightmap = instance->lightmap();
+    Lightmap* lightmap = mesh->lightmap();
     if( !lightmap ) {
         return RelightInvalidCall;
     }
@@ -57,12 +57,9 @@ RelightStatus Baker::bakeInstance( const Instance* instance )
     int     progress = 0;
 
 #if RELIGHT_BAKE_FACES
-    const SubMesh&      sub     = instance->mesh()->submesh( 0 );
-    const IndexBuffer&  indices = sub.m_indices;
-
-    for( int i = 0; i < sub.m_totalFaces; i++ ) {
-        bakeFace( instance, i );
-        printf( "Baking face %d/%d\n", i + 1, sub.m_totalFaces );
+    for( int i = 0, n = mesh->faceCount(); i < n; i++ ) {
+        bakeFace( mesh, i );
+        printf( "Baking face %d/%d\n", i + 1, mesh->faceCount() );
     }
 #else
     for( int j = 0; j < height; j++ ) {
@@ -85,10 +82,10 @@ RelightStatus Baker::bakeInstance( const Instance* instance )
 }
 
 // ** Baker::bakeFace
-void Baker::bakeFace( const Instance* instance, int index )
+void Baker::bakeFace( const Mesh* mesh, Index index )
 {
-    Face      face      = instance->mesh()->face( index );
-    Lightmap* lightmap  = instance->lightmap();
+    Face      face      = mesh->face( index );
+    Lightmap* lightmap  = mesh->lightmap();
 
     // ** Calculate UV bounds
     Uv min, max;
@@ -103,7 +100,7 @@ void Baker::bakeFace( const Instance* instance, int index )
     for( int v = vStart; v <= vEnd; v++ ) {
         for( int u = uStart; u <= uEnd; u++ ) {
             Lumel& lumel = lightmap->lumel( u, v );
-            if( !lumel ) {
+            if( !lumel || lumel.m_faceIdx != index ) {
                 continue;
             }
 
@@ -122,8 +119,8 @@ void Baker::bakeFace( const Instance* instance, int index )
 // ** Baker::bake
 RelightStatus Baker::bake( void )
 {
-    for( int i = 0, n = m_scene->instanceCount(); i < n; i++ ) {
-        bakeInstance( m_scene->instance( i ) );
+    for( int i = 0, n = m_scene->meshCount(); i < n; i++ ) {
+        bakeMesh( m_scene->mesh( i ) );
     }
 
     return RelightSuccess;

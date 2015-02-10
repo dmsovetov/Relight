@@ -32,47 +32,53 @@
 namespace relight {
 
 // ** Mesh::Mesh
-Mesh::Mesh( void )
+Mesh::Mesh( void ) : m_lightmap( NULL ), m_photonmap( NULL )
 {
 
+}
+
+// ** Mesh::vertexBuffer
+const Vertex* Mesh::vertexBuffer( void ) const
+{
+    return &m_vertices[0];
+}
+
+// ** Mesh::indexBuffer
+const Index* Mesh::indexBuffer( void ) const
+{
+    return &m_indices[0];
+}
+
+// ** Mesh::indexCount
+int Mesh::indexCount( void ) const
+{
+    return ( int )m_indices.size();
+}
+
+// ** Mesh::index
+Index Mesh::index( int index ) const
+{
+    assert( index >= 0 && index < indexCount() );
+    return m_indices[index];
 }
 
 // ** Mesh::vertexCount
 int Mesh::vertexCount( void ) const
 {
-    int result = 0;
-
-    for( int i = 0; i < submeshCount(); i++ ) {
-        result += submesh( i ).m_vertices.size();
-    }
-
-    return result;
+    return ( int )m_vertices.size();
 }
 
+// ** Mesh::vertex
+const Vertex& Mesh::vertex( int index ) const
+{
+    assert( index >= 0 && index < vertexCount() );
+    return m_vertices[index];
+}
 
 // ** Mesh::faceCount
 int Mesh::faceCount( void ) const
 {
-    int result = 0;
-
-    for( int i = 0; i < submeshCount(); i++ ) {
-        result += submesh( i ).m_totalFaces;
-    }
-
-    return result;
-}
-
-// ** Mesh::submeshCount
-int Mesh::submeshCount( void ) const
-{
-    return ( int )m_meshes.size();
-}
-
-// ** Mesh::submesh
-const SubMesh& Mesh::submesh( int index ) const
-{
-    assert( index >= 0 && index < submeshCount() );
-    return m_meshes[index];
+    return ( int )m_faces.size();
 }
 
 // ** Mesh::createFromFile
@@ -89,43 +95,84 @@ Mesh* Mesh::createFromFile( const String& fileName )
     return mesh;
 }
 
-// ** Mesh::addSubmesh
-void Mesh::addSubmesh( const VertexBuffer& vertices, const IndexBuffer& indices, int totalFaces )
+// ** Mesh::addFaces
+void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, int materialId )
 {
-    SubMesh sub;
-    sub.m_vertices   = vertices;
-    sub.m_indices    = indices;
-    sub.m_totalFaces = totalFaces;
-    m_meshes.push_back( sub );
+    // ** Push indices
+    for( int i = 0, n = ( int )indices.size(); i < n; i++ ) {
+        m_indices.push_back( indices[i] + m_vertices.size() );
+    }
+
+    // ** Append vertices
+    m_vertices.insert( m_vertices.end(), vertices.begin(), vertices.end() );
+
+    // ** Update face array
+    m_faces.clear();
+
+    for( int i = 0, n = m_indices.size() / 3; i < n; i++ ) {
+        Index* indices = &m_indices[i * 3];
+        m_faces.push_back( Face( i, &m_vertices[indices[0]], &m_vertices[indices[1]], &m_vertices[indices[2]] ) );
+    }
 }
 
 // ** Mesh::face
-Face Mesh::face( int index ) const
+const Face& Mesh::face( int index ) const
 {
     assert( index >= 0 && index < faceCount() );
+    assert( m_faces[index].faceIdx() == index );
+    return m_faces[index];
+}
 
-    int faces = 0;
+// ** Mesh::lightmap
+Lightmap* Mesh::lightmap( void ) const
+{
+    return m_lightmap;
+}
 
-    for( int i = 0; i < submeshCount(); i++ ) {
-        const SubMesh& sub = submesh( i );
+// ** Mesh::setLightmap
+void Mesh::setLightmap( Lightmap* value )
+{
+    m_lightmap = value;
+}
 
-        if( index >= sub.m_totalFaces + faces ) {
-            faces += sub.m_totalFaces;
-            continue;
-        }
+// ** Mesh::photonmap
+Photonmap* Mesh::photonmap( void ) const
+{
+    return m_photonmap;
+}
 
-        int   idx       = index - faces;
-        Index indices[] = { sub.m_indices[idx * 3 + 0], sub.m_indices[idx * 3 + 1], sub.m_indices[idx * 3 + 2] };
+// ** Mesh::setPhotonmap
+void Mesh::setPhotonmap( Photonmap* value )
+{
+    m_photonmap = value;
+}
 
-        return Face( &sub.m_vertices[indices[0]], &sub.m_vertices[indices[1]], &sub.m_vertices[indices[2]] );
+// ** Mesh::transformed
+Mesh* Mesh::transformed( const Matrix4& transform ) const
+{
+    Mesh* mesh          = new Mesh;
+    mesh->m_vertices    = m_vertices;
+    mesh->m_indices     = m_indices;
+    mesh->m_faces       = m_faces;
+
+    for( int i = 0, n = mesh->vertexCount(); i < n; i++ ) {
+        mesh->m_vertices[i].m_position = transform * mesh->m_vertices[i].m_position;
     }
+
+    return mesh;
 }
 
 // ---------------------------------------------- Face ---------------------------------------------- //
 
 // ** Face::Face
-Face::Face( const Vertex* a, const Vertex* b, const Vertex* c ) : m_a( a ), m_b( b ), m_c( c )
+Face::Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c ) : m_faceIdx( faceIdx ), m_a( a ), m_b( b ), m_c( c )
 {
+}
+
+// ** Face::faceIdx
+Index Face::faceIdx( void ) const
+{
+    return m_faceIdx;
 }
 
 // ** Face::uvRect
@@ -214,56 +261,6 @@ Uv Face::uvAt( const Barycentric& uv, Vertex::UvLayer layer ) const
     const Uv& c = m_c->m_uv[layer];
 
     return Uv( a.u + (b.u - a.u) * uv.v + (c.u - a.u) * uv.u, a.v + (b.v - a.v) * uv.v + (c.v - a.v) * uv.u );
-}
-
-// -------------------------------------------- Instance -------------------------------------------- //
-
-// ** Instance::Instance
-Instance::Instance( const Mesh* mesh, const Matrix4& transform ) : m_mesh( mesh ), m_transform( transform ), m_lightmap( NULL ), m_photonmap( NULL )
-{
-
-}
-
-// ** Instance::mesh
-const Mesh* Instance::mesh( void ) const
-{
-    return m_mesh;
-}
-
-// ** Instance::transform
-const Matrix4& Instance::transform( void ) const
-{
-    return m_transform;
-}
-
-// ** Instance::lightmap
-Lightmap* Instance::lightmap( void ) const
-{
-    return m_lightmap;
-}
-
-// ** Instance::setLightmap
-void Instance::setLightmap( Lightmap* value )
-{
-    m_lightmap = value;
-}
-
-// ** Instance::photonmap
-Photonmap* Instance::photonmap( void ) const
-{
-    return m_photonmap;
-}
-
-// ** Instance::setPhotonmap
-void Instance::setPhotonmap( Photonmap* value )
-{
-    m_photonmap = value;
-}
-
-// ** Instance::create
-Instance* Instance::create( const Mesh* mesh, const Matrix4& transform )
-{
-    return new Instance( mesh, transform );
 }
 
 } // namespace relight

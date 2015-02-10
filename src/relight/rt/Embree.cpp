@@ -92,14 +92,14 @@ void Embree::traceSegments( Segment segments[4] )
             continue;
         }
 
-        const Instance* instance = m_instances[rays.geomID[i]];
-        Face            face     = instance->mesh()->face( rays.primID[i] );
-        Barycentric     coord    = Barycentric( rays.u[i], rays.v[i] );
+        const Mesh* mesh    = m_meshes[rays.geomID[i]];
+        Face        face    = mesh->face( rays.primID[i] );
+        Barycentric coord   = Barycentric( rays.u[i], rays.v[i] );
 
-        segments[i].m_hit.m_normal    = face.normalAt( coord );
-        segments[i].m_hit.m_color     = face.colorAt( coord );
-        segments[i].m_hit.m_uv        = face.uvAt( coord, Vertex::Lightmap );
-        segments[i].m_hit.m_instance  = instance;
+        segments[i].m_hit.m_normal  = face.normalAt( coord );
+        segments[i].m_hit.m_color   = face.colorAt( coord );
+        segments[i].m_hit.m_uv      = face.uvAt( coord, Vertex::Lightmap );
+        segments[i].m_hit.m_mesh    = mesh;
     }
 }
 
@@ -141,43 +141,35 @@ bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
         return true;
     }
 
-    const Instance* instance = m_instances[ray.geomID];
-    Face            face     = instance->mesh()->face( ray.primID );
-    Barycentric     coord    = Barycentric( ray.u, ray.v );
+    const Mesh* mesh    = m_meshes[ray.geomID];
+    Face        face    = mesh->face( ray.primID );
+    Barycentric coord   = Barycentric( ray.u, ray.v );
 
     result->m_normal    = face.normalAt( coord );
     result->m_color     = face.colorAt( coord );
     result->m_uv        = face.uvAt( coord, Vertex::Lightmap );
-    result->m_instance  = instance;
+    result->m_mesh      = mesh;
 
     return true;
 }
 
-// ** Embree::addInstance
-void Embree::addInstance( const Instance* instance )
+// ** Embree::addMesh
+void Embree::addMesh( const Mesh* mesh )
 {
-    // ** Get a mesh data from instance
-    const Mesh* mesh = instance->mesh();
-    assert( mesh->submeshCount() == 1 );
-
     // ** Create a new Embree geomentry
     unsigned geom = rtcNewTriangleMesh( m_scene, RTC_GEOMETRY_STATIC, mesh->faceCount(), mesh->vertexCount() );
 
     // ** Upload vertex buffer
     EmVertex* vertices = ( EmVertex* )rtcMapBuffer( m_scene, geom, RTC_VERTEX_BUFFER );
 
-    for( int i = 0, n = mesh->submeshCount(); i < n; i++ ) {
-        const SubMesh& sub = mesh->submesh( i );
+    for( int j = 0, n = mesh->vertexCount(); j < n; j++ ) {
+        EmVertex&   dst = vertices[j];
+        Vec3        pos = mesh->vertex( j ).m_position;
 
-        for( int j = 0; j < sub.m_vertices.size(); j++ ) {
-            EmVertex&   dst = vertices[j];
-            Vec3        pos = instance->transform() * sub.m_vertices[j].m_position;
-
-            dst.x = pos.x;
-            dst.y = pos.y;
-            dst.z = pos.z;
-            dst.a = 1.0f;
-        }
+        dst.x = pos.x;
+        dst.y = pos.y;
+        dst.z = pos.z;
+        dst.a = 1.0f;
     }
 
     rtcUnmapBuffer( m_scene, geom, RTC_VERTEX_BUFFER );
@@ -186,22 +178,19 @@ void Embree::addInstance( const Instance* instance )
     EmFace* triangles = ( EmFace* )rtcMapBuffer( m_scene, geom, RTC_INDEX_BUFFER );
     int     idx       = 0;
 
-    for( int i = 0, n = mesh->submeshCount(); i < n; i++ ) {
-        const SubMesh& sub = mesh->submesh( i );
+    for( int j = 0, n = mesh->indexCount() / 3; j < n; j++ ) {
+        EmFace&     tri  = triangles[idx++];
+        const Face& face = mesh->face( j );
 
-        for( int j = 0; j < sub.m_totalFaces; j++ ) {
-            EmFace& tri  = triangles[idx++];
-
-            tri.v0 = sub.m_indices[j * 3 + 0];
-            tri.v1 = sub.m_indices[j * 3 + 1];
-            tri.v2 = sub.m_indices[j * 3 + 2];
-        }
+        tri.v0 = mesh->index( j * 3 + 0 );
+        tri.v1 = mesh->index( j * 3 + 1 );
+        tri.v2 = mesh->index( j * 3 + 2 );
     }
 
     rtcUnmapBuffer( m_scene, geom, RTC_INDEX_BUFFER );
 
     // ** Push instance to a registry
-    m_instances.push_back( instance );
+    m_meshes.push_back( mesh );
 }
 
 } // namespace rt

@@ -96,7 +96,7 @@ void Photons::trace( const Vec3& position, const Vec3& direction, const Color& c
         float attenuation = std::max( 1.0f - (position - hit.m_point).length() / m_reflectionRadius, 0.0f );
         float intensity   = DirectLight::lambert( -direction, hit.m_normal );
 
-        store( hit.m_instance->photonmap(), hit.m_color * color * intensity, hit.m_uv );
+        store( hit.m_mesh->photonmap(), hit.m_color * color * intensity, hit.m_uv );
 
         energy *= intensity;
     }

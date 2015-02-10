@@ -80,17 +80,17 @@ const Light* Scene::light( int index ) const
     return m_lights[index];
 }
 
-// ** Scene::instanceCount
-int Scene::instanceCount( void ) const
+// ** Scene::meshCount
+int Scene::meshCount( void ) const
 {
-    return ( int )m_meshInstances.size();
+    return ( int )m_meshes.size();
 }
 
-// ** Scene::instance
-const Instance* Scene::instance( int index ) const
+// ** Scene::mesh
+const Mesh* Scene::mesh( int index ) const
 {
-    assert( index >= 0 && index < instanceCount() );
-    return m_meshInstances[index];
+    assert( index >= 0 && index < meshCount() );
+    return m_meshes[index];
 }
 
 // ** Scene::addLight
@@ -100,11 +100,11 @@ RelightStatus Scene::addLight( const Light* light )
 }
 
 // ** Scene::addMesh
-Instance* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
+Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
 {
-    Instance* instance = Instance::create( mesh, transform );
-    m_meshInstances.push_back( instance );
-    return instance;
+    Mesh* transformed = mesh->transformed( transform );
+    m_meshes.push_back( transformed );
+    return transformed;
 }
 
 // ** Scene::bake
@@ -117,7 +117,7 @@ RelightStatus Scene::bake( int mask )
     if( mask & BakeIndirect ) {
         bake::Photons* photons = new bake::Photons( this, 32, 3, 0.05f, 10.0f );
         photons->bake();
-        m_meshInstances[0]->photonmap()->save( "output/ph.tga" );
+        m_meshes[0]->photonmap()->save( "output/ph.tga" );
 
         bake::IndirectLight* indirect = new bake::IndirectLight( this, 512, 50, 7 );
         indirect->bake();
@@ -158,8 +158,8 @@ RelightStatus Scene::end( void )
     m_tracer = new rt::Embree;
     m_tracer->begin();
 
-    for( int i = 0, n = ( int )m_meshInstances.size(); i < n; i++ ) {
-        m_tracer->addInstance( m_meshInstances[i] );
+    for( int i = 0, n = ( int )m_meshes.size(); i < n; i++ ) {
+        m_tracer->addMesh( m_meshes[i] );
     }
 
     m_tracer->end();

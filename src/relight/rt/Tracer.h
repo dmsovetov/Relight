@@ -38,15 +38,15 @@ namespace rt {
     //! Ray tracing result.
     struct Hit {
                         //! Constructs a new Hit instance.
-                        Hit( void ) : m_instance( NULL ) {}
+                        Hit( void ) : m_mesh( NULL ) {}
 
-                        operator bool() const { return m_instance != NULL; }
+                        operator bool() const { return m_mesh != NULL; }
 
         Vec3            m_point;    //!< Intersection point.
         Vec3            m_normal;   //!< Intersection normal.
         Color           m_color;    //!< Intersection color.
         Uv              m_uv;       //!< Intersection texture coordinates.
-        const Instance* m_instance; //!< Intersected instance.
+        const Mesh*     m_mesh;     //!< Intersected mesh instance.
     };
 
     //! A ray tracer segment.
@@ -81,7 +81,7 @@ namespace rt {
         virtual void            traceSegments( Segment segments[4] ) = 0;
 
         //! Adds a new mesh instance to scene.
-        virtual void            addInstance( const Instance* instance ) = 0;
+        virtual void            addMesh( const Mesh* mesh ) = 0;
 
         //! Begins a scene construction.
         virtual void            begin( void ) = 0;
