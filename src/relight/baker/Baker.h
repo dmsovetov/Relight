@@ -38,9 +38,9 @@ namespace bake {
     public:
 
                                 //! Constructs a new Baker instance.
-                                Baker( const Scene* scene );
+                                Baker( const Scene* scene, Progress* progress );
 
-        virtual                 ~Baker( void ) {}
+        virtual                 ~Baker( void );
 
         //! Bakes a light data to an instance lightmap.
         virtual RelightStatus   bakeMesh( const Mesh* mesh );
@@ -54,10 +54,14 @@ namespace bake {
         virtual void            bakeLumel( Lumel& lumel );
 
         //! Bakes a data to lumels corresponding to this face.
-        void                    bakeFace( const const Mesh* mesh, Index index );
+        void                    bakeFace( const Mesh* mesh, Index index );
 
     protected:
 
+        //! Baking progress
+        Progress*               m_progress;
+
+        //! Scene to bake.
         const Scene*            m_scene;
     };
 

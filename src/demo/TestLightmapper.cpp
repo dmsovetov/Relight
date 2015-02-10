@@ -45,48 +45,25 @@
 =========================================================================================
 */
 
+using namespace relight;
+
+// ** BakingProgress::notify
+void BakingProgress::notify( int step, int stepCount )
+{
+    m_hasUpdates = true;
+}
+
 // ** cTestLightmapper::Create
 void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& _mesh )
 {
-    using namespace relight;
+//    createScene( "data/simple_scene_one_uv.obj" );
+    createScene( "data/boxes_uv.obj" );
 
-    char* fileName = "data/simple_scene_one_uv.obj";
-    m_model = new Model_OBJ;
-    m_model->Load( fileName );
+    m_progress = new BakingProgress( m_diffuse, &m_diffuseGl );
 
-    Model_OBJ obj;
-    printf( "Loading %s\n", fileName );
-    obj.Load( fileName );
-    printf( "\n" );
-
-    // **
-    m_scene = Scene::create();
-
-    // ** Add lights
-    m_scene->begin();
-
-    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
-    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
-
-    // ** Add mesh
-    Mesh* mesh      = Mesh::createFromFile( fileName );
-    Mesh* instance  = m_scene->addMesh( mesh, Matrix4::translation( 0, 0, 0 ) );
-    m_diffuse = m_scene->createLightmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-    m_photons = m_scene->createPhotonmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-    RelightStatus status = m_diffuse->addMesh( instance );
-    m_photons->addMesh( instance );
-
-    m_scene->end();
-
-    // ** Bake
-    {
-        relight::TimeMeasure measure( "Bake" );
-        m_scene->bake();
-    }
-
-    m_diffuse->save( "output/lm.tga" );
-    m_photons->save( "output/photons.tga" );
-    m_diffuseGl = createTextureFromLightmap( m_diffuse );
+    m_data.m_scene      = m_scene;
+    m_data.m_progress   = m_progress;
+    pthread_create( &m_thread, NULL, worker, &m_data );
 
     renderDirect	= true;
     renderIndirect	= false;
@@ -184,6 +161,36 @@ void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& _mesh )
 */
 }
 
+void cTestLightmapper::createScene( const char* fileName )
+{
+    m_scene = Scene::create();
+
+    // ** Add lights
+    m_scene->begin();
+
+    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+
+    // ** Add mesh
+    Mesh* mesh      = Mesh::createFromFile( fileName );
+    Mesh* instance  = m_scene->addMesh( mesh, Matrix4::translation( 0, 0, 0 ) );
+    m_diffuse = m_scene->createLightmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
+    m_photons = m_scene->createPhotonmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
+    RelightStatus status = m_diffuse->addMesh( instance );
+    m_photons->addMesh( instance );
+
+    m_scene->end();
+
+    m_diffuseGl = createTextureFromLightmap( m_diffuse );
+}
+
+void* cTestLightmapper::worker( void* userData )
+{
+    WorkerData* data = reinterpret_cast<WorkerData*>( userData );
+    relight::TimeMeasure measure( "Bake" );
+    data->m_scene->bake( BakeAll, data->m_progress );
+}
+
 unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const
 {
     unsigned int id;
@@ -212,26 +219,10 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
     glScalef( 0.7f, 0.7f, 0.7f );
 
     rotation += 0.25f;
-	
-	if( renderDirect ) {
-        for( int i = 0; i < m_scene->meshCount(); i++ ) {
-            renderInstance( m_scene->mesh( i ) );
-        }
-	}
 
-	if( renderIndirect ) {
-		if( renderDirect ) {
-			glEnable( GL_BLEND );
-			glBlendFunc( GL_ONE, GL_ONE );
-			glDepthFunc( GL_LEQUAL );
-		}
-
-		for( int i = 0, n = m_model->meshes.size(); i < n; i++ ) {
-			glBindTexture( GL_TEXTURE_2D, texIndirect[i] );
-			m_model->Draw( i );
-		}
-		glDisable( GL_BLEND );
-	}
+    for( int i = 0; i < m_scene->meshCount(); i++ ) {
+        renderInstance( m_scene->mesh( i ) );
+    }
 
     glBindTexture( GL_TEXTURE_2D, 0 );
 
@@ -252,6 +243,16 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
     glColor3f( 1.0, 1.0, 1.0 );
 
     glPopMatrix();
+
+    if( m_progress->m_hasUpdates ) {
+        float* pixels = m_diffuse->toRgb32F();
+        glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_diffuse->width(), m_diffuse->height(), 0, GL_RGB, GL_FLOAT, pixels );
+        glBindTexture( GL_TEXTURE_2D, 0 );
+        delete[]pixels;
+
+        m_progress->m_hasUpdates = false;
+    }
 }
 
 void cTestLightmapper::renderInstance( const relight::Mesh* mesh ) const

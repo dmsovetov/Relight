@@ -39,7 +39,7 @@ namespace bake {
     public:
 
                                 //! Constructs a DirectLight instance.
-                                DirectLight( const Scene* scene );
+                                DirectLight( const Scene* scene, Progress* progress );
 
         //! Calculates a light influence by a Lambert's cosine law.
         static float            lambert( const Vec3& direction, const Vec3& normal );

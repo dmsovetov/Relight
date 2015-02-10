@@ -15,6 +15,7 @@
 
 #include	"Test.h"
 #include    <Relight.h>
+#include    <pthread.h>
 
 #define		MAX_LIGHTMAPS	(16)
 
@@ -31,6 +32,26 @@ class cLightmap;
 class cPhotonMap;
 class Model_OBJ;
 struct sLight;
+
+struct WorkerData {
+    relight::Scene*     m_scene;
+    relight::Progress*  m_progress;
+};
+
+class BakingProgress : public relight::Progress {
+public:
+
+                                BakingProgress( const relight::Lightmap* lightmap, unsigned int* textureId )
+                                    : m_lightmap( lightmap ), m_textureId( textureId ), m_hasUpdates( false ) {}
+
+    virtual void                notify( int step, int stepCount );
+
+public:
+
+    unsigned int*               m_textureId;
+    const relight::Lightmap*    m_lightmap;
+    bool                        m_hasUpdates;
+};
 
 // ** class cTestLightmapper
 class cTestLightmapper : public cTest {
@@ -68,6 +89,10 @@ private:
 	void			SaveLightmaps( void );
     void            LoadLightmaps( void );
 
+    void            createScene( const char* fileName );
+
+    static void*    worker( void* userData );
+
 public:
 
 					cTestLightmapper( const sLight *_lights, int _totalLights )
@@ -85,10 +110,14 @@ private:
 
 private:
 
+    pthread_t           m_thread;
+    WorkerData          m_data;
+
+    BakingProgress*     m_progress;
     relight::Scene*     m_scene;
     relight::Lightmap*  m_diffuse;
     relight::Photonmap* m_photons;
-    Model_OBJ*          m_model;
+
     unsigned int        m_diffuseGl;
 };
 

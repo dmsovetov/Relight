@@ -40,12 +40,13 @@ namespace bake {
                                 //! Constructs a Photons instance.
                                 /*!
                                  \param scene Scene to be baked.
+                                 \param progress Progress callback.
                                  \param passCount Amount of photon passes.
                                  \param maxDepth Maximum photon tracing depth (number of light bounces).
                                  \param energyThreshold The minimum energy that photon should have to continue tracing.
                                  \param reflectionRadius The reflected light influence distance.
                                  */
-                                Photons( const Scene* scene, int passCount, int maxDepth, float energyThreshold, float reflectionRadius );
+                                Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float reflectionRadius );
         // ** Baker
         virtual RelightStatus   bake( void );
 

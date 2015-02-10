@@ -37,8 +37,8 @@ namespace relight {
 namespace bake {
 
 // ** IndirectLight::IndirectLight
-IndirectLight::IndirectLight( const Scene* scene, int samples, float maxDistance, int radius )
-    : Baker( scene ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius )
+IndirectLight::IndirectLight( const Scene* scene, Progress* progress, int samples, float maxDistance, int radius )
+    : Baker( scene, progress ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius )
 {
 
 }
@@ -74,7 +74,7 @@ void IndirectLight::bakeLumel( Lumel& lumel )
         }
     }
 
-    lumel.m_color = gathered / m_samples;
+    lumel.m_color += gathered / m_samples;
 }
 
 } // namespace bake

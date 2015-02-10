@@ -83,6 +83,14 @@ namespace relight {
         RelightNotImplemented   //!< The method is not implemented.
     };
 
+    //! Baker progress callback.
+    class Progress {
+    public:
+
+        //! Notifies about a task progress.
+        virtual void            notify( int step, int stepCount ) {}
+    };
+
     // ** TimeMeasure
     struct TimeMeasure {
         TimeMeasure( const char* label ) : m_label( label ), m_time( std::chrono::steady_clock::now() ) {}

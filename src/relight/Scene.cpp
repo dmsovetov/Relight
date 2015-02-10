@@ -108,28 +108,27 @@ Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
 }
 
 // ** Scene::bake
-RelightStatus Scene::bake( int mask )
+RelightStatus Scene::bake( int mask, Progress* progress )
 {
     if( m_state != StateReadyToBake ) {
         return RelightInvalidCall;
     }
 
-    if( mask & BakeIndirect ) {
-        bake::Photons* photons = new bake::Photons( this, 32, 3, 0.05f, 10.0f );
-        photons->bake();
-        m_meshes[0]->photonmap()->save( "output/ph.tga" );
+    if( mask & BakeDirect ) {
+        bake::DirectLight* direct = new bake::DirectLight( this, progress );
+        direct->bake();
+        delete direct;
+    }
 
-        bake::IndirectLight* indirect = new bake::IndirectLight( this, 512, 50, 7 );
+    if( mask & BakeIndirect ) {
+        bake::Photons* photons = new bake::Photons( this, progress, 32, 3, 0.05f, 10.0f );
+        photons->bake();
+
+        bake::IndirectLight* indirect = new bake::IndirectLight( this, progress, 512, 50, 7 );
         indirect->bake();
 
         delete photons;
         delete indirect;
-    }
-
-    if( mask & BakeDirect ) {
-        bake::DirectLight* direct = new bake::DirectLight( this );
-        direct->bake();
-        delete direct;
     }
 
     return RelightNotImplemented;

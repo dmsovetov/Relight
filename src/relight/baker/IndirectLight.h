@@ -40,11 +40,12 @@ namespace bake {
                                 //! Constructs a new IndirectLight instance.
                                 /*!
                                  \param scene Scene to be baked.
+                                 \param progress Progress callback.
                                  \param samples Amount of final gather samples.
                                  \param maxDistance Maximum distance to gather photons at.
                                  \param radius Final gather radius.
                                  */
-                                IndirectLight( const Scene* scene, int samples, float maxDistance, int radius );
+                                IndirectLight( const Scene* scene, Progress* progress, int samples, float maxDistance, int radius );
 
         //! Bakes an indirect lighting to a texture using a final gather.
         virtual RelightStatus   bake( void );

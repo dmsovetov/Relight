@@ -40,8 +40,8 @@ namespace relight {
 namespace bake {
 
 // ** Photons::Photons
-Photons::Photons( const Scene* scene, int passCount, int maxDepth, float energyThreshold, float reflectionRadius )
-    : Baker( scene ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_reflectionRadius( reflectionRadius )
+Photons::Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float reflectionRadius )
+    : Baker( scene, progress ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_reflectionRadius( reflectionRadius )
 {
 
 }
@@ -60,7 +60,9 @@ RelightStatus Photons::bake( void )
             emitPhotons( light );
         }
 
-        printf( "Tracing photons %d%%\n", int( float( j ) / m_passCount * 100 ) );
+        if( m_progress ) {
+            m_progress->notify( j + 1, m_passCount );
+        }
     }
 
     return RelightSuccess;

@@ -38,7 +38,12 @@ namespace relight {
 namespace bake {
 
 // ** Baker::Baker
-Baker::Baker( const Scene* scene ) : m_scene( scene )
+Baker::Baker( const Scene* scene, Progress* progress ) : m_scene( scene ), m_progress( progress )
+{
+
+}
+
+Baker::~Baker( void )
 {
 
 }
@@ -59,7 +64,9 @@ RelightStatus Baker::bakeMesh( const Mesh* mesh )
 #if RELIGHT_BAKE_FACES
     for( int i = 0, n = mesh->faceCount(); i < n; i++ ) {
         bakeFace( mesh, i );
-        printf( "Baking face %d/%d\n", i + 1, mesh->faceCount() );
+        if( m_progress ) {
+            m_progress->notify( i + 1, mesh->faceCount() );
+        }
     }
 #else
     for( int j = 0; j < height; j++ ) {
@@ -71,9 +78,8 @@ RelightStatus Baker::bakeMesh( const Mesh* mesh )
             }
         }
 
-        if( int( float( j ) / height * 100 ) != progress ) {
-            progress = float( j ) / height * 100;
-            printf( "Baking %d%%\n", progress );
+        if( m_progress ) {
+            m_progress->notify( j + 1, height );
         }
     }
 #endif

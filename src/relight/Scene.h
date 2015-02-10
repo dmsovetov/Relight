@@ -98,7 +98,7 @@ namespace relight {
          Backes a lightmap to a texture.
          \param bake A bake mask.
          */
-        RelightStatus           bake( int mask = BakeAll );
+        RelightStatus           bake( int mask = BakeAll, Progress* progress = NULL );
 
         //! Creates a new scene.
         static Scene*           create( void );
