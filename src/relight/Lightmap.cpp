@@ -148,6 +148,82 @@ void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& baryce
     lumel.m_flags       = lumel.m_flags | Lumel::Valid;
 }
 
+// ** Lightmap::expand
+void Lightmap::expand( void )
+{
+    for( int y = 0; y < m_height; y++ ) {
+        for( int x = 0; x < m_width; x++ ) {
+            Lumel& lumel = m_lumels[y * m_width + x];
+            if( lumel ) {
+                continue;
+            }
+
+            lumel.m_color = nearestColor( x, y, 1 );
+        }
+    }
+}
+
+// ** Lightmap::blur
+void Lightmap::blur( void )
+{
+    for( int y = 1; y < m_height - 1; y++ ) {
+        for( int x = 1; x < m_width - 1; x++ ) {
+            Color color( 0, 0, 0 );
+            int count = 0;
+
+            for( int j = y - 1; j <= y + 1; j++ ) {
+                for( int i = x - 1; i <= x + 1; i++ ) {
+                    const Lumel& lumel = m_lumels[j * m_width + i];
+
+                    if( lumel  ) {
+                        color += lumel.m_color;
+                        count++;
+                    }
+                }
+            }
+            
+            if( count ) {
+                m_lumels[y * m_width + x].m_color = color * (1.0 / count);
+            }
+        }
+    }
+}
+
+// ** Lightmap::nearestColor
+const Color& Lightmap::nearestColor( int x, int y, int radius ) const
+{
+    // ** Search range
+    int xmin = std::max( 0, x - radius );
+    int xmax = std::min( m_width - 1, x + radius );
+    int ymin = std::max( 0, y - radius );
+    int ymax = std::min( m_height - 1, y + radius );
+
+    // ** Lumel
+    const Lumel* nearest = NULL;
+    float distance       = FLT_MAX;
+
+    for( int j = ymin; j <= ymax; j++ ) {
+        for( int i = xmin; i <= xmax; i++ ) {
+            const Lumel& lumel = m_lumels[j * m_width + i];
+            if( !lumel ) {
+                continue;
+            }
+
+            float d = sqrtf( (x - i) * (x - i) + (y - j) * (y - j) );
+            if( d < distance ) {
+                distance = d;
+                nearest	 = &lumel;
+            }
+        }
+    }
+    
+    if( !nearest ) {
+        return nearestColor( x, y, radius + 1 );
+    }
+    
+    return nearest->m_color;
+}
+
 // ** Lightmap::save
 bool Lightmap::save( const String& fileName ) const
 {
@@ -208,9 +284,9 @@ unsigned char* Lightmap::toRgb8( void ) const
             const Lumel&    lumel   = m_lumels[y * m_width + x];
             unsigned char*  pixel   = &pixels[y * stride + x * 3];
 
-            pixel[0] = std::min( lumel.m_color.b * 255.0, 255.0 );
-            pixel[1] = std::min( lumel.m_color.g * 255.0, 255.0 );
             pixel[2] = std::min( lumel.m_color.r * 255.0, 255.0 );
+            pixel[1] = std::min( lumel.m_color.g * 255.0, 255.0 );
+            pixel[0] = std::min( lumel.m_color.b * 255.0, 255.0 );
         }
     }
 
@@ -228,9 +304,9 @@ float* Lightmap::toRgb32F( void ) const
             const Lumel& lumel = m_lumels[y * m_width + x];
             float*       pixel = &pixels[y * stride + x * 3];
 
-            pixel[0] = lumel.m_color.b;
+            pixel[0] = lumel.m_color.r;
             pixel[1] = lumel.m_color.g;
-            pixel[2] = lumel.m_color.r;
+            pixel[2] = lumel.m_color.b;
         }
     }
     

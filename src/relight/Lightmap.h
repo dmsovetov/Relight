@@ -86,6 +86,12 @@ namespace relight {
          */
         virtual RelightStatus   addMesh( const Mesh* mesh, bool copyVertexColor = false );
 
+        //! Fills all illegal pixels with a nearest valid color.
+        void                    expand( void );
+
+        //! Blurs a lightmap
+        void                    blur( void );
+
         //! Saves a lightmap to file.
         bool                    save( const String& fileName ) const;
 
@@ -111,6 +117,9 @@ namespace relight {
 
         //! Initializes a given face lumel.
         void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor );
+
+        //! Returns a nearest valid lumel color.
+        const Color&            nearestColor( int x, int y, int radius ) const;
 
     protected:
 
