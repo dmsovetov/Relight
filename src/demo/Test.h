@@ -13,6 +13,8 @@
 =========================================================================================
 */
 
+#include <float.h>
+
 /*
 =========================================================================================
 
@@ -34,7 +36,7 @@ public:
 	virtual void	KeyPressed( int key ) {}
 	virtual void	Create( IRayTracer *model, const Model_OBJ& mesh ) {}
 	virtual void	Update( void ) {}
-	virtual void	Render( Model_OBJ& mesh ) {}
+	virtual void	Render( Model_OBJ& mesh, Model_OBJ& light ) {}
 };
 
 #endif	/*	!__DC_Test_H__	*/

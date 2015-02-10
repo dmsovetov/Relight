@@ -1,104 +1,146 @@
-//
-//  Filename:	Lightmap.h
-//	Created:	22:03:2012   15:35
+/**************************************************************************
 
-#ifndef		__Lightmap_H__
-#define		__Lightmap_H__
+ The MIT License (MIT)
 
-/*
-=========================================================================================
+ Copyright (c) 2015 Dmitry Sovetov
 
-			HEADERS & DEFS
+ https://github.com/dmsovetov
 
-=========================================================================================
-*/
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
 
-#include	"Lightmapper.h"
+ **************************************************************************/
 
-/*
-=========================================================================================
+#ifndef __Relight_Lightmap_H__
+#define __Relight_Lightmap_H__
 
-			CODE
+#include "Relight.h"
+#include "Vector.h"
 
-=========================================================================================
-*/
-/*
-// ** enum eExtraLightmap
-enum eExtraLightmap {
-	LightmapAO		= 1,
-	LightmapPhotons,
-	LightmapIndirect,
-	LightmapTotal
-};*/
+namespace relight {
 
-// ** enum eLumelFlag
-enum eLumelFlag {
-	LumelValid		= 1,
-	LumelExpanded	= 2,
-};
+    //! A single lightmap pixel data.
+    struct Lumel {
+        //! Lumel state flags
+        enum Flags {
+            Valid = 0x1,
+        };
 
-// ** struct sLumel
-struct sLumel {
-	sVector3		normal;
-	sVector3		position;
+        Vec3    m_position;     //!< Lumel world space position.
+        Vec3    m_normal;       //!< Lumel world space normal.
+        Color   m_color;        //!< Baked color.
 
-	sColor			color;
-	unsigned char	flags;
-//	bool			isValid;
+        int     m_photons;      //!< Amount of photons stored (valid only for photon maps).
+        Color   m_gathered;     //!< Gathered photons color.
 
-	int				faceIndex;
+        int     m_flags;
 
-					sLumel( void ) : flags( 0 ), color( 1.0f, 0.0f, 1.0f ) {}
+                Lumel( void ) : m_photons( 0 ), m_flags( 0 ) {}
 
-	bool			IsValid( void ) const { return flags & LumelValid ? true : false; }
-	void			SetValid( void ) { flags |= LumelValid; }
+                operator bool() const { return m_flags & Valid; }
+    };
 
-	bool			IsExpanded( void ) const { return flags & LumelExpanded ? true : false; }
-	void			SetExpanded( void ) { flags |= LumelExpanded; }
-};
+    //! Holds a rendered lightmap data.
+    class Lightmap {
+    public:
 
-// ** class cLightmap
-class cLightmap {
-friend class cLightCalculator;
-private:
+                                //! Constructs a new Lightmap instance.
+                                Lightmap( int width, int height );
 
-	cLightmapper	*lightmapper;
-	int				index;
-//	cLightmap		*extra[LightmapTotal];
-//	void			*userData;
-	int				width;
-	int				height;
-	sLumel			*lumels;
+        //! Returns a lightmap width
+        int                     width( void ) const;
 
-private:
+        //! Returns a lightmap height
+        int                     height( void ) const;
 
-	void			CreateLumels( int faceIndex, const sLMFace& face );
-	void			CalculateLumel( int faceIndex, const sLMFace& face, sLumel *lumel, double u, double v, double bu, double bv );
-	const sColor&	GetNearestColor( int x, int y, int radius ) const;
+        //! Returns a lumel data.
+        Lumel*                  lumels( void );
 
-public:
+        //! Returns a lumel at a given UV coordinates.
+        Lumel&                  lumel( const Uv& uv );
+        const Lumel&            lumel( const Uv& uv ) const;
 
-					cLightmap( cLightmapper *_lightmapper ) : lightmapper( _lightmapper ), width( 0 ), height( 0 ), lumels( NULL ) {}
-					~cLightmap( void ) { delete[]lumels; }
+        //! Returns a lumel at a given buffer coordinates.
+        Lumel&                  lumel( int x, int y );
+        const Lumel&            lumel( int x, int y ) const;
 
-	void			Create( int index, int width, int height );
-	void			Clear( void );
-	void			Blur( void );
-	void			Expand( void );
-	void			Save( const char *fileName ) const;
-    void            Load( const char *fileName );
-	int				GetIndex( void ) const { return index; }
-	int				GetWidth( void ) const { return width; }
-	int				GetHeight( void ) const { return height; }
-	sLumel*			GetLumels( void ) { return lumels; }
-	const sLumel*	GetLumels( void ) const { return lumels; }
-//	void*			GetUserData( void ) { return userData; }
-//	void			SetUserData( void *_userData ) { userData = _userData; }
-//	void			SetExtraLightmap( eExtraLightmap type, cLightmap *lightmap ) { extra[type] = lightmap; }
-//	cLightmap*		GetExtraLightmap( eExtraLightmap type ) { return extra[type]; }
+        //! Adds an instance to this lightmap.
+        /*!
+         This function initializes all lumels corresponding to a given instance.
+         \param instance Instance to be added.
+         */
+        virtual RelightStatus   addInstance( const Instance* instance, bool copyVertexColor = false );
 
-	void			SaveLumels( const char *fileName );
-	void			LoadLumels( const char *fileName );
-};
+        //! Saves a lightmap to file.
+        bool                    save( const String& fileName ) const;
 
-#endif	/*	!__Lightmap_H__	*/
+        //! Converts a lightmap to buffer with 8-bit color.
+        /*!
+         Warning: you should free the resulting buffer by yourself.
+         */
+        unsigned char*          toRgb8( void ) const;
+
+        //! Converts a lightmap to buffer with 32-bit floating point color.
+        /*!
+         Warning: you should free the resulting buffer by yourself.
+         */
+        float*                  toRgb32F( void ) const;
+
+    protected:
+
+        //! Initializes all lumels corresponding to a given mesh.
+        void                    initializeLumels( const Mesh* mesh, bool copyVertexColor );
+
+        //! Initializes all lumels corresponsing to a given face.
+        void                    initializeLumels( const VertexBuffer& vertices, Index v0, Index v1, Index v2, bool copyVertexColor );
+
+        //! Initializes a given face lumel.
+        void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor );
+
+    protected:
+
+        //! Lightmap width.
+        int                     m_width;
+
+        //! Lightmap height.
+        int                     m_height;
+
+        //! Lightmap data.
+        Array<Lumel>            m_lumels;
+    };
+
+    // ** class Photonmap
+    class Photonmap : public Lightmap {
+    public:
+
+                                //! Constructs a new Photonmap instance
+                                Photonmap( int width, int height );
+
+        //! Does a gathering of photons for all lumels.
+        void                    gather( int radius );
+
+        //! Adds an instance to this photonmap.
+        virtual RelightStatus   addInstance( const Instance* instance, bool copyVertexColor = false );
+
+    private:
+
+        //! Gathers surrounding photons to lumel
+        Color                   gather( int x, int y, int radius ) const;
+    };
+
+} // namespace relight
+
+#endif  /*  !defined( __Relight_Lightmap_H__ ) */

@@ -14,7 +14,7 @@
 */
 
 #include	<vector>
-#include	"UVUnwrap.h"	// ** sVector3
+#include	"Relight.h"     // ** sVector3
 #include	"PathTracer.h"	// ** sColor
 
 /*

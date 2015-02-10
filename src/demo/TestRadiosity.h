@@ -26,6 +26,15 @@
 
 class cLightmapper;
 
+typedef struct												// Create A Structure
+{
+    unsigned char	*imageData;										// Image Data (Up To 32 Bits)
+    unsigned int	bpp;											// Image Color Depth In Bits Per Pixel.
+    unsigned int	width;											// Image Width
+    unsigned int	height;											// Image Height
+    unsigned int	texID;											// Texture ID Used To Select A Texture
+} TextureImage;
+
 // ** class cTestRadiosity
 class cTestRadiosity : public cTest {
 private:
@@ -51,6 +60,7 @@ private:
 
 	// ** Debug draw
 	const sRadiositySample	*nearest;
+    float                   rotation;
 
 private:
 
@@ -66,7 +76,7 @@ public:
 	virtual void			KeyPressed( int key );
 	virtual void			Create( IRayTracer *model, const Model_OBJ& mesh );
 	virtual void			Update( void );
-	virtual void			Render( Model_OBJ& mesh );
+	virtual void			Render( Model_OBJ& mesh, Model_OBJ& light );
 };
 
 #endif	/*	!__TestRadiosity_H__	*/

@@ -1,298 +1,310 @@
-//
-//  Filename:	Lightmap.h
-//	Created:	22:03:2012   15:35
+/**************************************************************************
 
-/*
-=========================================================================================
+ The MIT License (MIT)
 
-			HEADERS & DEFS
+ Copyright (c) 2015 Dmitry Sovetov
 
-=========================================================================================
-*/
+ https://github.com/dmsovetov
 
-#include	"Lightmap.h"
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
 
-/*
-=========================================================================================
+ **************************************************************************/
 
-			CODE
+#include "BuildCheck.h"
 
-=========================================================================================
-*/
+#include "Lightmap.h"
+#include "Mesh.h"
 
-// ** cLightmap::Clear
-void cLightmap::Clear( void )
+namespace relight {
+
+// ------------------------------------------------ Lightmap ------------------------------------------------ //
+
+// ** Lightmap::Lightmap
+Lightmap::Lightmap( int width, int height ) : m_width( width ), m_height( height )
 {
-	for( int j = 0; j < height; j++ ) {
-		for( int i = 0; i < width; i++ ) {
-			sLumel& lumel	= lumels[j*width + i];
-			lumel.color		= sColor( 0, 0, 0 );
-		}
-	}
+    m_lumels.resize( width * height );
 }
 
-// ** cLightmap::Create
-void cLightmap::Create( int _index, int _width, int _height )
+// ** Lightmap::width
+int Lightmap::width( void ) const
 {
-	width  = _width;
-	height = _height;
-	index  = _index;
-	lumels = new sLumel[width * height];
-
-	for( int i = 0, n = ( int )lightmapper->faces.size(); i < n; i++ ) {
-		CreateLumels( i, lightmapper->faces[i] );
-	}
+    return m_width;
 }
 
-// ** cLightmap::Blur
-void cLightmap::Blur( void )
+// ** Lightmap::height
+int Lightmap::height( void ) const
 {
-	for( int y = 1; y < height - 1; y++ ) {
-		for( int x = 1; x < width - 1; x++ ) {
-			sColor color( 0, 0, 0 );
-			int count = 0;
-
-			for( int j = y - 1; j <= y + 1; j++ ) {
-				for( int i = x - 1; i <= x + 1; i++ ) {
-					const sLumel& lumel = lumels[j * width + i];
-
-					if( lumel.IsValid() ) {
-						color += lumel.color;
-						count++;
-					}
-				}
-			}
-
-			if( count ) {
-				lumels[y * width + x].color = color * (1.0 / count);
-			}
-		}
-	}
+    return m_height;
 }
 
-// ** cLightmap::GetNearestColor
-const sColor& cLightmap::GetNearestColor( int x, int y, int radius ) const
+// ** Lightmap::lumels
+Lumel* Lightmap::lumels( void )
 {
-	if( radius > width || radius > height ) {
-		return lumels[0].color;
-	}
-
-	// ** Search range
-	int xmin = std::max( 0, x - radius );
-	int xmax = std::min( width - 1, x + radius );
-	int ymin = std::max( 0, y - radius );
-	int ymax = std::min( height - 1, y + radius );
-
-	// ** Lumel
-	const sLumel *nearest = NULL;
-	float distance = FLT_MAX;
-
-	for( int j = ymin; j <= ymax; j++ ) {
-		for( int i = xmin; i <= xmax; i++ ) {
-			const sLumel& lumel = lumels[j * width + i];
-			if( !lumel.IsValid() /*&& !lumel.IsExpanded()*/ ) {
-				continue;
-			}
-
-			float d = sqrtf( (x - i) * (x - i) + (y - j) * (y - j) );
-			if( d < distance ) {
-				distance = d;
-				nearest	 = &lumel;
-			}
-		}
-	}
-
-	if( !nearest ) {
-		return GetNearestColor( x, y, radius + 1 );
-	}
-
-	return nearest->color;
+    return &m_lumels[0];
 }
 
-// ** cLightmap::Expand
-void cLightmap::Expand( void )
+// ** Lightmap::lumel
+Lumel& Lightmap::lumel( const Uv& uv )
 {
-	for( int y = 0; y < height; y++ ) {
-		for( int x = 0; x < width; x++ ) {
-			sLumel& lumel = lumels[y * width + x];
-			if( lumel.IsValid() ) {
-				continue;
-			}
-
-			lumel.color = GetNearestColor( x, y, 1 );
-			lumel.SetExpanded();
-		}
-	//	printf( "Expanding lightmap %d%%\r", int( float( y ) / height * 100 ) );
-	}
-//	printf( "\n" );
+    return lumel( uv.u * m_width, uv.v * m_height );
 }
 
-// ** cLightmap::CreateLumels
-void cLightmap::CreateLumels( int faceIndex, const sLMFace& face )
+// ** Lightmap::lumel
+const Lumel& Lightmap::lumel( const Uv& uv ) const
 {
-	if( face.lightmap != index ) {
-		return;
-	}
-
-	int uStart	= face.uvMin.x * width;
-	int uEnd	= face.uvMax.x * width;
-	int vStart	= face.uvMin.y * height;
-	int vEnd	= face.uvMax.y * height;
-
-	for( int v = vStart; v <= vEnd; v++ ) {
-		for( int u = uStart; u <= uEnd; u++ ) {
-			sLumel *lumel = &lumels[width * v + u];
-
-			float _u = (u + 0.5f) / float( width );
-			float _v = (v + 0.5f) / float( height );
-
-			float bu, bv;
-			if( !cLightmapper::IsUVInside( face.vertices[0].uv, face.vertices[1].uv, face.vertices[2].uv, _u, _v, &bu, &bv ) ) {
-				continue;
-			}
-
-			CalculateLumel( faceIndex, face, lumel, u, v, bu, bv );
-		}
-	}
+    return lumel( uv.u * m_width, uv.v * m_height );
 }
 
-// ** cLightmap::CalculateLumel
-void cLightmap::CalculateLumel( int faceIndex, const sLMFace& face, sLumel *lumel, double u, double v, double bu, double bv )
+// ** Lightmap::lumel
+Lumel& Lightmap::lumel( int x, int y )
 {
-	lumel->position		= cLightmapper::TriangleInterpolate( face.vertices[0].position, face.vertices[1].position, face.vertices[2].position, bu, bv );
-	lumel->normal		= cLightmapper::TriangleInterpolate( face.vertices[0].normal, face.vertices[1].normal, face.vertices[2].normal, bu, bv );
-	lumel->color			= sColor( 0, 0, 0 );
-	lumel->SetValid();
-	lumel->faceIndex		= faceIndex;
-
-	if( lightmapper->IsCopyColorFromVertex() ) {
-		lumel->color		= face.vertices[0].color;
-	}
+    assert( x >= 0 && x < m_width && y >= 0 && y < m_height );
+    return m_lumels[y * m_width + x];
 }
 
-// ** cLightmap::Save
-void cLightmap::Save( const char *fileName ) const
+// ** Lightmap::lumel
+const Lumel& Lightmap::lumel( int x, int y ) const
 {
-	char buffer[256];
-
-	FILE	*file;
-	int		image_size = 0;
-
-	sprintf( buffer, "%s-%d.tga", fileName, width );
-
-	unsigned char tga_header_a[12]   = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-	unsigned char tga_info_header[6] = { 0, 0, 0, 0, 0, 0 };
-
-	file = fopen( buffer, "wb" );
-	if( !file ) {
-		return;
-	}
-
-	fwrite( tga_header_a, 1, sizeof( tga_header_a ), file );
-
-	int channels = 3;
-
-	tga_info_header[0] = width  % 256;
-	tga_info_header[1] = width  / 256;
-	tga_info_header[2] = height % 256;
-	tga_info_header[3] = height / 256;
-	tga_info_header[4] = channels * 8;
-	tga_info_header[5] = 0;
-
-	fwrite( tga_info_header, 1, sizeof( tga_info_header ), file );
-	image_size = width * height * channels;
-
-	for( int j = 0; j < height; j++ ) {
-		for( int i = 0; i < width; i++ ) {
-			const sLumel& lumel = lumels[j*width + i];
-
-			unsigned char r = std::min( lumel.color.b * 255.0, 255.0 );
-			unsigned char g = std::min( lumel.color.g * 255.0, 255.0 );
-			unsigned char b = std::min( lumel.color.r * 255.0, 255.0 );
-
-		//	unsigned char pixel[] = { r > 255 ? 255 : r, g > 255 ? 255 : g, b > 255 ? 255 : b };
-            unsigned char pixel[] = { r, g, b };
-			fwrite( pixel, sizeof( pixel ), 1, file );
-		}
-	}
-
-	fclose( file );
+    assert( x >= 0 && x < m_width && y >= 0 && y < m_height );
+    return m_lumels[y * m_width + x];
 }
 
-// ** cLightmap::Load
-void cLightmap::Load( const char *fileName )
+// ** Lightmap::addInstance
+RelightStatus Lightmap::addInstance( const Instance* instance, bool copyVertexColor )
 {
-	GLubyte		TGAheader[12] = {0,0,2,0,0,0,0,0,0,0,0,0};	// Uncompressed TGA Header
-	GLubyte		TGAcompare[12];								// Used To Compare TGA Header
-	GLubyte		header[6];									// First 6 Useful Bytes From The Header
+    if( instance->lightmap() ) {
+        return RelightInvalidCall;
+    }
 
-	FILE *file = fopen( fileName, "rb" );						// Open The TGA File
+    // ** Attach this lightmap to an instance
+    const_cast<Instance*>( instance )->setLightmap( this );
 
-	if(	file==NULL ||										// Does File Even Exist?
-       fread(TGAcompare,1,sizeof(TGAcompare),file)!=sizeof(TGAcompare) ||	// Are There 12 Bytes To Read?
-       memcmp(TGAheader,TGAcompare,sizeof(TGAheader))!=0				||	// Does The Header Match What We Want?
-       fread(header,1,sizeof(header),file)!=sizeof(header))				// If So Read Next 6 Header Bytes
-	{
-        if (file == NULL) {									// Did The File Even Exist? *Added Jim Strong*
-            printf( "cLightmap::Load : failed to load %s\n", fileName);
-			return;									// Return False
+    // ** Initialize lumels
+    initializeLumels( instance->mesh(), copyVertexColor );
+
+    return RelightSuccess;
+}
+
+// ** Lightmap::initializeLumels
+void Lightmap::initializeLumels( const Mesh* mesh, bool copyVertexColor )
+{
+    // ** For each sub mesh
+    for( int i = 0; i < mesh->submeshCount(); i++ ) {
+        // ** Get a sub mesh by index
+        const SubMesh& sub = mesh->submesh( i );
+
+        // ** For each face in a sub mesh
+        for( int j = 0; j < sub.m_totalFaces; j++ ) {
+            initializeLumels( sub.m_vertices, sub.m_indices[j * 3 + 0], sub.m_indices[j * 3 + 1], sub.m_indices[j * 3 + 2], copyVertexColor );
         }
-		else
-		{
-            printf( "cLightmap::Load : failed to load %s\n", fileName);
-			fclose(file);									// If Anything Failed, Close The File
-			return;									// Return False
-		}
-	}
+    }
+}
 
-    width  = header[1] * 256 + header[0];			// Determine The TGA Width	(highbyte*256+lowbyte)
-    height = header[3] * 256 + header[2];			// Determine The TGA Height	(highbyte*256+lowbyte)
+// ** Lightmap::initializeLumels
+void Lightmap::initializeLumels( const VertexBuffer& vertices, Index v0, Index v1, Index v2, bool copyVertexColor )
+{
+    Face face( &vertices[v0], &vertices[v1], &vertices[v2] );
+    Uv   min, max;
 
- 	if( width <=0 || height	<=0	|| (header[4] != 24 && header[4] != 32) )
-	{
-		fclose(file);
-		return;
-	}
+    // ** Calculate UV bounds
+    face.uvRect( min, max );
 
-    // ** Read pixels
-	int bytesPerPixel    = header[4] / 8;
-	int imageSize		 = width * height * bytesPerPixel;
-    unsigned char *image = new unsigned char[imageSize];
-    fread( image, 1, imageSize, file );
-    fclose( file );	
+    int uStart = min.u * m_width;
+    int uEnd   = max.u * m_width;
+    int vStart = min.v * m_height;
+    int vEnd   = max.v * m_height;
 
-    // ** Create lumels
-    for( int y = 0; y < height; y++ ) {
-        for( int x = 0; x < width; x++ ) {
-            unsigned char *pixel = &image[y * width * bytesPerPixel + x * bytesPerPixel];
-            lumels[y * width + x].color = sColor( pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f );
+    // ** Initialize lumels
+    for( int v = vStart; v <= vEnd; v++ ) {
+        for( int u = uStart; u <= uEnd; u++ ) {
+            Lumel& lumel = m_lumels[m_width * v + u];
+
+            Uv uv( (u + 0.5f) / float( m_width ), (v + 0.5f) / float( m_height ) );
+            Barycentric barycentric;
+
+            if( !face.isUvInside( uv, barycentric, Vertex::Lightmap ) ) {
+                continue;
+            }
+
+            initializeLumel( lumel, face, barycentric, copyVertexColor );
+        }
+    }
+}
+
+// ** Lightmap::initializeLumel
+void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor )
+{
+    lumel.m_position    = face.positionAt( barycentric );
+    lumel.m_normal      = face.normalAt( barycentric );
+    lumel.m_color       = copyVertexColor ? face.vertex( 0 )->m_color : Color( 0, 0, 0 );
+    lumel.m_flags       = lumel.m_flags | Lumel::Valid;
+}
+
+// ** Lightmap::save
+bool Lightmap::save( const String& fileName ) const
+{
+    char buffer[256];
+
+    FILE	*file;
+    int		image_size = 0;
+
+    unsigned char tga_header_a[12]   = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    unsigned char tga_info_header[6] = { 0, 0, 0, 0, 0, 0 };
+
+    file = fopen( fileName.c_str(), "wb" );
+    if( !file ) {
+        return false;
+    }
+
+    fwrite( tga_header_a, 1, sizeof( tga_header_a ), file );
+
+    int channels = 3;
+
+    tga_info_header[0] = m_width  % 256;
+    tga_info_header[1] = m_width  / 256;
+    tga_info_header[2] = m_height % 256;
+    tga_info_header[3] = m_height / 256;
+    tga_info_header[4] = channels * 8;
+    tga_info_header[5] = 0;
+
+    fwrite( tga_info_header, 1, sizeof( tga_info_header ), file );
+    image_size = m_width * m_height * channels;
+
+    for( int j = 0; j < m_height; j++ ) {
+        for( int i = 0; i < m_width; i++ ) {
+            const Lumel& lumel   = m_lumels[j*m_width + i];
+            int          photons = lumel.m_photons ? lumel.m_photons : 1;
+
+            unsigned char r = std::min( lumel.m_color.b / photons * 255.0, 255.0 );
+            unsigned char g = std::min( lumel.m_color.g / photons * 255.0, 255.0 );
+            unsigned char b = std::min( lumel.m_color.r / photons * 255.0, 255.0 );
+
+            unsigned char pixel[] = { r, g, b };
+            fwrite( pixel, sizeof( pixel ), 1, file );
+        }
+    }
+    
+    fclose( file );
+
+    return true;
+}
+
+// ** Lightmap::toRgb8
+unsigned char* Lightmap::toRgb8( void ) const
+{
+    unsigned char* pixels = new unsigned char[m_width * m_height * 3];
+    const int      stride = m_width * 3;
+
+    for( int y = 0; y < m_height; y++ ) {
+        for( int x = 0; x < m_width; x++ ) {
+            const Lumel&    lumel   = m_lumels[y * m_width + x];
+            unsigned char*  pixel   = &pixels[y * stride + x * 3];
+
+            pixel[0] = std::min( lumel.m_color.b * 255.0, 255.0 );
+            pixel[1] = std::min( lumel.m_color.g * 255.0, 255.0 );
+            pixel[2] = std::min( lumel.m_color.r * 255.0, 255.0 );
         }
     }
 
-    delete[]image;
+    return pixels;
 }
 
-// ** cLightmap::SaveLumels
-void cLightmap::SaveLumels( const char *fileName )
+// ** Lightmap::toRgb32F
+float* Lightmap::toRgb32F( void ) const
 {
-	FILE *file = fopen( fileName, "wb" );
-    assert(file != NULL);
+    float*    pixels = new float[m_width * m_height * 3];
+    const int stride = m_width * 3;
 
-	fwrite( &width, sizeof( width ), 1, file );
-	fwrite( &height, sizeof( height ), 1, file );
-	fwrite( lumels, sizeof( sLumel ), width * height, file );
-	fclose( file );
+    for( int y = 0; y < m_height; y++ ) {
+        for( int x = 0; x < m_width; x++ ) {
+            const Lumel& lumel = m_lumels[y * m_width + x];
+            float*       pixel = &pixels[y * stride + x * 3];
+
+            pixel[0] = lumel.m_color.b;
+            pixel[1] = lumel.m_color.g;
+            pixel[2] = lumel.m_color.r;
+        }
+    }
+    
+    return pixels;
 }
 
-// ** cLightmap::LoadLumels
-void cLightmap::LoadLumels( const char *fileName )
+// ------------------------------------------------ Photonmap ------------------------------------------------ //
+
+// ** Photonmap::Photonmap
+Photonmap::Photonmap( int width, int height ) : Lightmap( width, height )
 {
-	FILE *file = fopen( fileName, "rb" );
 
-	fread( &width, sizeof( width ), 1, file );
-	fread( &height, sizeof( height ), 1, file );
-
-	lumels = new sLumel[width * height];
-	fread( lumels, sizeof( sLumel ), width * height, file );
-	fclose( file );
 }
+
+// ** Photonmap::addInstance
+RelightStatus Photonmap::addInstance( const Instance* instance, bool copyVertexColor )
+{
+    if( instance->photonmap() ) {
+        return RelightInvalidCall;
+    }
+
+    // ** Attach this lightmap to an instance
+    const_cast<Instance*>( instance )->setPhotonmap( this );
+
+    // ** Initialize lumels
+    initializeLumels( instance->mesh(), copyVertexColor );
+
+    return RelightSuccess;
+}
+
+// ** Photonmap::gather
+void Photonmap::gather( int radius )
+{
+    for( int y = 0; y < m_height; y++ ) {
+        for( int x = 0; x < m_height; x++ ) {
+            lumel( x, y ).m_gathered = gather( x, y, radius );
+        }
+    }
+}
+
+// ** Photonmap::gather
+Color Photonmap::gather( int x, int y, int radius ) const
+{
+    Color color;
+    int   photons = 0;
+
+    for( int j = y - radius; j <= y + radius; j++ ) {
+        for( int i = x - radius; i <= x + radius; i++ ) {
+            if( i < 0 || j < 0 || i >= m_width || j >= m_height ) {
+                continue;
+            }
+
+            const Lumel& lumel = m_lumels[j * m_width + i];
+            float distance = sqrtf( (x - i) * (x - i) + (y - j) * (y - j) );
+            if( distance > radius ) {
+                continue;
+            }
+
+            color   += lumel.m_color;
+            photons += lumel.m_photons;
+        }
+    }
+
+    if( photons == 0 ) {
+        return Color( 0.0f, 0.0f, 0.0f );
+    }
+
+    return color / photons;
+}
+
+} // namespace relight

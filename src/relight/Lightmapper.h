@@ -14,7 +14,6 @@
 */
 
 #include	"PathTracer.h"
-#include	"UVUnwrap.h"
 #include	<pthread.h>
 
 /*

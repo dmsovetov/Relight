@@ -1,16 +1,18 @@
 
 //#include "monteCarloPathTracing.h"
 #include "PathTracer.h"
-#include "Model.h"
-#include "EmbreeModel.h"
+//#include "Model.h"
+//#include "EmbreeModel.h"
 #include "Mesh.h"
-#include "UVUnwrap.h"
+//#include "UVUnwrap.h"
 #include "Lightmapper.h"
 #include "Lightmap.h"
 #include "LightmapCalculator.h"
-#include "PhotonMap.h"
+//#include "PhotonMap.h"
 #include "Radiosity.h"
-#include "DirectLightCalculator.h"
+//#include "DirectLightCalculator.h"
+
+#include <GLUT/GLUT.h>
 
 #ifdef WIN32
     #include <windows.h>
@@ -287,11 +289,11 @@ void display()
 
 	// ** Test rendering
 	if( test ) {
-		test->Render( mesh );
+        test->Render( mesh, light );
 	}
 
 	glPopMatrix();
-
+/*
 	glDisable( GL_TEXTURE_2D );
 	for( int i = 0, n = sizeof( lights ) / sizeof( sLight ); i < n; i++ ) {
 		sLight l = lights[i];
@@ -305,7 +307,7 @@ void display()
 		glPopMatrix();
 	}
 	glColor3f( 1.0, 1.0, 1.0 );
- 
+ */
 //    if(k < N_SAMPLES) glutPostRedisplay();
 
 #ifdef WIN32
@@ -734,7 +736,8 @@ int main(int argc, char *argv[])
 //	_mesh.Save( "data/"filename"_uv.obj" );
 	printf( "Loading model...\n" );
 //	mesh.Load( "data/sponza_one_uv.obj" );
-    mesh.Load( "data/simple_scene_one_uv.obj" );
+//    mesh.Load( "data/simple_scene_one_uv.obj" );
+    mesh.Load( "data/boxes_uv.obj" );
 	light.Load( "data/light.obj" );
 
 	// ** Concat mesh
@@ -770,10 +773,11 @@ int main(int argc, char *argv[])
 
 	// ** Model
 	printf( "Creating tracer...\n" );
-//	model = new cBulletModel;
+/*
 	model = new cEmbryModel;
     model->Create();
 	model->AddMesh( compoundMesh );
+*/
 //	for( int i = 0; i < mesh.meshes.size(); i++ ) {
 //		model->AddMesh( mesh.meshes[i] );
 //	}

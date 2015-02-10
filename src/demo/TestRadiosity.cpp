@@ -15,7 +15,7 @@
 #include	"Lightmap.h"
 #include	"Mesh.h"
 
-#define		RADIOSITY_LIGHTMAP_SIZE	(128)
+#define		RADIOSITY_LIGHTMAP_SIZE	(256)
 #define		MAX_RADIOSITY_SAMPLES	(0)
 
 /*
@@ -35,6 +35,7 @@ extern PFNGLCLIENTACTIVETEXTUREARBPROC glActiveTextureARB;
 // ** cTestRadiosity::Create
 void cTestRadiosity::Create( IRayTracer *model, const Model_OBJ& mesh )
 {
+/*
 	// ** Create lightmapper & dynamic indirect lightmap
 	lightmapper = new cLightmapper;
 	indirect	= lightmapper->CreateLightmap();
@@ -76,14 +77,15 @@ void cTestRadiosity::Create( IRayTracer *model, const Model_OBJ& mesh )
 	renderDirect		= true;
 	renderIndirect		= true;
 	renderSample		= false;
-	blurTexture			= false;
+	blurTexture			= true;
 	solve				= true;
 	interpolate			= true;
+    rotation            = 0.0f;*/
 }
 
 // ** cTestRadiosity::Update
 void cTestRadiosity::Update( void )
-{
+{/*
 	// ** Inject
 	DWORD time = timeGetTime();
 	solver->Clear();
@@ -121,15 +123,21 @@ void cTestRadiosity::Update( void )
 
 	char buffer[512];
 	sprintf( buffer, "Inject: %d; Propagate: %d; Total: %d; Radiosity fps: %d;", _inject, _propagate, _inject + _propagate, (injectTime + propagateTime) ? 1000 / (injectTime + propagateTime) : 999 );
-	glutSetWindowTitle( buffer );
+	glutSetWindowTitle( buffer );*/
 }
 
 // ** cTestRadiosity::Render
-void cTestRadiosity::Render( Model_OBJ& mesh )
+void cTestRadiosity::Render( Model_OBJ& mesh, Model_OBJ& light )
 {
+/*
 	glEnable( GL_TEXTURE_2D );
 	glEnable( GL_CULL_FACE );
 	glPushMatrix();
+
+    glRotatef( rotation, 0, 1, 0 );
+    glScalef( 0.7f, 0.7f, 0.7f );
+
+    rotation += 0.25f;
 	
 	if( renderDirect ) {
 		glActiveTextureARB( GL_TEXTURE1_ARB );
@@ -174,6 +182,21 @@ void cTestRadiosity::Render( Model_OBJ& mesh )
 
 	glBindTexture( GL_TEXTURE_2D, 0 );
 
+    // ** Render lights
+    glDisable( GL_TEXTURE_2D );
+    for( int i = 0, n = sizeof( lights ) / sizeof( sLight ); i < n; i++ ) {
+        sLight l = lights[i];
+
+        glPushMatrix();
+
+        glColor3f( l.r, l.g, l.b );
+        glTranslatef( lights[i].x, lights[i].y, lights[i].z );
+        glScalef( 0.05, 0.05, 0.05 );
+        light.Draw( 0 );
+        glPopMatrix();
+    }
+    glColor3f( 1.0, 1.0, 1.0 );
+
 	// ** Render nearest sample
 	if( !nearest || !renderSample ) {
 		return;
@@ -190,6 +213,7 @@ void cTestRadiosity::Render( Model_OBJ& mesh )
 		glVertex3fv( &other.position.x );
 	}
 	glEnd();
+*/
 }
 
 // ** cTestRadiosity::KeyPressed
@@ -212,6 +236,7 @@ void cTestRadiosity::KeyPressed( int key )
 // ** cTestRadiosity::FindNearestSample
 void cTestRadiosity::FindNearestSample( void )
 {
+/*
 	float	 distance = FLT_MAX;
 	sVector3 L		  = sVector3( lights[0].x, lights[0].y, lights[0].z );
 
@@ -224,6 +249,7 @@ void cTestRadiosity::FindNearestSample( void )
 			nearest  = &sample;
 		}
 	}
+*/
 }
 
 // ** cTestRadiosity::BlurLightmap

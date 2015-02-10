@@ -10,10 +10,12 @@
 =========================================================================================
 */
 
+#include    <Relight.h>
+
 #include	"TestLightmapper.h"
 #include	"Lightmapper.h"
 #include	"Lightmap.h"
-#include	"PhotonMap.h"
+//#include	"PhotonMap.h"
 #include	"Mesh.h"
 
 #define		CALCULATE					(1)
@@ -21,8 +23,8 @@
 #define		CALCULATE_DIRECT			(1)
 #define		CALCULATE_INDIRECT			(1)
 
-#define		DIRECT_LIGHTMAP_SIZE		(1024)
-#define		INDIRECT_LIGHTMAP_SIZE		(1024)
+#define		DIRECT_LIGHTMAP_SIZE		(512)
+#define		INDIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_MAX_DEPTH			(3)
 #define     INDIRECT_RADIUS             (7)
 #define		INDIRECT_SAMPLES			(512)
@@ -46,10 +48,52 @@
 // ** cTestLightmapper::Create
 void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& mesh )
 {
-	this->model		= model;
-	renderDirect	= true;
-	renderIndirect	= false;
+    using namespace relight;
+
+    char* fileName = "data/simple_scene_one_uv.obj";
+    m_model = new Model_OBJ;
+    m_model->Load( fileName );
+
+    Model_OBJ obj;
+    printf( "Loading %s\n", fileName );
+    obj.Load( fileName );
+    printf( "\n" );
+
+    // **
+    m_scene = Scene::create();
+
+    // ** Add lights
+    m_scene->begin();
+
+    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+
+    // ** Add mesh
+    Instance* instance = m_scene->addMesh( Mesh::createFromFile( fileName ), Matrix4::translation( 0, 0, 0 ) );
+    m_diffuse = m_scene->createLightmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
+    m_photons = m_scene->createPhotonmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
+    RelightStatus status = m_diffuse->addInstance( instance );
+    m_photons->addInstance( instance );
+
+    m_scene->end();
+
+    // ** Bake
+    {
+        relight::TimeMeasure measure( "Bake" );
+        m_scene->bake();
+    }
+
+    m_diffuse->save( "output/lm.tga" );
+    m_photons->save( "output/photons.tga" );
+    m_diffuseGl = createTextureFromLightmap( m_diffuse );
+
+    renderDirect	= true;
+    renderIndirect	= false;
     rotation        = 0.0f;
+/*
+    // **
+
+	this->model		= model;
 
 	memset( direct, 0, sizeof( direct ) );
 	memset( indirect, 0, sizeof( indirect ) );
@@ -136,10 +180,28 @@ void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& mesh )
 
 	delete[]indirectPixels;
 	delete[]directPixels;
+*/
+}
+
+unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const
+{
+    unsigned int id;
+
+    float* pixels = lightmap->toRgb32F();
+
+    glGenTextures( 1, &id );
+    glBindTexture( GL_TEXTURE_2D, id );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, lightmap->width(), lightmap->height(), 0, GL_RGB, GL_FLOAT, pixels );
+
+    delete[]pixels;
+
+    return id;
 }
 
 // ** cTestLightmapper::Render
-void cTestLightmapper::Render( Model_OBJ& mesh )
+void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
 {
 	glEnable( GL_TEXTURE_2D );
 	glEnable( GL_CULL_FACE );
@@ -151,10 +213,9 @@ void cTestLightmapper::Render( Model_OBJ& mesh )
     rotation += 0.25f;
 	
 	if( renderDirect ) {
-		for( int i = 0, n = mesh.meshes.size(); i < n; i++ ) {
-			glBindTexture( GL_TEXTURE_2D, texDirect[i] );
-			mesh.Draw( i );
-		}
+        for( int i = 0; i < m_scene->instanceCount(); i++ ) {
+            renderInstance( m_scene->instance( i ) );
+        }
 	}
 
 	if( renderIndirect ) {
@@ -164,14 +225,68 @@ void cTestLightmapper::Render( Model_OBJ& mesh )
 			glDepthFunc( GL_LEQUAL );
 		}
 
-		for( int i = 0, n = mesh.meshes.size(); i < n; i++ ) {
+		for( int i = 0, n = m_model->meshes.size(); i < n; i++ ) {
 			glBindTexture( GL_TEXTURE_2D, texIndirect[i] );
-			mesh.Draw( i );
+			m_model->Draw( i );
 		}
 		glDisable( GL_BLEND );
 	}
 
-	glBindTexture( GL_TEXTURE_2D, 0 );
+    glBindTexture( GL_TEXTURE_2D, 0 );
+
+    // ** Render lights
+    glDisable( GL_TEXTURE_2D );
+    for( int i = 0; i < m_scene->lightCount(); i++ ) {
+        const relight::Light* light = m_scene->light( i );
+
+        glPushMatrix();
+
+        glColor3f( light->color().r, light->color().g, light->color().b );
+        glTranslatef( light->position().x, light->position().y, light->position().z );
+        glScalef( 0.05, 0.05, 0.05 );
+        lightMesh.Draw( 0 );
+
+        glPopMatrix();
+    }
+    glColor3f( 1.0, 1.0, 1.0 );
+
+    glPopMatrix();
+}
+
+void cTestLightmapper::renderInstance( const relight::Instance* instance ) const
+{
+    for( int i = 0; i < instance->mesh()->submeshCount(); i++ ) {
+        const relight::SubMesh& submesh  = instance->mesh()->submesh( i );
+        const relight::Vertex*  vertices = &submesh.m_vertices[i];
+        const relight::Index*   indices  = &submesh.m_indices[i];
+        int                     nFaces   = submesh.m_totalFaces;
+
+        glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
+
+        glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
+        glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);				// Enable texture coord arrays
+        glEnableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+
+        glVertexPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_position.x );				// Vertex Pointer to triangle array
+        glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
+        glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
+
+        glClientActiveTextureARB( GL_TEXTURE1_ARB );
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+
+        glClientActiveTextureARB( GL_TEXTURE0_ARB );
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+
+        glDrawElements( GL_TRIANGLES, nFaces * 3, GL_UNSIGNED_SHORT, indices );
+
+        glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
+        glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);				// Disable texture coord arrays
+        glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+    }
 }
 
 // ** cTestLightmapper::KeyPressed
@@ -186,6 +301,7 @@ void cTestLightmapper::KeyPressed( int key )
 // ** cTestLightmapper::CalculateDirectLight
 void cTestLightmapper::CalculateDirectLight( void )
 {
+/*
 	printf( "Calculating direct lighting...\n" );
 	DWORD start = timeGetTime();
 
@@ -224,12 +340,13 @@ void cTestLightmapper::CalculateDirectLight( void )
 		direct[k]->Expand();
 		printf( "Expanded in %dms\n", timeGetTime() - time );
 	}
-#endif
+#endif*/
 }
 
 // ** cTestLightmapper::CalculateIndirectLight
 void cTestLightmapper::CalculateIndirectLight( void )
 {
+/*
 	for( int k = 0; k < MAX_LIGHTMAPS; k++ ) {
 		if( !direct[k] ) {
 			continue;
@@ -273,11 +390,13 @@ void cTestLightmapper::CalculateIndirectLight( void )
 			indirect[k]->Blur();
 		}
 	}
+*/
 }
 
 // ** cTestLightmapper::UpdatePixels
 void cTestLightmapper::UpdatePixels( const cLightmap *lightmap, float *pixels )
 {
+/*
 	int width  = lightmap->GetWidth();
 	int height = lightmap->GetHeight();
 	const sLumel *lumels = lightmap->GetLumels();
@@ -292,11 +411,13 @@ void cTestLightmapper::UpdatePixels( const cLightmap *lightmap, float *pixels )
 			pixel[2] = lumel.color.b;
 		}
 	}
+*/
 }
 
 // ** cTestLightmapper::SaveLightmaps
 void cTestLightmapper::SaveLightmaps( void )
 {
+/*
 	char buffer[512];
 
 	for( int i = 0; i < MAX_LIGHTMAPS; i++ ) {
@@ -315,11 +436,13 @@ void cTestLightmapper::SaveLightmaps( void )
 			indirect[i]->Save( buffer );
 		}
 	}
+*/
 }
 
 // ** cTestLightmapper::LoadLightmaps
 void cTestLightmapper::LoadLightmaps( void )
 {
+/*
 	char buffer[512];
 
 	for( int i = 0; i < MAX_LIGHTMAPS; i++ ) {
@@ -334,4 +457,5 @@ void cTestLightmapper::LoadLightmaps( void )
 			indirect[i]->Load( buffer );
 		}
 	}
+*/
 }

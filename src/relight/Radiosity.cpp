@@ -2,6 +2,8 @@
 //  Filename:	Radiosity.cpp
 //	Created:	01:06:2012   12:08
 
+#if 0
+
 /*
 =========================================================================================
 
@@ -494,3 +496,5 @@ bool cRadiositySolver::Load( const char *fileName )
 	fclose( file );
 	return true;
 }
+
+#endif

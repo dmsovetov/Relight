@@ -14,6 +14,7 @@
 */
 
 #include	"Test.h"
+#include    <Relight.h>
 
 #define		MAX_LIGHTMAPS	(16)
 
@@ -75,7 +76,20 @@ public:
 	// ** cTest
 	virtual void	KeyPressed( int key );
 	virtual void	Create( IRayTracer *model, const Model_OBJ& mesh );
-	virtual void	Render( Model_OBJ& mesh );
+	virtual void	Render( Model_OBJ& mesh, Model_OBJ& light );
+
+private:
+
+    unsigned int    createTextureFromLightmap( const relight::Lightmap* lightmap ) const;
+    void            renderInstance( const relight::Instance* instance ) const;
+
+private:
+
+    relight::Scene*     m_scene;
+    relight::Lightmap*  m_diffuse;
+    relight::Photonmap* m_photons;
+    Model_OBJ*          m_model;
+    unsigned int        m_diffuseGl;
 };
 
 #endif	/*	!__DC_TestLightmapper_H__	*/
