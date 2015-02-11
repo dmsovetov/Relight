@@ -30,6 +30,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <float.h>
 
 namespace relight {
 
@@ -37,6 +38,16 @@ namespace relight {
     inline float rand0to1( void ) {
         static double invRAND_MAX = 1.0 / RAND_MAX;
         return rand() * invRAND_MAX;
+    }
+
+    //! Returns a minimum value of two.
+    inline float min( float a, float b ) {
+        return a < b ? a : b;
+    }
+
+    //! Returns a maximum value of two.
+    inline float max( float a, float b ) {
+        return a > b ? a : b;
     }
 
     /*!
@@ -50,6 +61,8 @@ namespace relight {
 
         float   operator * ( const Uv& other ) const;
         Uv      operator - ( const Uv& other ) const;
+        Uv      operator + ( const Uv& other ) const;
+        Uv      operator * ( float scalar ) const;
 
     public:
 
@@ -64,6 +77,16 @@ namespace relight {
     // ** Uv::operator -
     inline Uv Uv::operator - ( const Uv& other ) const {
         return Uv( u - other.u, v - other.v );
+    }
+
+    // ** Uv::operator +
+    inline Uv Uv::operator + ( const Uv& other ) const {
+        return Uv( u + other.u, v + other.v );
+    }
+
+    // ** Uv::operator *
+    inline Uv Uv::operator * ( float scalar ) const {
+        return Uv( u * scalar, v * scalar );
     }
 
     typedef Uv Barycentric;
@@ -84,6 +107,7 @@ namespace relight {
         Vec3        operator - ( const Vec3& other ) const;
         float       operator * ( const Vec3& other ) const;
         Vec3        operator * ( float scalar ) const;
+        Vec3        operator / ( float scalar ) const;
 
         //! Normalizes vector.
         float       normalize( void );
@@ -135,6 +159,11 @@ namespace relight {
     // ** Vec3::operator *
     inline Vec3 Vec3::operator * ( float scalar ) const {
         return Vec3( x * scalar, y * scalar, z * scalar );
+    }
+
+    // ** Vec3::operator /
+    inline Vec3 Vec3::operator / ( float scalar ) const {
+        return Vec3( x / scalar, y / scalar, z / scalar );
     }
 
     // ** Vec3::operator *
@@ -250,6 +279,53 @@ namespace relight {
     }
 
     /*!
+     A bounding box class.
+     */
+    class Bounds {
+    public:
+
+                        //! Constructs a Bounds instance
+                        /*!
+                         \param min A bounds minimum point.
+                         \param max A bounds maximum point.
+                         */
+                        Bounds( Vec3 min = Vec3( FLT_MAX, FLT_MAX, FLT_MAX ), Vec3 max = Vec3( -FLT_MAX, -FLT_MAX, -FLT_MAX ) );
+
+        //! Adds a new point to a bounding box (extends a bounds if needed).
+        const Bounds&   operator += ( const Vec3& point );
+
+        //! Returns a bounds volume.
+        float           volume( void ) const;
+
+    private:
+
+        //! Lower corner coordinate.
+        Vec3            m_min;
+
+        //! Upper corner coordinate.
+        Vec3            m_max;
+    };
+
+    // ** Bounds::Bounds
+    inline Bounds::Bounds( Vec3 min, Vec3 max ) : m_min( min ), m_max( max ) {
+
+    }
+
+    // ** Bounds::volume
+    inline float Bounds::volume( void ) const {
+        return (m_max.x - m_min.x) * (m_max.y - m_min.y) * (m_max.z - m_min.z);
+    }
+
+    // ** Bounds::operator +=
+    inline const Bounds& Bounds::operator += ( const Vec3& point ) {
+        for( int i = 0; i < 3; i++ ) {
+            m_min[i] = min( m_min[i], point[i] );
+            m_max[i] = max( m_max[i], point[i] );
+        }
+        return *this;
+    }
+
+    /*!
      Affine transform matrix.
      */
     class Matrix4 {
@@ -292,6 +368,7 @@ namespace relight {
         const Color&    operator += ( const Color& other );
         const Color&    operator *= ( float scalar );
         Color           operator * ( float scalar ) const;
+        Color           operator + ( const Color& other ) const;
         Color           operator * ( const Color& other ) const;
         Color           operator / ( float scalar ) const;
 
@@ -315,6 +392,11 @@ namespace relight {
     // ** Color::operator *
     inline Color Color::operator * ( float scalar ) const {
         return Color( r * scalar, g * scalar, b * scalar );
+    }
+
+    // ** Color::operator +
+    inline Color Color::operator + ( const Color& other ) const {
+        return Color( r + other.r, g + other.g, b + other.b );
     }
 
     // ** Color::operator *
