@@ -44,9 +44,9 @@ namespace bake {
                                  \param passCount Amount of photon passes.
                                  \param maxDepth Maximum photon tracing depth (number of light bounces).
                                  \param energyThreshold The minimum energy that photon should have to continue tracing.
-                                 \param reflectionRadius The reflected light influence distance.
+                                 \param maxDistance The reflected light maximum distance. All intersections above this value will be ignored.
                                  */
-                                Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float reflectionRadius );
+                                Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float maxDistance );
         // ** Baker
         virtual RelightStatus   bake( void );
 
@@ -60,13 +60,14 @@ namespace bake {
          Traces a photon path for a given depth. Each time the photon bounces the
          reflected light is stored to a photon map.
 
+         \param attenuation Light attenuation model.
          \param position Photon's start position.
          \param direction Photon's direction.
          \param color Photon's color.
          \param energy Photon's energy.
          \param depth Current trace depth.
          */
-        void                    trace( const Vec3& position, const Vec3& direction, const Color& color, float energy, int depth );
+        void                    trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, float energy, int depth );
 
         //! Stores a photon bounce.
         void                    store( Photonmap* photonmap, const Color& color, const Uv& uv );
@@ -82,8 +83,8 @@ namespace bake {
         //! Photon energy threshold.
         float                   m_energyThreshold;
 
-        //! Reflected light influence radius.
-        float                   m_reflectionRadius;
+        //! Maximum intersection distance
+        float                   m_maxDistance;
     };
 
 } // namespace bake

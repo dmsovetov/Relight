@@ -40,8 +40,8 @@ namespace relight {
 namespace bake {
 
 // ** Photons::Photons
-Photons::Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float reflectionRadius )
-    : Baker( scene, progress ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_reflectionRadius( reflectionRadius )
+Photons::Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float maxDistance )
+    : Baker( scene, progress ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_maxDistance( maxDistance )
 {
 
 }
@@ -74,12 +74,12 @@ void Photons::emitPhotons( const Light* light )
     PhotonEmitter*  emitter = light->photonEmitter();
 
     for( int i = 0, n = emitter->photonCount(); i < n; i++ ) {
-        trace( light->position(), emitter->emit(), light->color(), light->intensity(), 0 );
+        trace( light->attenuation(), light->position(), emitter->emit(), light->color(), light->intensity(), 0 );
     }
 }
 
 // ** Photons::trace
-void Photons::trace( const Vec3& position, const Vec3& direction, const Color& color, float energy, int depth )
+void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, float energy, int depth )
 {
     // ** Maximum depth or energy threshold exceeded
     if( depth > m_maxDepth || energy < m_energyThreshold ) {
@@ -89,22 +89,28 @@ void Photons::trace( const Vec3& position, const Vec3& direction, const Color& c
     rt::Hit hit;
 
     // ** The photon didn't hit anything
-    if( !m_scene->tracer()->traceSegment( position, position + direction * m_reflectionRadius, &hit ) ) {
+    if( !m_scene->tracer()->traceSegment( position, position + direction * m_maxDistance, &hit ) ) {
         return;
     }
 
+    // ** Energy attenuation after a photon has passed the traced segment
+    float att = attenuation->calculate( (position - hit.m_point).length() );
+
+    // ** Energy after reflection
+    float influence = DirectLight::lambert( -direction, hit.m_normal ) * att;
+
+    // ** Final photon color
+    Color hitColor  = color * hit.m_color * influence;
+
+    energy *= influence;
+
     // ** Store photons with depth more that 0, because zero depth means that it's a direct light.
     if( depth > 0 ) {
-        float attenuation = std::max( 1.0f - (position - hit.m_point).length() / m_reflectionRadius, 0.0f );
-        float intensity   = DirectLight::lambert( -direction, hit.m_normal );
-
-        store( hit.m_mesh->photonmap(), hit.m_color * color * intensity, hit.m_uv );
-
-        energy *= intensity;
+        store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
     }
 
     // ** Keep tracing
-    trace( hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hit.m_color * color, energy, depth + 1 );
+    trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hitColor, energy, depth + 1 );
 }
 
 // ** Photons::store
