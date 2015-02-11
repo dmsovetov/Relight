@@ -77,6 +77,14 @@ namespace rt {
          */
         virtual bool            traceSegment( const Vec3& start, const Vec3& end, Hit* hit = NULL ) = 0;
 
+        //! Test a given segment for intersection with scene.
+        /*!
+         \param start Segment start point.
+         \param end Segment end point.
+         \return True if a ray intersects a scene, otherwise false.
+         */
+        virtual bool            test( const Vec3& start, const Vec3& end ) = 0;
+
         //! Traces a batch of 4 segments.
         virtual void            traceSegments( Segment segments[4] ) = 0;
 

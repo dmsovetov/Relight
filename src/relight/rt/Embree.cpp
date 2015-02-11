@@ -103,20 +103,19 @@ void Embree::traceSegments( Segment segments[4] )
     }
 }
 
-// ** Embree::traceSegment
-bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
+// ** Embree::initializeRay
+float Embree::initializeRay( RTCRay& ray, Vec3& direction, const Vec3& start, const Vec3& end ) const
 {
-    Vec3 dir = end - start;
-    float len = dir.normalize();
+    direction = end - start;
+    float len = direction.normalize();
 
-    RTCRay ray;
     ray.org[0] = start.x;
     ray.org[1] = start.y;
     ray.org[2] = start.z;
 
-    ray.dir[0] = dir.x;
-    ray.dir[1] = dir.y;
-    ray.dir[2] = dir.z;
+    ray.dir[0] = direction.x;
+    ray.dir[1] = direction.y;
+    ray.dir[2] = direction.z;
 
     ray.tnear = 0.01f;
     ray.tfar  = len;
@@ -127,10 +126,32 @@ bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
     ray.mask   = 0xFFFFFFFF;
     ray.time   = 0.0f;
 
+    return len;
+}
+
+// ** Embree::test
+bool Embree::test( const Vec3& start, const Vec3& end )
+{
+    Vec3   direction;
+    RTCRay ray;
+    initializeRay( ray, direction, start, end );
+
+    rtcOccluded( m_scene, ray );
+
+    return ray.geomID != -1;
+}
+
+// ** Embree::traceSegment
+bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
+{
+    Vec3   direction;
+    RTCRay ray;
+    initializeRay( ray, direction, start, end );
+
     rtcIntersect( m_scene, ray );
 
     if( result ) {
-        result->m_point = start + dir * ray.time;
+        result->m_point = start + direction * ray.time;
     }
 
     if( ray.primID == -1 ) {

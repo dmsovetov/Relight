@@ -45,10 +45,16 @@ namespace rt {
 
         // ** ITracer
         virtual bool    traceSegment( const Vec3& start, const Vec3& end, Hit* result = NULL );
+        virtual bool    test( const Vec3& start, const Vec3& end );
         virtual void    traceSegments( Segment segments[4] );
         virtual void    addMesh( const Mesh* mesh );
         virtual void    begin( void );
         virtual void    end( void );
+
+    private:
+
+        //! Initializes an Embree ray from a given segment.
+        float           initializeRay( RTCRay& ray, Vec3& direction, const Vec3& start, const Vec3& end ) const;
 
     private:
 
