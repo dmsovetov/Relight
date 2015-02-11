@@ -33,12 +33,15 @@ namespace relight {
 
 namespace bake {
 
+    class BakeIterator;
+
     //! Baker class is a base class for all light bakers (direct, indirect, ambient occlusion, etc)
     class Baker {
+    friend class BakeIterator;
     public:
 
                                 //! Constructs a new Baker instance.
-                                Baker( const Scene* scene, Progress* progress );
+                                Baker( const Scene* scene, Progress* progress, BakeIterator* iterator );
 
         virtual                 ~Baker( void );
 
@@ -63,6 +66,89 @@ namespace bake {
 
         //! Scene to bake.
         const Scene*            m_scene;
+
+        //! Bake iterator.
+        BakeIterator*           m_iterator;
+    };
+
+    //! Bake iterator is used to iterate over lightmap lumels and bake data into them.
+    class BakeIterator {
+    public:
+
+                                //! Constructs a BakeIterator instance.
+                                /*!
+                                 \param baker Parent baker.
+                                 \param first First element index.
+                                 \param step Iteration step.
+                                 */
+                                BakeIterator( int first, int step );
+
+        //! Begins iteration process.
+        /*!
+         \param baker Parent baker.
+         \param lightmap A target lightmap to bake.
+         \param mesh Current mesh being processed.
+         */
+        virtual void            begin( Baker* baker, Lightmap* lightmap, const Mesh* mesh );
+
+        //! Processes a next iterator item.
+        /*!
+         \return True if there are any items left for processing, otherwise false.
+         */
+        virtual bool            next( void );
+
+        //! Returns a total amount of items to process.
+        virtual int             itemCount( void ) const;
+
+    protected:
+
+        //! Processes a single lumel.
+        void                    bake( Lumel& lumel );
+
+    protected:
+
+        //! Parent baker.
+        Baker*                  m_baker;
+
+        //! Current target lightmap.
+        Lightmap*               m_lightmap;
+
+        //! Mesh being processed.
+        const Mesh*             m_mesh;
+
+        //! Current element index.
+        int                     m_index;
+
+        //! Iteration elements step.
+        int                     m_step;
+    };
+
+    //! LumelBakeIterator is used to bake lightmap lumels one by one.
+    class LumelBakeIterator : public BakeIterator {
+    public:
+
+                                //! Constructs a LumelBakeIterator instance.
+                                LumelBakeIterator( int first, int step );
+
+        //! Processes a next lightmap lumel.
+        virtual bool            next( void );
+
+        //! Returns a total amount of items to process.
+        virtual int             itemCount( void ) const;
+    };
+
+    //! FaceBakeIterator is used to bake mesh faces on by one.
+    class FaceBakeIterator : public BakeIterator {
+    public:
+
+                                //! Constructs a FaceBakeIterator instance.
+                                FaceBakeIterator( int first, int step );
+
+        //! Processes a next lightmap lumel.
+        virtual bool            next( void );
+
+        //! Returns a total amount of items to process.
+        virtual int             itemCount( void ) const;
     };
 
 } // namespace bake

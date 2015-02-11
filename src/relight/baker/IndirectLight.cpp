@@ -37,8 +37,8 @@ namespace relight {
 namespace bake {
 
 // ** IndirectLight::IndirectLight
-IndirectLight::IndirectLight( const Scene* scene, Progress* progress, int samples, float maxDistance, int radius )
-    : Baker( scene, progress ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius )
+IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius )
+    : Baker( scene, progress, iterator ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius )
 {
 
 }

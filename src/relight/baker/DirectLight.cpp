@@ -38,7 +38,7 @@ namespace relight {
 namespace bake {
 
 // ** DirectLight::DirectLight
-DirectLight::DirectLight( const Scene* scene, Progress* progress ) : Baker( scene, progress )
+DirectLight::DirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator ) : Baker( scene, progress, iterator )
 {
 
 }

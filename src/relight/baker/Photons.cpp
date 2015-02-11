@@ -40,8 +40,8 @@ namespace relight {
 namespace bake {
 
 // ** Photons::Photons
-Photons::Photons( const Scene* scene, Progress* progress, int passCount, int maxDepth, float energyThreshold, float maxDistance )
-    : Baker( scene, progress ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_maxDistance( maxDistance )
+Photons::Photons( const Scene* scene, Progress* progress, BakeIterator* iterator, int passCount, int maxDepth, float energyThreshold, float maxDistance )
+    : Baker( scene, progress, iterator ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_maxDistance( maxDistance )
 {
 
 }
