@@ -290,6 +290,7 @@ namespace relight {
                         Color( float r, float g, float b );
 
         const Color&    operator += ( const Color& other );
+        const Color&    operator *= ( float scalar );
         Color           operator * ( float scalar ) const;
         Color           operator * ( const Color& other ) const;
         Color           operator / ( float scalar ) const;
@@ -302,6 +303,12 @@ namespace relight {
     // ** Color::operator +=
     inline const Color& Color::operator += ( const Color& other ) {
         r += other.r; g += other.g; b += other.b;
+        return *this;
+    }
+
+    // ** Color::operator *=
+    inline const Color& Color::operator *= ( float scalar ) {
+        r *= scalar; g *= scalar; b *= scalar;
         return *this;
     }
 
