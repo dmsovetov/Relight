@@ -43,11 +43,49 @@ namespace relight {
             TotalUvLayers
         };
 
-        Vec3        m_position;
-        Vec3        m_normal;
-        Color       m_color;
-        Uv          m_uv[TotalUvLayers];
-        Material    m_material;
+        Vec3            m_position;
+        Vec3            m_normal;
+        Color           m_color;
+        Uv              m_uv[TotalUvLayers];
+        Material        m_material;
+
+        //! Interpolates between two vertices.
+        static Vertex   interpolate( const Vertex& a, const Vertex& b, float scalar );
+    };
+
+    //! A helper class to tesselate faces.
+    class Triangle {
+    public:
+
+                        //! Constructs a Triangle instance.
+                        Triangle( void ) {}
+
+                        //! Constructs a Triangle instance from a given Face.
+                        Triangle( const Face& face );
+
+                        //! Constructs a Triangle instance from three vertices.
+                        Triangle( const Vertex& a, const Vertex& b, const Vertex& c );
+
+        //! Returns a triangle centroid.
+        const Vertex&   centroid( void ) const;
+
+        //! Tesselates a triangle. Splits this triangle into 4 smaller ones.
+        /*!
+         \param center Output center triangle.
+         \param triangles Three triangles on corners.
+         */
+        void            tesselate( Triangle& center, Triangle triangles[3] ) const;
+
+        //! Calculates a triangle area.
+        static float    area( const Vec3& a, const Vec3& b, const Vec3& c );
+
+    private:
+
+        //! Triangle vertices
+        Vertex          m_a, m_b, m_c;
+
+        //! Triangle centroid.
+        Vertex          m_centroid;
     };
 
     /*!
@@ -58,6 +96,9 @@ namespace relight {
 
                         //! Constructs a new Face instance.
                         Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c );
+
+        //! Returns a face area.
+        float           area( void ) const;
 
         //! Returns a face id.
         Index           faceIdx( void ) const;
@@ -101,6 +142,9 @@ namespace relight {
     friend class Lightmap;
     friend class Photonmap;
     public:
+
+        //! Returns a mesh bounds.
+        const Bounds&       bounds( void ) const;
 
         //! Returns a vertex buffer pointer.
         const Vertex*       vertexBuffer( void ) const;
@@ -155,6 +199,9 @@ namespace relight {
         void                setPhotonmap( Photonmap* value );
 
     private:
+
+        //! Mesh bounds.
+        Bounds              m_bounds;
 
         //! Mesh vertex buffer.
         VertexBuffer        m_vertices;

@@ -24,17 +24,25 @@
 
  **************************************************************************/
 
-#include "BuildCheck.h"
+#include "../BuildCheck.h"
 
 #include "Mesh.h"
 #include "MeshLoader.h"
 
 namespace relight {
 
+// ---------------------------------------------- Mesh ---------------------------------------------- //
+
 // ** Mesh::Mesh
 Mesh::Mesh( void ) : m_lightmap( NULL ), m_photonmap( NULL )
 {
 
+}
+
+// ** Mesh::bounds
+const Bounds& Mesh::bounds( void ) const
+{
+    return m_bounds;
 }
 
 // ** Mesh::vertexBuffer
@@ -113,6 +121,11 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, i
         Index* indices = &m_indices[i * 3];
         m_faces.push_back( Face( i, &m_vertices[indices[0]], &m_vertices[indices[1]], &m_vertices[indices[2]] ) );
     }
+
+    // ** Update mesh bounds
+    for( int i = 0, n = ( int )vertices.size(); i < n; i++ ) {
+        m_bounds += vertices[i].m_position;
+    }
 }
 
 // ** Mesh::face
@@ -162,7 +175,66 @@ Mesh* Mesh::transformed( const Matrix4& transform ) const
     return mesh;
 }
 
-// ---------------------------------------------- Face ---------------------------------------------- //
+// ----------------------------------------------- Vertex ----------------------------------------------- //
+
+// ** Vertex::interpolate
+Vertex Vertex::interpolate( const Vertex& a, const Vertex& b, float scalar )
+{
+    Vertex result;
+
+    result.m_position = a.m_position * scalar + b.m_position * (1.0f - scalar);
+    result.m_color    = a.m_color    * scalar + b.m_color    * (1.0f - scalar);
+
+    for( int i = 0; i < TotalUvLayers; i++ ) {
+        result.m_uv[i] = a.m_uv[i] * scalar + b.m_uv[i] * (1.0f - scalar);
+    }
+
+    result.m_normal = a.m_normal * scalar + b.m_normal * (1.0f - scalar);
+    result.m_normal.normalize();
+
+    return result;
+}
+
+// ---------------------------------------------- Triangle ---------------------------------------------- //
+
+// ** Triangle::Triangle
+Triangle::Triangle( const Face& face ) : m_a( *face.vertex( 0 ) ), m_b( *face.vertex( 1 ) ), m_c( *face.vertex( 2 ) )
+{
+    m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
+    m_centroid.m_color    = (m_a.m_color    + m_b.m_color    + m_c.m_color)     / 3.0f;
+    m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
+    m_centroid.m_normal.normalize();
+}
+
+// ** Triangle::Triangle
+Triangle::Triangle( const Vertex& a, const Vertex& b, const Vertex& c ) : m_a( a ), m_b( b ), m_c( c )
+{
+    m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
+    m_centroid.m_color    = (m_a.m_color    + m_b.m_color    + m_c.m_color)     / 3.0f;
+    m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
+    m_centroid.m_normal.normalize();
+}
+
+// ** Triangle::centroid
+const Vertex& Triangle::centroid( void ) const
+{
+    return m_centroid;
+}
+
+// ** Triangle::tesselate
+void Triangle::tesselate( Triangle& center, Triangle triangles[3] ) const
+{
+    Vertex xA = Vertex::interpolate( m_a, m_b, 0.5f );
+    Vertex xB = Vertex::interpolate( m_b, m_c, 0.5f );
+    Vertex xC = Vertex::interpolate( m_c, m_a, 0.5f );
+
+    triangles[0] = Triangle( m_a, xA,  xC  );
+    triangles[1] = Triangle( xA,  m_b, xB  );
+    triangles[2] = Triangle( xC,  xB,  m_c );
+    center       = Triangle( xA,  xB,  xC  );
+}
+
+// ------------------------------------------------ Face ------------------------------------------------ //
 
 // ** Face::Face
 Face::Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c ) : m_faceIdx( faceIdx ), m_a( a ), m_b( b ), m_c( c )
