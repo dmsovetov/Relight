@@ -36,8 +36,8 @@ namespace relight {
      A supported light type enumeration.
      */
     enum LightType {
-        LightPoint,
-        AreaLight,
+        PointLightType,
+        MeshLightType,
 
         TotalLightTypes
     };
@@ -48,6 +48,8 @@ namespace relight {
     class LightAttenuation {
     public:
 
+                            //! Constructs a LightAttenuation instance.
+                            LightAttenuation( const Light* light );
         virtual             ~LightAttenuation( void ) {}
 
         //! Calculates light attenuation by distance.
@@ -55,7 +57,12 @@ namespace relight {
          An attenuation factor is a value in range [0;1], where 0 means
          that light is attenuated to zero, and 1 means no attenuation at all.
          */
-        virtual float       calculate( const Light* light, float distance ) const { return 0.0f; }
+        virtual float       calculate( float distance ) const { return 0.0f; }
+
+    protected:
+
+        //! Parent light source.
+        const Light*        m_light;
     };
 
     /*!
@@ -64,8 +71,11 @@ namespace relight {
     class LinearLightAttenuation : public LightAttenuation {
     public:
 
+                            //! Constructs a LinearLightAttenuation instance.
+                            LinearLightAttenuation( const Light* light );
+
         // ** LinearLightAttenuation
-        virtual float       calculate( const Light* light, float distance ) const;
+        virtual float       calculate( float distance ) const;
     };
 
     /*!
@@ -176,9 +186,6 @@ namespace relight {
     class PointLight : public Light {
     public:
 
-                            //! Constructs a new PointLight instance.
-                            PointLight( void );
-
         //! Returns a light radius.
         float               radius( void ) const;
 
@@ -190,15 +197,132 @@ namespace relight {
 
     private:
 
+                            //! Constructs a new PointLight instance.
+                            PointLight( void );
+
+    private:
+
         //! A light radius.
         float               m_radius;
     };
 
+    //! A light vertex is a single light point used with mesh light sources.
+    struct LightVertex {
+        Vec3                m_position; //!< Point position.
+        Vec3                m_normal;   //!< Point normal.
+    };
+
+    typedef Array<LightVertex> LightVertexBuffer;
+
     /*!
-     A spherical area light.
+     A LightVertexGenerator used to generate a set of light points for mesh light sources.
      */
-    class SphericalAreaLight : public PointLight {
+    class LightVertexGenerator {
     public:
+
+                                    //! Constructs a LightVertexGenerator instance.
+                                    LightVertexGenerator( const Mesh* mesh );
+        virtual                     ~LightVertexGenerator( void ) {}
+
+        //! Returns an array of light vertices.
+        const LightVertexBuffer&    vertices( void ) const;
+
+        //! Generates a set of light vertices based on mesh vertices.
+        virtual void                generate( void );
+
+        //! Clears a previously generated data.
+        void                        clear( void );
+
+        //! Returns a total number of light vertices.
+        int                         vertexCount( void ) const;
+
+    protected:
+
+        //! Adds a new light vertex.
+        void                        push( const Vertex& vertex );
+
+    protected:
+
+        //! Source mesh.
+        const Mesh*                 m_mesh;
+
+        //! A set of generated light vertices.
+        LightVertexBuffer           m_vertices;
+    };
+
+    /*!
+     A FaceLightVertexGenerator generates a set of vertices based on mesh vertices & face centroids.
+     Face based generator can also perform a mesh tesselation.
+     */
+    class FaceLightVertexGenerator : public LightVertexGenerator {
+    public:
+
+                                    //! Constructs a FaceLightVertexGenerator instance.
+                                    /*!
+                                     \param mesh Source light mesh.
+                                     \param excludeVertices The flag indicating that we should skip mesh vertices.
+                                     \param maxSubdivisions Maximum subdivision steps per mesh face (0 means no tesselation).
+                                     */
+                                    FaceLightVertexGenerator( const Mesh* mesh, bool excludeVertices, int maxSubdivisions );
+
+        //! Generates a set of light vertices.
+        virtual void                generate( void );
+
+    private:
+
+        //! Generates a set of light vertices from triangle.
+        virtual void                generateFromTriangle( const Triangle& triangle, int subdivision );
+
+    private:
+
+        //! The flag indicating that we should skip mesh vertices.
+        bool                        m_excludeVertices;
+
+        //! Max subdivision depth.
+        int                         m_maxSubdivisions;
+    };
+
+    /*!
+     A mesh area light.
+     */
+    class MeshLight : public Light {
+    public:
+
+                                ~MeshLight( void );
+
+        //! Returns a mesh used as a light source.
+        const Mesh*             mesh( void ) const;
+
+        //! Returns true if a mesh light takes into account only upper-hemisphere rays.
+        bool                    isHemisphere( void ) const;
+
+        //! Sets heimisphere flag.
+        void                    setHemisphere( bool value );
+
+        //! Sets a light vertex generator.
+        void                    setVertexGenerator( LightVertexGenerator* value );
+
+        //! Returns a light vertex generator.
+        LightVertexGenerator*   vertexGenerator( void ) const;
+
+        //! Creates a new MeshLight instance.
+        static MeshLight*       create( const Mesh* mesh, const Vec3& position, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true, bool hemisphere = false );
+
+    private:
+
+                                //! Constructs a new MeshLight instance.
+                                MeshLight( const Mesh* mesh );
+
+    private:
+
+        //! A mesh used as a light source volume.
+        const Mesh*             m_mesh;
+
+        //! Hemisphere lighting.
+        bool                    m_isHemisphere;
+
+        //! A light vertex generator.
+        LightVertexGenerator*   m_vertexGenerator;
     };
 
 } // namespace relight

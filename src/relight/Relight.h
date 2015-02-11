@@ -47,10 +47,13 @@ namespace relight {
     typedef std::string String;
 
     class Scene;
+    class LightAttenuation;
     class Light;
         class PointLight;
+        class MeshLight;
     struct SubMesh;
     class Face;
+    class Triangle;
     class Mesh;
     class Lightmap;
         class Photonmap;

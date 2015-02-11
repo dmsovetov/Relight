@@ -51,7 +51,14 @@ namespace bake {
 
     private:
 
-        Color                   lightFromSource( const Vec3& position, const Vec3& normal, const PointLight* light ) const;
+        //! Calculates a direct light from a point light source.
+        Color                   lightFromPoint( const Vec3& position, const Vec3& normal, const PointLight* light ) const;
+
+        //! Calculates a direct light from a mesh light source.
+        Color                   lightFromMesh( const Vec3& position, const Vec3& normal, const MeshLight* light ) const;
+
+        //! Calculates a direct light from a given point.
+        float                   influenceFromPoint( Vec3& direction, const Vec3& position, const Vec3& normal, const Vec3& point, LightAttenuation* attenuation, bool castsShadow ) const;
     };
 
 } // namespace bake

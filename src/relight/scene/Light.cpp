@@ -24,11 +24,14 @@
 
  **************************************************************************/
 
-#include "BuildCheck.h"
+#include "../BuildCheck.h"
 
 #include "Light.h"
+#include "Mesh.h"
 
 namespace relight {
+
+// ------------------------------------------------------------ Light ------------------------------------------------------------ //
 
 // ** Light::Light
 Light::Light( LightType type ) : m_type( type ), m_intensity( 0.0f ), m_castsShadow( false ), m_attenuation( NULL ), m_photonEmitter( NULL )
@@ -125,7 +128,7 @@ void Light::setCastsShadow( bool value )
 // ---------------------------------------------------------- PointLight ---------------------------------------------------------- //
 
 // ** PointLight::PointLight
-PointLight::PointLight( void ) : Light( LightPoint )
+PointLight::PointLight( void ) : Light( PointLightType )
 {
 
 }
@@ -147,7 +150,7 @@ PointLight* PointLight::create( const Vec3& position, float radius, const Color&
 {
     PointLight* light = new PointLight;
 
-    light->setAttenuation( new LinearLightAttenuation );
+    light->setAttenuation( new LinearLightAttenuation( light ) );
     light->setPhotonEmitter( new PhotonEmitter( light ) );
     light->setCastsShadow( castsShadow );
     light->setPosition( position );
@@ -156,6 +159,159 @@ PointLight* PointLight::create( const Vec3& position, float radius, const Color&
     light->setRadius( radius );
     
     return light;
+}
+
+// ---------------------------------------------------------- MeshLight ----------------------------------------------------------- //
+
+// ** MeshLight::MeshLight
+MeshLight::MeshLight( const Mesh* mesh ) : Light( MeshLightType ), m_mesh( mesh ), m_isHemisphere( false ), m_vertexGenerator( NULL )
+{
+
+}
+
+MeshLight::~MeshLight( void )
+{
+    delete m_vertexGenerator;
+}
+
+// ** MeshLight::vertexGenerator
+LightVertexGenerator* MeshLight::vertexGenerator( void ) const
+{
+    return m_vertexGenerator;
+}
+
+// ** MeshLight::setVertexGenerator
+void MeshLight::setVertexGenerator( LightVertexGenerator* value )
+{
+    delete m_vertexGenerator;
+    m_vertexGenerator = value;
+}
+
+// ** MeshLight::isHemisphere
+bool MeshLight::isHemisphere( void ) const
+{
+    return m_isHemisphere;
+}
+
+// ** MeshLight::setHemisphere
+void MeshLight::setHemisphere( bool value )
+{
+    m_isHemisphere = value;
+}
+
+// ** MeshLight::mesh
+const Mesh* MeshLight::mesh( void ) const
+{
+    return m_mesh;
+}
+
+// ** MeshLight::create
+MeshLight* MeshLight::create( const Mesh* mesh, const Vec3& position, const Color& color, float intensity, bool castsShadow, bool hemisphere )
+{
+    MeshLight* light = new MeshLight( mesh );
+
+    light->setAttenuation( new LinearLightAttenuation( light ) );
+    light->setPhotonEmitter( new PhotonEmitter( light ) );
+    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 3 ) );
+//    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, false, 0 ) );
+//    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 0 ) );
+//    light->setVertexGenerator( new LightVertexGenerator( mesh ) );
+    light->setCastsShadow( castsShadow );
+    light->setPosition( position );
+    light->setColor( color );
+    light->setIntensity( intensity );
+    light->setHemisphere( hemisphere );
+    
+    return light;
+}
+
+// ---------------------------------------------------- LightVertexGenerator ------------------------------------------------------ //
+
+// ** LightVertexGenerator::LightVertexGenerator
+LightVertexGenerator::LightVertexGenerator( const Mesh* mesh ) : m_mesh( mesh )
+{
+
+}
+
+// ** LightVertexGenerator::vertexCount
+int LightVertexGenerator::vertexCount( void ) const
+{
+    return ( int )m_vertices.size();
+}
+
+// ** LightVertexGenerator::vertices
+const LightVertexBuffer& LightVertexGenerator::vertices( void ) const
+{
+    return m_vertices;
+}
+
+// ** LightVertexGenerator::clear
+void LightVertexGenerator::clear( void )
+{
+    m_vertices.clear();
+}
+
+// ** LightVertexGenerator::generate
+void LightVertexGenerator::generate( void )
+{
+    clear();
+
+    for( int i = 0; i < m_mesh->vertexCount(); i++ ) {
+        push( m_mesh->vertex( i ) ) ;
+    }
+}
+
+// ** LightVertexGenerator::push
+void LightVertexGenerator::push( const Vertex& vertex )
+{
+     LightVertex lightVertex;
+
+     lightVertex.m_position = vertex.m_position;
+     lightVertex.m_normal   = vertex.m_normal;
+
+     m_vertices.push_back( lightVertex );
+}
+
+// ------------------------------------------------- FaceLightVertexGenerator --------------------------------------------------- //
+
+// ** FaceLightVertexGenerator::FaceLightVertexGenerator
+FaceLightVertexGenerator::FaceLightVertexGenerator( const Mesh* mesh, bool excludeVertices, int maxSubdivisions )
+    : LightVertexGenerator( mesh ), m_excludeVertices( excludeVertices ), m_maxSubdivisions( maxSubdivisions )
+{
+
+}
+
+// ** FaceLightVertexGenerator::generate
+void FaceLightVertexGenerator::generate( void )
+{
+    if( !m_excludeVertices ) {
+        LightVertexGenerator::generate();
+    }
+    
+    for( int i = 0; i < m_mesh->faceCount(); i++ ) {
+        generateFromTriangle( m_mesh->face( i ), 0 );
+    }
+}
+
+// ** FaceLightVertexGenerator::generateFromTriangle
+void FaceLightVertexGenerator::generateFromTriangle( const Triangle& triangle, int subdivision )
+{
+    // ** Generate light vertex from triangle centroid
+    push( triangle.centroid() );
+
+    // ** The maximum subdivisions exceeded
+    if( subdivision >= m_maxSubdivisions ) {
+        return;
+    }
+
+    // ** Tesselate a triangle
+    Triangle center, corners[3];
+    triangle.tesselate( center, corners );
+
+    // ** Process corner triangles
+    for( int i = 0; i < 3; i++ ) {
+        generateFromTriangle( corners[i], subdivision + 1 );
+    }
 }
 
 // -------------------------------------------------------- PhotonEmitter --------------------------------------------------------- //
@@ -179,17 +335,36 @@ Vec3 PhotonEmitter::emit( void ) const
     return Vec3::randomDirection();
 }
 
+// ------------------------------------------------------- LightAttenuation ------------------------------------------------------- //
+
+// ** LightAttenuation::LightAttenuation
+LightAttenuation::LightAttenuation( const Light* light ) : m_light( light )
+{
+
+}
+
 // ---------------------------------------------------- LinearLightAttenuation ---------------------------------------------------- //
 
+// ** LinearLightAttenuation::LinearLightAttenuation
+LinearLightAttenuation::LinearLightAttenuation( const Light* light ) : LightAttenuation( light )
+{
+
+}
+
 // ** LinearLightAttenuation::calculate
-float LinearLightAttenuation::calculate( const Light* light, float distance ) const
+float LinearLightAttenuation::calculate( float distance ) const
 {
     float att = 1.0f;
 
-    if( light->type() == LightPoint ) {
-        att = 1.0f - (distance / static_cast<const PointLight*>( light )->radius());
+    if( m_light->type() == PointLightType ) {
+        att = 1.0f - (distance / static_cast<const PointLight*>( m_light )->radius());
     }
-
+    else if( m_light->type() == MeshLightType ) {
+        att = 1.0f - (distance / static_cast<const MeshLight*>( m_light )->mesh()->bounds().volume());
+    }
+    else {
+        assert( false );
+    }
 
     return att < 0.0f ? 0.0f : att;
 }
