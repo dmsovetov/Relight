@@ -1,13 +1,13 @@
 
 //#include "monteCarloPathTracing.h"
-#include "PathTracer.h"
+//#include "PathTracer.h"
 //#include "Model.h"
 //#include "EmbreeModel.h"
 #include "Mesh.h"
 //#include "UVUnwrap.h"
-#include "Lightmapper.h"
+//#include "Lightmapper.h"
 #include "Lightmap.h"
-#include "LightmapCalculator.h"
+//#include "LightmapCalculator.h"
 //#include "PhotonMap.h"
 #include "Radiosity.h"
 //#include "DirectLightCalculator.h"
@@ -108,19 +108,19 @@ int				phnSize				= 64;
 //const int		radSize				= 128;
 int				blurPassCount		= 1;	// 3
 int				photonPassCount		= 16;
-Model_OBJ		mesh;
-Model_OBJ		light;
+//Model_OBJ		mesh;
+//Model_OBJ		light;
 IRayTracer		*model;
 
 cRadiositySolver	*radiosity;
-
+/*
 cLightmapper		lm;
 cLightmap			*direct[MAX_LIGHTMAPS];
 cLightmap			*photons[MAX_LIGHTMAPS];
 cPhotonMap			*photonMap[MAX_LIGHTMAPS];
 TextureImage		directLightmaps[MAX_LIGHTMAPS];
 TextureImage		photonLightmaps[MAX_LIGHTMAPS];
-
+*/
 float x = 0, y = 3, z = 3;
 
 // **
@@ -213,12 +213,12 @@ sLight lights[] = {
 	{ -1, 0.2, -1.5,	0.8f, 0.8f, 0.8f,  1.0f, 5, 0.05f, 16, true },
 };
 */
-
+/*
 sLight lights[] = { // !!
 	{ -1, 0.2,	 -1.5,	0.25f, 0.5f, 1.0f,   4.0f, 5, 0.05f, 1, true },
 	{  1.5, 2.5,  1.5,	1.0f,  0.5f, 0.25f,  4.0f, 5, 0.05f, 1, true },
 };
-
+*/
 /*
 sLight lights[] = {
 	{ -0.5f, 2, -2.2f, 1.0f,  1.0f, 1.0f,  4.0f, 5, 0.05f, 64, true },
@@ -243,7 +243,7 @@ void keyPressed (unsigned char key, int x, int y)
 	if( test ) {
 		test->KeyPressed( key );
 	}
-
+/*
 	switch( key ) {
 	case 'i': lights[0].x += 0.1; break;
 	case 'k': lights[0].x -= 0.1; break;
@@ -252,6 +252,7 @@ void keyPressed (unsigned char key, int x, int y)
 	case 'u': lights[0].y -= 0.1; break;
 	case 'o': lights[0].y += 0.1; break;
 	}
+*/
 }  
 
 void windowReshapeFunc( GLint width, GLint height )
@@ -289,7 +290,7 @@ void display()
 
 	// ** Test rendering
 	if( test ) {
-        test->Render( mesh, light );
+        test->Render( /*mesh, light*/ );
 	}
 
 	glPopMatrix();
@@ -734,12 +735,12 @@ int main(int argc, char *argv[])
  //	unwrap.Unwrap( &_mesh );
 
 //	_mesh.Save( "data/"filename"_uv.obj" );
-	printf( "Loading model...\n" );
+//	printf( "Loading model...\n" );
 //	mesh.Load( "data/sponza_one_uv.obj" );
 //    mesh.Load( "data/simple_scene_one_uv.obj" );
-    mesh.Load( "data/boxes_uv.obj" );
-	light.Load( "data/light.obj" );
-
+//    mesh.Load( "data/boxes_uv.obj" );
+//	light.Load( "data/light.obj" );
+/*
 	// ** Concat mesh
 	sMesh compoundMesh;
 	for( int i = 0; i < mesh.meshes.size(); i++ ) {
@@ -772,7 +773,7 @@ int main(int argc, char *argv[])
 	}
 
 	// ** Model
-	printf( "Creating tracer...\n" );
+	printf( "Creating tracer...\n" );*/
 /*
 	model = new cEmbryModel;
     model->Create();
@@ -786,8 +787,8 @@ int main(int argc, char *argv[])
 
 	// ** Create tests
 //	test = new cTestRadiosity( lights, sizeof( lights ) / sizeof( sLight ) );
-	test = new cTestLightmapper( lights, sizeof( lights ) / sizeof( sLight ) );
-	test->Create( model, mesh );
+	test = new cTestLightmapper;
+	test->Create();
 
 	// ** Start
 #ifdef WIN32

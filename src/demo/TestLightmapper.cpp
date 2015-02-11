@@ -13,7 +13,7 @@
 #include    <Relight.h>
 
 #include	"TestLightmapper.h"
-#include	"Lightmapper.h"
+//#include	"Lightmapper.h"
 #include	"Lightmap.h"
 //#include	"PhotonMap.h"
 #include	"Mesh.h"
@@ -23,7 +23,7 @@
 #define		CALCULATE_DIRECT			(1)
 #define		CALCULATE_INDIRECT			(1)
 
-#define		DIRECT_LIGHTMAP_SIZE		(512)
+#define		DIRECT_LIGHTMAP_SIZE		(1024)
 #define		INDIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_MAX_DEPTH			(3)
 #define     INDIRECT_RADIUS             (7)
@@ -54,10 +54,12 @@ void BakingProgress::notify( int step, int stepCount )
 }
 
 // ** cTestLightmapper::Create
-void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& _mesh )
+void cTestLightmapper::Create( void )
 {
-//    createScene( "data/simple_scene_one_uv.obj" );
-    createScene( "data/boxes_uv.obj" );
+    m_light = Mesh::createFromFile( "data/light.obj" );
+
+    createScene( "data/simple_scene_one_uv.obj" );
+//    createScene( "data/boxes_uv.obj" );
 
     m_progress = new BakingProgress( m_diffuse, &m_diffuseGl );
 
@@ -65,8 +67,8 @@ void cTestLightmapper::Create( IRayTracer *model, const Model_OBJ& _mesh )
     m_data.m_progress   = m_progress;
     pthread_create( &m_thread, NULL, worker, &m_data );
 
-    renderDirect	= true;
-    renderIndirect	= false;
+//    renderDirect	= true;
+//    renderIndirect	= false;
     rotation        = 0.0f;
 /*
     // **
@@ -169,7 +171,9 @@ void cTestLightmapper::createScene( const char* fileName )
     m_scene->begin();
 
     m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+//    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 1.00f, 0.50f ), 1.0f, true ) );
     m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+//    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.0f, 0.0f, 0.0f ), 1.0f, true ) );
 
     // ** Add mesh
     Mesh* mesh      = Mesh::createFromFile( fileName );
@@ -188,7 +192,15 @@ void* cTestLightmapper::worker( void* userData )
 {
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
     relight::TimeMeasure measure( "Bake" );
-    data->m_scene->bake( BakeAll, data->m_progress );
+    data->m_scene->bake( BakeDirect /*| BakeAmbientOcclusion*/ | BakeIndirect, data->m_progress );
+
+    data->m_progress->m_lightmap->expand();
+    data->m_progress->notify( 1000, 0 );
+
+    data->m_progress->m_lightmap->save( "output/lm.tga" );
+
+//    data->m_progress->m_lightmap->blur();
+//    data->m_progress->notify( 1000, 0 );
 }
 
 unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const
@@ -209,7 +221,7 @@ unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightma
 }
 
 // ** cTestLightmapper::Render
-void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
+void cTestLightmapper::Render( void )
 {
 	glEnable( GL_TEXTURE_2D );
 	glEnable( GL_CULL_FACE );
@@ -218,7 +230,7 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
     glRotatef( rotation, 0, 1, 0 );
     glScalef( 0.7f, 0.7f, 0.7f );
 
-    rotation += 0.25f;
+    rotation += 0.05f;
 
     for( int i = 0; i < m_scene->meshCount(); i++ ) {
         renderInstance( m_scene->mesh( i ) );
@@ -236,7 +248,8 @@ void cTestLightmapper::Render( Model_OBJ& mesh, Model_OBJ& lightMesh )
         glColor3f( light->color().r, light->color().g, light->color().b );
         glTranslatef( light->position().x, light->position().y, light->position().z );
         glScalef( 0.05, 0.05, 0.05 );
-        lightMesh.Draw( 0 );
+
+        renderInstance( m_light );
 
         glPopMatrix();
     }
@@ -290,10 +303,10 @@ void cTestLightmapper::renderInstance( const relight::Mesh* mesh ) const
 // ** cTestLightmapper::KeyPressed
 void cTestLightmapper::KeyPressed( int key )
 {
-	switch( key ) {
-	case '9': renderIndirect	= !renderIndirect;	break;
-	case '0': renderDirect		= !renderDirect;	break;
-	}
+//	switch( key ) {
+//	case '9': renderIndirect	= !renderIndirect;	break;
+//	case '0': renderDirect		= !renderDirect;	break;
+//	}
 }
 
 // ** cTestLightmapper::CalculateDirectLight

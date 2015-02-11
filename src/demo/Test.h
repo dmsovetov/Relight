@@ -34,9 +34,9 @@ public:
 	virtual			~cTest( void ) {}
 
 	virtual void	KeyPressed( int key ) {}
-	virtual void	Create( IRayTracer *model, const Model_OBJ& mesh ) {}
+	virtual void	Create( void ) {}
 	virtual void	Update( void ) {}
-	virtual void	Render( Model_OBJ& mesh, Model_OBJ& light ) {}
+	virtual void	Render( void ) {}
 };
 
 #endif	/*	!__DC_Test_H__	*/

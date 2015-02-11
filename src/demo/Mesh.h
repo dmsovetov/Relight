@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Lightmapper.h"
+//#include "Lightmapper.h"
 
 #include <unistd.h>
 #include <OpenGL/gl.h>
@@ -12,7 +12,7 @@
 /*************************************************************************** 
   OBJ Loading 
  ***************************************************************************/
- 
+ /*
 class Model_OBJ
 {
 	typedef std::map< sMeshVertex, int >	tVertexMap;
@@ -309,5 +309,5 @@ inline void Model_OBJ::Draw( int meshIndex )
 	glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);				// Disable texture coord arrays
 	glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
-}
+}*/
  

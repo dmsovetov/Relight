@@ -11,7 +11,7 @@
 */
 
 #include	"TestRadiosity.h"
-#include	"Lightmapper.h"
+//#include	"Lightmapper.h"
 #include	"Lightmap.h"
 #include	"Mesh.h"
 
@@ -127,7 +127,7 @@ void cTestRadiosity::Update( void )
 }
 
 // ** cTestRadiosity::Render
-void cTestRadiosity::Render( Model_OBJ& mesh, Model_OBJ& light )
+void cTestRadiosity::Render( void )
 {
 /*
 	glEnable( GL_TEXTURE_2D );

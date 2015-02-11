@@ -33,48 +33,29 @@ class cPhotonMap;
 class Model_OBJ;
 struct sLight;
 
-struct WorkerData {
-    relight::Scene*     m_scene;
-    relight::Progress*  m_progress;
-};
-
 class BakingProgress : public relight::Progress {
 public:
 
-                                BakingProgress( const relight::Lightmap* lightmap, unsigned int* textureId )
+                                BakingProgress( relight::Lightmap* lightmap, unsigned int* textureId )
                                     : m_lightmap( lightmap ), m_textureId( textureId ), m_hasUpdates( false ) {}
 
     virtual void                notify( int step, int stepCount );
 
 public:
 
-    unsigned int*               m_textureId;
-    const relight::Lightmap*    m_lightmap;
-    bool                        m_hasUpdates;
+    unsigned int*           m_textureId;
+    relight::Lightmap*      m_lightmap;
+    bool                    m_hasUpdates;
+};
+
+struct WorkerData {
+    relight::Scene*     m_scene;
+    BakingProgress*     m_progress;
 };
 
 // ** class cTestLightmapper
 class cTestLightmapper : public cTest {
 private:
-
-	cLightmapper	*lightmapper;
-
-	cLightmap		*direct[MAX_LIGHTMAPS];
-	cLightmap		*indirect[MAX_LIGHTMAPS];
-	cPhotonMap		*photonMap[MAX_LIGHTMAPS];
-
-	IRayTracer		*model;
-
-	// ** GPU textures
-	unsigned int	texIndirect[MAX_LIGHTMAPS], texDirect[MAX_LIGHTMAPS];
-
-	// ** Settings
-	bool			useLinearFiltration;
-	bool			renderDirect, renderIndirect;
-
-	// ** Lights
-	const sLight	*lights;
-	int				totalLights;
 
     // ** Rotation
     float           rotation;
@@ -95,13 +76,10 @@ private:
 
 public:
 
-					cTestLightmapper( const sLight *_lights, int _totalLights )
-						: lights( _lights ), totalLights( _totalLights ) {}
-
 	// ** cTest
 	virtual void	KeyPressed( int key );
-	virtual void	Create( IRayTracer *model, const Model_OBJ& mesh );
-	virtual void	Render( Model_OBJ& mesh, Model_OBJ& light );
+	virtual void	Create( void );
+	virtual void	Render( void );
 
 private:
 
@@ -117,6 +95,7 @@ private:
     relight::Scene*     m_scene;
     relight::Lightmap*  m_diffuse;
     relight::Photonmap* m_photons;
+    relight::Mesh*      m_light;
 
     unsigned int        m_diffuseGl;
 };
