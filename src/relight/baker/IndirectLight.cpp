@@ -28,8 +28,8 @@
 
 #include "IndirectLight.h"
 #include "../Lightmap.h"
-#include "../Scene.h"
-#include "../Mesh.h"
+#include "../scene/Scene.h"
+#include "../scene/Mesh.h"
 #include "../rt/Tracer.h"
 
 namespace relight {

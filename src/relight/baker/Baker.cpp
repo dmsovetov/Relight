@@ -27,9 +27,9 @@
 #include "../BuildCheck.h"
 
 #include "Baker.h"
-#include "../Mesh.h"
+#include "../scene/Mesh.h"
 #include "../Lightmap.h"
-#include "../Scene.h"
+#include "../scene/Scene.h"
 
 #define RELIGHT_BAKE_FACES  (1)
 

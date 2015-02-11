@@ -15,7 +15,7 @@
 
 #include	<vector>
 #include	"Relight.h"     // ** sVector3
-#include	"PathTracer.h"	// ** sColor
+//#include	"PathTracer.h"	// ** sColor
 
 /*
 =========================================================================================

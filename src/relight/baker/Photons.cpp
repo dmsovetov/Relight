@@ -29,9 +29,9 @@
 #include "Photons.h"
 #include "DirectLight.h"
 
-#include "../Scene.h"
-#include "../Light.h"
-#include "../Mesh.h"
+#include "../scene/Scene.h"
+#include "../scene/Light.h"
+#include "../scene/Mesh.h"
 #include "../Lightmap.h"
 #include "../rt/Tracer.h"
 

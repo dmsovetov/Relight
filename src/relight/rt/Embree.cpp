@@ -27,7 +27,7 @@
 #include "../BuildCheck.h"
 
 #include "Embree.h"
-#include "../Mesh.h"
+#include "../scene/Mesh.h"
 
 namespace relight {
 

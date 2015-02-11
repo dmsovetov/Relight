@@ -37,6 +37,7 @@
 #define lmTYPE float
 #define sVector2 relight::Uv
 #define sVector3 relight::Vec3
+#define sColor relight::Color
 
 namespace relight {
 
@@ -106,9 +107,9 @@ namespace relight {
 } // namespace relight
 
 #ifndef RELIGHT_BUILD_LIBRARY
-    #include "Scene.h"
-    #include "Mesh.h"
-    #include "Light.h"
+    #include "scene/Scene.h"
+    #include "scene/Mesh.h"
+    #include "scene/Light.h"
 #endif
 
 #endif  /*  !defined( Relight ) */

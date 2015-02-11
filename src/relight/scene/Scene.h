@@ -35,9 +35,10 @@ namespace relight {
      A bake mask bits.
      */
     enum BakeMask {
-        BakeDirect   = 0x1,                         //!< Bake direct light.
-        BakeIndirect = 0x2,                         //!< Bake indirect (reflected) light (aka GlobalIllumination).
-        BakeAll      = BakeDirect | BakeIndirect    //!< Bakes all light data.
+        BakeDirect              = 0x1,                                              //!< Bake direct light.
+        BakeIndirect            = 0x2,                                              //!< Bake indirect (reflected) light (aka GlobalIllumination).
+        BakeAmbientOcclusion    = 0x4,                                              //!< Bake ambient occlusion.
+        BakeAll                 = BakeDirect | BakeIndirect | BakeAmbientOcclusion  //!< Bakes all light data.
     };
 
     /*!
