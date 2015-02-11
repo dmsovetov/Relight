@@ -24,7 +24,7 @@
 
  **************************************************************************/
 
-#include "BuildCheck.h"
+#include "../BuildCheck.h"
 
 #include "MeshLoader.h"
 #include "Mesh.h"
