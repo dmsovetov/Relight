@@ -57,11 +57,6 @@ struct WorkerData {
 class cTestLightmapper : public cTest {
 private:
 
-    // ** Rotation
-    float           rotation;
-
-private:
-
 	void			CalculateDirectLight( void );
 	void			CalculateIndirectLight( void );
 
@@ -96,6 +91,7 @@ private:
     relight::Lightmap*  m_diffuse;
     relight::Photonmap* m_photons;
     relight::Mesh*      m_light;
+    float               m_rotation;
 
     unsigned int        m_diffuseGl;
 };

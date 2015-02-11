@@ -56,8 +56,6 @@ void BakingProgress::notify( int step, int stepCount )
 // ** cTestLightmapper::Create
 void cTestLightmapper::Create( void )
 {
-    m_light = Mesh::createFromFile( "data/light.obj" );
-
     createScene( "data/simple_scene_one_uv.obj" );
 //    createScene( "data/boxes_uv.obj" );
 
@@ -67,113 +65,24 @@ void cTestLightmapper::Create( void )
     m_data.m_progress   = m_progress;
     pthread_create( &m_thread, NULL, worker, &m_data );
 
-//    renderDirect	= true;
-//    renderIndirect	= false;
-    rotation        = 0.0f;
-/*
-    // **
-
-	this->model		= model;
-
-	memset( direct, 0, sizeof( direct ) );
-	memset( indirect, 0, sizeof( indirect ) );
-	memset( photonMap, 0, sizeof( photonMap ) );
-
-	// ** Create lightmapper
-	lightmapper = new cLightmapper;
-	lightmapper->SetRayTracer( model );
-
-	// ** Add faces to lightmapper
-	for( int i = 0; i < mesh.meshes.size(); i++ ) {
-		const sMesh& m = mesh.meshes[i];
-
-		direct[i] = lightmapper->CreateLightmap();
-        indirect[i] = lightmapper->CreateLightmap();
-
-		for( int j = 0; j < m.totalFaces; j++ ) {
-			int *face = &m.indices[j * 3];
-			lightmapper->AddFace( i, &m, face[0], face[1], face[2], m.vertices );
-		}
-
-		// ** Save/load lumels
-		char lumelsFileName[256];
-		sprintf( lumelsFileName, "output/direct%d.lumels", i );
-
-	#if CALCULATE_LUMELS && CALCULATE
-		printf( "Creating lightmap for direct light...\n" );
-		direct[i]->Create( i, DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-		direct[i]->SaveLumels( lumelsFileName );
-	#else
-		direct[i]->LoadLumels( lumelsFileName );
-        indirect[i]->LoadLumels( lumelsFileName );
-	#endif
-	}
-
-	// ** Add lights
-	printf( "Adding lights...\n" );
-	for( int i = 0, n = totalLights; i < n; i++ ) {
-		lightmapper->AddLight( lights[i] );
-	}
-
-	// ** Bake
-#if CALCULATE
-	DWORD start = timeGetTime();
-	#if CALCULATE_DIRECT
-	CalculateDirectLight();
-	#endif
-
-	#if CALCULATE_INDIRECT
-	CalculateIndirectLight();
-	#endif
-	printf( "Baked in %ds\n", (timeGetTime() - start) / 1000 );
-
-    SaveLightmaps();
-#else
-    LoadLightmaps();
-#endif
-
-	float *indirectPixels = new float[INDIRECT_LIGHTMAP_SIZE*INDIRECT_LIGHTMAP_SIZE*3];
-	float *directPixels	  = new float[DIRECT_LIGHTMAP_SIZE*DIRECT_LIGHTMAP_SIZE*3];
-
-	// ** Upload pixels
-	for( int i = 0; i < MAX_LIGHTMAPS; i++ ) {
-		if( direct[i] ) {
-			UpdatePixels( direct[i], directPixels );
-
-			glGenTextures( 1, &texDirect[i] );
-			glBindTexture( GL_TEXTURE_2D, texDirect[i] );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE, 0, GL_RGB, GL_FLOAT, directPixels );
-		}
-
-		if( indirect[i] ) {
-			UpdatePixels( indirect[i], indirectPixels );
-
-			glGenTextures( 1, &texIndirect[i] );
-			glBindTexture( GL_TEXTURE_2D, texIndirect[i] );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-			glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-			glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, INDIRECT_LIGHTMAP_SIZE, INDIRECT_LIGHTMAP_SIZE, 0, GL_RGB, GL_FLOAT, indirectPixels );
-		}
-	}
-
-	delete[]indirectPixels;
-	delete[]directPixels;
-*/
+    m_rotation        = 0.0f;
 }
 
 void cTestLightmapper::createScene( const char* fileName )
 {
     m_scene = Scene::create();
+    m_light = Mesh::createFromFile( "data/light.obj" );
 
     // ** Add lights
     m_scene->begin();
 
-    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
-//    m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 1.00f, 0.50f ), 1.0f, true ) );
-    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
-//    m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.0f, 0.0f, 0.0f ), 1.0f, true ) );
+    if( true ) {
+        m_scene->addLight( MeshLight::create( m_light, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+        m_scene->addLight( MeshLight::create( m_light, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    } else {
+        m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+        m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    }
 
     // ** Add mesh
     Mesh* mesh      = Mesh::createFromFile( fileName );
@@ -191,10 +100,15 @@ void cTestLightmapper::createScene( const char* fileName )
 void* cTestLightmapper::worker( void* userData )
 {
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
-    relight::TimeMeasure measure( "Bake" );
-    data->m_scene->bake( BakeDirect /*| BakeAmbientOcclusion*/ | BakeIndirect, data->m_progress );
+    {
+        relight::TimeMeasure measure( "Bake" );
+        data->m_scene->bake( BakeDirect /*| BakeAmbientOcclusion*/ | BakeIndirect, data->m_progress );
+    }
 
-    data->m_progress->m_lightmap->expand();
+    {
+        relight::TimeMeasure measure( "Expand" );
+        data->m_progress->m_lightmap->expand();
+    }
     data->m_progress->notify( 1000, 0 );
 
     data->m_progress->m_lightmap->save( "output/lm.tga" );
@@ -227,10 +141,10 @@ void cTestLightmapper::Render( void )
 	glEnable( GL_CULL_FACE );
 	glPushMatrix();
 
-    glRotatef( rotation, 0, 1, 0 );
+    glRotatef( m_rotation, 0, 1, 0 );
     glScalef( 0.7f, 0.7f, 0.7f );
 
-    rotation += 0.05f;
+    m_rotation += 0.05f;
 
     for( int i = 0; i < m_scene->meshCount(); i++ ) {
         renderInstance( m_scene->mesh( i ) );
@@ -303,10 +217,7 @@ void cTestLightmapper::renderInstance( const relight::Mesh* mesh ) const
 // ** cTestLightmapper::KeyPressed
 void cTestLightmapper::KeyPressed( int key )
 {
-//	switch( key ) {
-//	case '9': renderIndirect	= !renderIndirect;	break;
-//	case '0': renderDirect		= !renderDirect;	break;
-//	}
+
 }
 
 // ** cTestLightmapper::CalculateDirectLight
