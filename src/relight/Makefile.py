@@ -1,1 +1,1 @@
-StaticLibrary( 'relight', sources = [ '.', 'baker', 'scene', 'rt' ], include = [ '/usr/local/include' ], defines = [ 'RELIGHT_BUILD_LIBRARY' ] )
+StaticLibrary( 'relight', sources = [ '.', 'baker', 'scene', 'rt' ], paths = [ '../../externals/include' ], defines = [ 'RELIGHT_BUILD_LIBRARY' ] )
