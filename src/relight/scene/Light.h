@@ -33,13 +33,60 @@
 namespace relight {
 
     /*!
-     A supported light type enumeration.
+     Light cuttoff is used for configuring the light source influence direction (omni, directional, spotlight).
+     LightCutoff class is a base for all cutoff models and represents an omni-directional light.
      */
-    enum LightType {
-        PointLightType,
-        MeshLightType,
+    class LightCutoff {
+    public:
 
-        TotalLightTypes
+                            //! Constructs a LightCutoff instance.
+                            LightCutoff( const Light* light );
+        virtual             ~LightCutoff( void ) {}
+
+        //! Calculates a light influence to a given point.
+        virtual float       calculate( const Vec3& point ) const;
+
+        //! Calculates a light cutoff for direction.
+        virtual float       cutoffForDirection( const Vec3& direction ) const;
+
+    protected:
+
+        //! Parent light instance.
+        const Light*        m_light;
+    };
+
+    /*!
+     LightSpotCutoff is used for spot lights.
+     */
+    class LightSpotCutoff : public LightCutoff {
+    public:
+
+                            //! Constructs a LightSpotCutoff instance
+                            /*!
+                             \param light Parent light source.
+                             \param direction Spot light direction.
+                             \param cutoff The cutoff value represents the maximum angle between the light direction and the light to pixel vector.
+                             \param exponent The cutoff exponent.
+                             */
+                            LightSpotCutoff( const Light* light, const Vec3& direction, float cutoff, float exponent );
+        virtual             ~LightSpotCutoff( void ) {}
+
+        //! Calculates a light influence for a spot light.
+        virtual float       calculate( const Vec3& point ) const;
+
+        //! Calculates a light cutoff for direction.
+        virtual float       cutoffForDirection( const Vec3& direction ) const;
+
+    private:
+
+        //! Light direction.
+        Vec3                m_direction;
+
+        //! Light cutoff.
+        float               m_cutoff;
+
+        //! Light spot exponent.
+        float               m_exponent;
     };
 
     /*!
@@ -72,10 +119,59 @@ namespace relight {
     public:
 
                             //! Constructs a LinearLightAttenuation instance.
-                            LinearLightAttenuation( const Light* light );
+                            /*!
+                             \param light Parent light source.
+                             \param radius Light influence radius.
+                             */
+                            LinearLightAttenuation( const Light* light, float radius );
 
         // ** LinearLightAttenuation
         virtual float       calculate( float distance ) const;
+
+    private:
+
+        //! Light influence radius.
+        float               m_radius;
+    };
+
+    /*!
+     Light to point influence model.
+     */
+    class LightInfluence {
+    public:
+
+                            //! Constructs a LightInfluence instance.
+                            LightInfluence( const Light* light );
+        virtual             ~LightInfluence( void ) {}
+
+        //! Calculates omni light influence to a given point.
+        virtual float       calculate( rt::ITracer* tracer, const Vec3& light, const Vec3& point, const Vec3& normal, float& distance ) const;
+
+        //! Calculates a light influence by a Lambert's cosine law.
+        static float        lambert( const Vec3& direction, const Vec3& normal );
+
+    protected:
+
+        //! Parent light instance.
+        const Light*        m_light;
+    };
+
+    /*!
+     Directional light influence model.
+     */
+    class DirectionalLightInfluence : public LightInfluence {
+    public:
+
+                            //! Constructs a DirectionalLightInfluence instance.
+                            DirectionalLightInfluence( const Light* light, const Vec3& direction );
+
+        //! Calculates a directional light influence.
+        virtual float       calculate( rt::ITracer* tracer, const Vec3& light, const Vec3& point, const Vec3& normal, float& distance ) const;
+
+    private:
+
+        //! Light source direction.
+        Vec3                m_direction;
     };
 
     /*!
@@ -108,14 +204,29 @@ namespace relight {
 
         virtual             ~Light( void );
 
-        //! Returns a light type.
-        virtual LightType   type( void ) const;
+        //! Returns an light influence model.
+        LightInfluence*     influence( void ) const;
+
+        //! Sets an light influence model.
+        void                setInfluence( LightInfluence* value );
 
         //! Returns an attenuation model.
         LightAttenuation*   attenuation( void ) const;
 
         //! Sets an attenuation model.
         void                setAttenuation( LightAttenuation* value );
+
+        //! Returns a light vertex generator.
+        LightVertexGenerator* vertexGenerator( void ) const;
+
+        //! Sets an light vertex generator.
+        void                setVertexGenerator( LightVertexGenerator* value );
+
+        //! Returns an cutoff model.
+        LightCutoff*        cutoff( void ) const;
+
+        //! Sets an cutoff model.
+        void                setCutoff( LightCutoff* value );
 
         //! Returns a photon emitter.
         PhotonEmitter*      photonEmitter( void ) const;
@@ -151,15 +262,24 @@ namespace relight {
         //! Sets a castShadow flag.
         void                setCastsShadow( bool value );
 
+        //! Creates a point light instance.
+        static Light*       createPointLight( const Vec3& position, float radius, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+
+        //! Creates a spot light instance.
+        static Light*       createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+
+        //! Creates a directional light instance.
+        static Light*       createDirectionalLight( const Vec3& direction, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+
+        //! Creates an area light instance.
+        static Light*       createAreaLight( const Mesh* mesh, const Vec3& position, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+
     protected:
 
                             //! Constructs a Light instance.
-                            Light( LightType type = TotalLightTypes );
+                            Light( void );
 
     private:
-
-        //! Light type.
-        LightType           m_type;
 
         //! Light position.
         Vec3                m_position;
@@ -173,37 +293,20 @@ namespace relight {
         //! Casts shadow flag.
         bool                m_castsShadow;
 
+        //! Light cutoff model.
+        LightCutoff*        m_cutoff;
+
         //! Light attenuation model.
         LightAttenuation*   m_attenuation;
 
+        //! Light influence model.
+        LightInfluence*     m_influence;
+
+        //! Light vertex sampler.
+        LightVertexGenerator*   m_vertexGenerator;
+
         //! Light source photon emitter.
         PhotonEmitter*      m_photonEmitter;
-    };
-
-    /*!
-     A point light (omni-directional).
-     */
-    class PointLight : public Light {
-    public:
-
-        //! Returns a light radius.
-        float               radius( void ) const;
-
-        //! Sets a light radius.
-        void                setRadius( float value );
-
-        //! Creates a new PointLight instance.
-        static PointLight*  create( const Vec3& position, float radius, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
-
-    private:
-
-                            //! Constructs a new PointLight instance.
-                            PointLight( void );
-
-    private:
-
-        //! A light radius.
-        float               m_radius;
     };
 
     //! A light vertex is a single light point used with mesh light sources.
@@ -280,49 +383,6 @@ namespace relight {
 
         //! Max subdivision depth.
         int                         m_maxSubdivisions;
-    };
-
-    /*!
-     A mesh area light.
-     */
-    class MeshLight : public Light {
-    public:
-
-                                ~MeshLight( void );
-
-        //! Returns a mesh used as a light source.
-        const Mesh*             mesh( void ) const;
-
-        //! Returns true if a mesh light takes into account only upper-hemisphere rays.
-        bool                    isHemisphere( void ) const;
-
-        //! Sets heimisphere flag.
-        void                    setHemisphere( bool value );
-
-        //! Sets a light vertex generator.
-        void                    setVertexGenerator( LightVertexGenerator* value );
-
-        //! Returns a light vertex generator.
-        LightVertexGenerator*   vertexGenerator( void ) const;
-
-        //! Creates a new MeshLight instance.
-        static MeshLight*       create( const Mesh* mesh, const Vec3& position, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true, bool hemisphere = false );
-
-    private:
-
-                                //! Constructs a new MeshLight instance.
-                                MeshLight( const Mesh* mesh );
-
-    private:
-
-        //! A mesh used as a light source volume.
-        const Mesh*             m_mesh;
-
-        //! Hemisphere lighting.
-        bool                    m_isHemisphere;
-
-        //! A light vertex generator.
-        LightVertexGenerator*   m_vertexGenerator;
     };
 
 } // namespace relight

@@ -48,6 +48,9 @@ namespace relight {
 
     class Scene;
     class LightAttenuation;
+    class LightCutoff;
+    class LightInfluence;
+    class LightVertexGenerator;
     class Light;
         class PointLight;
         class MeshLight;

@@ -71,10 +71,17 @@ RelightStatus Photons::bake( void )
 // ** Photons::emitPhotons
 void Photons::emitPhotons( const Light* light )
 {
-    PhotonEmitter*  emitter = light->photonEmitter();
+    PhotonEmitter* emitter = light->photonEmitter();
 
     for( int i = 0, n = emitter->photonCount(); i < n; i++ ) {
-        trace( light->attenuation(), light->position(), emitter->emit(), light->color(), light->intensity(), 0 );
+        Vec3  direction = emitter->emit();
+        float cutoff    = light->cutoff()->cutoffForDirection( direction );
+
+        if( cutoff <= 0.0f ) {
+            continue;
+        }
+
+        trace( light->attenuation(), light->position(), direction, light->color(), light->intensity() * cutoff, 0 );
     }
 }
 
@@ -97,7 +104,7 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
     float att = attenuation->calculate( (position - hit.m_point).length() );
 
     // ** Energy after reflection
-    float influence = DirectLight::lambert( -direction, hit.m_normal ) * att;
+    float influence = LightInfluence::lambert( -direction, hit.m_normal ) * att;
 
     // ** Final photon color
     Color hitColor  = color * hit.m_color * influence;

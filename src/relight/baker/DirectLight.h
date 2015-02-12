@@ -41,9 +41,6 @@ namespace bake {
                                 //! Constructs a DirectLight instance.
                                 DirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator );
 
-        //! Calculates a light influence by a Lambert's cosine law.
-        static float            lambert( const Vec3& direction, const Vec3& normal );
-
     protected:
 
         // ** Baker
@@ -52,13 +49,13 @@ namespace bake {
     private:
 
         //! Calculates a direct light from a point light source.
-        Color                   lightFromPoint( const Vec3& position, const Vec3& normal, const PointLight* light ) const;
+        Color                   lightFromPoint( const Lumel& lumel, const Light* light ) const;
 
-        //! Calculates a direct light from a mesh light source.
-        Color                   lightFromMesh( const Vec3& position, const Vec3& normal, const MeshLight* light ) const;
+        //! Calculates a direct light from an area light source.
+        Color                   lightFromPointSet( const Lumel& lumel, const Light* light ) const;
 
         //! Calculates a direct light from a given point.
-        float                   influenceFromPoint( Vec3& direction, const Vec3& position, const Vec3& normal, const Vec3& point, LightAttenuation* attenuation, bool castsShadow ) const;
+        float                   influenceFromPoint( const Lumel& lumel, const Vec3& point, LightInfluence* influence, LightCutoff* cutoff, LightAttenuation* attenuation, bool castsShadow ) const;
     };
 
 } // namespace bake

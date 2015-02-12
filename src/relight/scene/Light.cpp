@@ -28,27 +28,63 @@
 
 #include "Light.h"
 #include "Mesh.h"
+#include "../rt/Tracer.h"
 
 namespace relight {
 
 // ------------------------------------------------------------ Light ------------------------------------------------------------ //
 
 // ** Light::Light
-Light::Light( LightType type ) : m_type( type ), m_intensity( 0.0f ), m_castsShadow( false ), m_attenuation( NULL ), m_photonEmitter( NULL )
+Light::Light( void ) : m_intensity( 0.0f ), m_castsShadow( false ), m_cutoff( NULL ), m_attenuation( NULL ), m_influence( NULL ), m_vertexGenerator( NULL ), m_photonEmitter( NULL )
 {
 
 }
 
 Light::~Light( void )
 {
+    delete m_cutoff;
     delete m_attenuation;
     delete m_photonEmitter;
+    delete m_influence;
 }
 
-// ** Light::type
-LightType Light::type( void ) const
+// ** Light::cutoff
+LightCutoff* Light::cutoff( void ) const
 {
-    return m_type;
+    return m_cutoff;
+}
+
+// ** Light::setCutoff
+void Light::setCutoff( LightCutoff* value )
+{
+    delete m_cutoff;
+    m_cutoff = value;
+}
+
+// ** Light::influence
+LightInfluence* Light::influence( void ) const
+{
+    return m_influence;
+}
+
+// ** Light::setInfluence
+void Light::setInfluence( LightInfluence* value )
+{
+    delete m_influence;
+    m_influence = value;
+}
+
+// ** Light::vertexGenerator
+LightVertexGenerator* Light::vertexGenerator( void ) const
+{
+    return m_vertexGenerator;
+}
+
+// ** Light::setVertexGenerator
+void Light::setVertexGenerator( LightVertexGenerator* value )
+{
+    delete m_vertexGenerator;
+    m_vertexGenerator = value;
 }
 
 // ** Light::attenuation
@@ -125,103 +161,72 @@ void Light::setCastsShadow( bool value )
     m_castsShadow = value;
 }
 
-// ---------------------------------------------------------- PointLight ---------------------------------------------------------- //
-
-// ** PointLight::PointLight
-PointLight::PointLight( void ) : Light( PointLightType )
+// ** Light::createPointLight
+Light* Light::createPointLight( const Vec3& position, float radius, const Color& color, float intensity, bool castsShadow )
 {
+    Light* light = new Light;
 
-}
-
-// ** PointLight::setRadius
-void PointLight::setRadius( float value )
-{
-    m_radius = value;
-}
-
-// ** PointLight::radius
-float PointLight::radius( void ) const
-{
-    return m_radius;
-}
-
-// ** PointLight::create
-PointLight* PointLight::create( const Vec3& position, float radius, const Color& color, float intensity, bool castsShadow )
-{
-    PointLight* light = new PointLight;
-
-    light->setAttenuation( new LinearLightAttenuation( light ) );
+    light->setInfluence( new LightInfluence( light ) );
+    light->setAttenuation( new LinearLightAttenuation( light, radius ) );
     light->setPhotonEmitter( new PhotonEmitter( light ) );
+    light->setCutoff( new LightCutoff( light ) );
     light->setCastsShadow( castsShadow );
     light->setPosition( position );
     light->setColor( color );
     light->setIntensity( intensity );
-    light->setRadius( radius );
     
     return light;
 }
 
-// ---------------------------------------------------------- MeshLight ----------------------------------------------------------- //
-
-// ** MeshLight::MeshLight
-MeshLight::MeshLight( const Mesh* mesh ) : Light( MeshLightType ), m_mesh( mesh ), m_isHemisphere( false ), m_vertexGenerator( NULL )
+// ** Light::createSpotLight
+Light* Light::createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Color& color, float intensity, bool castsShadow )
 {
+    Light* light = new Light;
 
-}
-
-MeshLight::~MeshLight( void )
-{
-    delete m_vertexGenerator;
-}
-
-// ** MeshLight::vertexGenerator
-LightVertexGenerator* MeshLight::vertexGenerator( void ) const
-{
-    return m_vertexGenerator;
-}
-
-// ** MeshLight::setVertexGenerator
-void MeshLight::setVertexGenerator( LightVertexGenerator* value )
-{
-    delete m_vertexGenerator;
-    m_vertexGenerator = value;
-}
-
-// ** MeshLight::isHemisphere
-bool MeshLight::isHemisphere( void ) const
-{
-    return m_isHemisphere;
-}
-
-// ** MeshLight::setHemisphere
-void MeshLight::setHemisphere( bool value )
-{
-    m_isHemisphere = value;
-}
-
-// ** MeshLight::mesh
-const Mesh* MeshLight::mesh( void ) const
-{
-    return m_mesh;
-}
-
-// ** MeshLight::create
-MeshLight* MeshLight::create( const Mesh* mesh, const Vec3& position, const Color& color, float intensity, bool castsShadow, bool hemisphere )
-{
-    MeshLight* light = new MeshLight( mesh );
-
-    light->setAttenuation( new LinearLightAttenuation( light ) );
+    light->setInfluence( new LightInfluence( light ) );
+    light->setAttenuation( new LinearLightAttenuation( light, radius ) );
     light->setPhotonEmitter( new PhotonEmitter( light ) );
-    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 3 ) );
-//    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, false, 0 ) );
-//    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 0 ) );
-//    light->setVertexGenerator( new LightVertexGenerator( mesh ) );
+    light->setCutoff( new LightSpotCutoff( light, direction, cutoff, 1.0f ) );
     light->setCastsShadow( castsShadow );
     light->setPosition( position );
     light->setColor( color );
     light->setIntensity( intensity );
-    light->setHemisphere( hemisphere );
+    
+    return light;
+}
 
+// ** Light::createDirectionalLight
+Light* Light::createDirectionalLight( const Vec3& direction, const Color& color, float intensity, bool castsShadow )
+{
+    Light* light = new Light;
+
+    light->setInfluence( new DirectionalLightInfluence( light, direction ) );
+    light->setPhotonEmitter( new PhotonEmitter( light ) );
+    light->setCastsShadow( castsShadow );
+    light->setColor( color );
+    light->setIntensity( intensity );
+
+    return light;
+}
+
+// ** Light::create
+Light* Light::createAreaLight( const Mesh* mesh, const Vec3& position, const Color& color, float intensity, bool castsShadow )
+{
+    Light* light = new Light;
+
+    light->setInfluence( new LightInfluence( light ) );
+    light->setAttenuation( new LinearLightAttenuation( light, mesh->bounds().volume() ) );
+    light->setPhotonEmitter( new PhotonEmitter( light ) );
+    light->setCutoff( new LightCutoff( light ) );
+    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 3 ) );
+//  light->setVertexGenerator( new FaceLightVertexGenerator( mesh, false, 0 ) );
+//  light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 0 ) );
+//  light->setVertexGenerator( new LightVertexGenerator( mesh ) );
+    light->setCastsShadow( castsShadow );
+    light->setPosition( position );
+    light->setColor( color );
+    light->setIntensity( intensity );
+    
     light->vertexGenerator()->generate();
     
     return light;
@@ -327,14 +332,129 @@ PhotonEmitter::PhotonEmitter( const Light* light ) : m_light( light )
 // ** PhotonEmitter::photonCount
 int PhotonEmitter::photonCount( void ) const
 {
-    float area = 0.05f;
-    return (area * 100) * (area * 100) * m_light->intensity() * 1000;
+    return m_light->intensity() * 25000;
 }
 
 // ** PhotonEmitter::emit
 Vec3 PhotonEmitter::emit( void ) const
 {
     return Vec3::randomDirection();
+
+}
+
+// ------------------------------------------------------- LightInfluence --------------------------------------------------------- //
+
+// ** LightInfluence::LightInfluence
+LightInfluence::LightInfluence( const Light* light ) : m_light( light )
+{
+
+}
+
+// ** LightInfluence::calculate
+float LightInfluence::calculate( rt::ITracer* tracer, const Vec3& light, const Vec3& point, const Vec3& normal, float& distance ) const
+{
+    Vec3 direction = light - point;
+    distance       = direction.normalize();
+
+    // ** Calculate Lambert's cosine law intensity
+    float intensity = lambert( direction, normal );
+    if( intensity <= 0.001f ) {
+        return 0.0f;
+    }
+
+    // ** Cast shadow to point
+    if( m_light->castsShadow() ) {
+        intensity *= tracer->test( point, light ) ? 0.0f : 1.0f;
+    }
+
+    return intensity;
+}
+
+// ** LightInfluence::lambert
+float LightInfluence::lambert( const Vec3& direction, const Vec3& normal )
+{
+    float dp = direction * normal;
+    return dp < 0.0f ? 0.0f : dp;
+}
+
+// --------------------------------------------------- DirectionalLightInfluence -------------------------------------------------- //
+
+// ** DirectionalLightInfluence::DirectionalLightInfluence
+DirectionalLightInfluence::DirectionalLightInfluence( const Light* light, const Vec3& direction ) : LightInfluence( light ), m_direction( direction )
+{
+
+}
+
+// ** DirectionalLightInfluence::calculate
+float DirectionalLightInfluence::calculate( rt::ITracer* tracer, const Vec3& light, const Vec3& point, const Vec3& normal, float& distance ) const
+{
+    float intensity = lambert( -m_direction, normal );
+
+    if( intensity <= 0.001f ) {
+        return 0.0f;
+    }
+
+    // ** Cast shadow to point
+    if( m_light->castsShadow() ) {
+        intensity *= tracer->test( point, point - m_direction * 1000 ) ? 0.0f : 1.0f;
+    }
+
+    return intensity;
+}
+
+// --------------------------------------------------------- LightCutoff ---------------------------------------------------------- //
+
+// ** LightCutoff::LightCutoff
+LightCutoff::LightCutoff( const Light* light ) : m_light( light )
+{
+
+}
+
+// ** LightCutoff::calculate
+float LightCutoff::calculate( const Vec3& point ) const
+{
+    return 1.0f;
+}
+
+// ** LightCutoff::cutoffForDirection
+float LightCutoff::cutoffForDirection( const Vec3& direction ) const
+{
+    return 1.0f;
+}
+
+// ------------------------------------------------------- LightSpotCutoff -------------------------------------------------------- //
+
+// ** LightSpotCutoff::LightSpotCutoff
+LightSpotCutoff::LightSpotCutoff( const Light* light, const Vec3& direction, float cutoff, float exponent ) : LightCutoff( light ), m_direction( direction ), m_cutoff( cutoff ), m_exponent( exponent )
+{
+
+}
+
+// ** LightSpotCutoff::calculate
+float LightSpotCutoff::calculate( const Vec3& point ) const
+{
+    Vec3 dir = point - m_light->position();
+    dir.normalize();
+
+    return cutoffForDirection( dir );
+}
+
+// ** LightSpotCutoff::cutoffForDirection
+float LightSpotCutoff::cutoffForDirection( const Vec3& direction ) const
+{
+    float value = direction * m_direction;
+
+    if( value <= m_cutoff ) {
+        return 0.0f;
+    }
+
+    value = (1.0 - (1.0 - value) * 1.0/(1.0 - m_cutoff));
+
+    if( fabs( 1.0f - m_exponent ) > 0.01f ) {
+        value = powf( value, m_exponent );
+    }
+
+    return value;
 }
 
 // ------------------------------------------------------- LightAttenuation ------------------------------------------------------- //
@@ -348,7 +468,7 @@ LightAttenuation::LightAttenuation( const Light* light ) : m_light( light )
 // ---------------------------------------------------- LinearLightAttenuation ---------------------------------------------------- //
 
 // ** LinearLightAttenuation::LinearLightAttenuation
-LinearLightAttenuation::LinearLightAttenuation( const Light* light ) : LightAttenuation( light )
+LinearLightAttenuation::LinearLightAttenuation( const Light* light, float radius ) : LightAttenuation( light ), m_radius( radius )
 {
 
 }
@@ -356,19 +476,7 @@ LinearLightAttenuation::LinearLightAttenuation( const Light* light ) : LightAtte
 // ** LinearLightAttenuation::calculate
 float LinearLightAttenuation::calculate( float distance ) const
 {
-    float att = 1.0f;
-
-    if( m_light->type() == PointLightType ) {
-        att = 1.0f - (distance / static_cast<const PointLight*>( m_light )->radius());
-    }
-    else if( m_light->type() == MeshLightType ) {
-        att = 1.0f - (distance / static_cast<const MeshLight*>( m_light )->mesh()->bounds().volume());
-    }
-    else {
-        assert( false );
-    }
-
-    return att < 0.0f ? 0.0f : att;
+    return max( 1.0f - (distance / m_radius), 0.0f );
 }
 
 } // namespace relight
