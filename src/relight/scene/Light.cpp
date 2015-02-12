@@ -221,6 +221,8 @@ MeshLight* MeshLight::create( const Mesh* mesh, const Vec3& position, const Colo
     light->setColor( color );
     light->setIntensity( intensity );
     light->setHemisphere( hemisphere );
+
+    light->vertexGenerator()->generate();
     
     return light;
 }
@@ -230,7 +232,7 @@ MeshLight* MeshLight::create( const Mesh* mesh, const Vec3& position, const Colo
 // ** LightVertexGenerator::LightVertexGenerator
 LightVertexGenerator::LightVertexGenerator( const Mesh* mesh ) : m_mesh( mesh )
 {
-
+    
 }
 
 // ** LightVertexGenerator::vertexCount
