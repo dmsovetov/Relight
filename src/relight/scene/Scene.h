@@ -27,7 +27,7 @@
 #ifndef __Relight_Scene_H__
 #define __Relight_Scene_H__
 
-#include "Relight.h"
+#include "../Relight.h"
 
 namespace relight {
 

@@ -27,7 +27,7 @@
 #ifndef __relight__MeshLoader__
 #define __relight__MeshLoader__
 
-#include "Relight.h"
+#include "../Relight.h"
 
 namespace relight {
 
