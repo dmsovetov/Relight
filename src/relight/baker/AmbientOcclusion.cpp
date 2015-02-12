@@ -36,8 +36,8 @@ namespace relight {
 namespace bake {
 
 // ** AmbientOcclusion::AmbientOcclusion
-AmbientOcclusion::AmbientOcclusion( const Scene* scene, Progress* progress, int samples, float occludedFraction, float maxDistance )
-    : Baker( scene, progress ), m_samples( samples ), m_occludedFraction( occludedFraction ), m_maxDistance( maxDistance )
+AmbientOcclusion::AmbientOcclusion( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float occludedFraction, float maxDistance )
+    : Baker( scene, progress, iterator ), m_samples( samples ), m_occludedFraction( occludedFraction ), m_maxDistance( maxDistance )
 {
 
 }
@@ -56,8 +56,10 @@ void AmbientOcclusion::bakeLumel( Lumel& lumel )
         }
     }
 
-    float ao = 1.0f - occluded / (m_samples * m_occludedFraction);
-    lumel.m_color = Color( ao, ao, ao );
+    lumel.m_color *= 1.0f - occluded / (m_samples * m_occludedFraction);
+
+//    float ao = ;
+//    lumel.m_color = lumel.m_color * Color( ao, ao, ao );
 }
 
 } // namespace bake

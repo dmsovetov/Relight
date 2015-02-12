@@ -39,11 +39,13 @@ namespace bake {
 
                             //! Constructs a AmbientOcclusion instance.
                             /*!
-                             \params samples Amount of samples to be taken.
+                             \param samples Amount of samples to be taken.
+                             \param progress Progress callback.
+                             \param iterator Bake iterator.
                              \param occludedFraction Fraction of samples taken that must be occluded in order to reach full occlusion.
                              \param maxDistance Maximum distance for an object to cause occlusion on another object.
                              */
-                            AmbientOcclusion( const Scene* scene, Progress* progress, int samples, float occludedFraction, float maxDistance );
+                            AmbientOcclusion( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float occludedFraction, float maxDistance );
 
     protected:
 
