@@ -23,7 +23,7 @@
 #define		CALCULATE_DIRECT			(1)
 #define		CALCULATE_INDIRECT			(1)
 
-#define		DIRECT_LIGHTMAP_SIZE		(1024)
+#define		DIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_MAX_DEPTH			(3)
 #define     INDIRECT_RADIUS             (7)
@@ -61,11 +61,29 @@ void cTestLightmapper::Create( void )
 
     m_progress = new BakingProgress( m_diffuse, &m_diffuseGl );
 
-    m_data.m_scene      = m_scene;
-    m_data.m_progress   = m_progress;
-    pthread_create( &m_thread, NULL, worker, &m_data );
+    const int kThreads = 8;
+    for( int i = 0; i < kThreads; i++ ) {
+        startThread( i, kThreads, IndirectLightSettings::production(), AmbientOcclusionSettings::production() );
+    }
 
     m_rotation        = 0.0f;
+}
+
+void cTestLightmapper::startThread( int index, int threadCount, const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
+{
+    WorkerData* data = new WorkerData;
+    pthread_t   thread;
+
+    data->m_scene                   = m_scene;
+    data->m_progress                = m_progress;
+    data->m_startIndex              = index;
+    data->m_step                    = threadCount;
+    data->m_indirectLightSettings   = indirectLight;
+    data->m_aoSettings              = ambientOcclusion;
+
+    data->m_indirectLightSettings.m_photonPassCount /= threadCount;
+
+    pthread_create( &thread, NULL, worker, data );
 }
 
 void cTestLightmapper::createScene( const char* fileName )
@@ -100,21 +118,12 @@ void cTestLightmapper::createScene( const char* fileName )
 void* cTestLightmapper::worker( void* userData )
 {
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
-    {
-        relight::TimeMeasure measure( "Bake" );
-        data->m_scene->bake( BakeDirect /*| BakeAmbientOcclusion*/ | BakeIndirect, data->m_progress );
-    }
+//    Relight::bakeDirectLight( data->m_scene, data->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+//    Relight::bakeIndirectLight( data->m_scene, data->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    Relight::bakeAmbientOcclusion( data->m_scene, data->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
 
-    {
-        relight::TimeMeasure measure( "Expand" );
-        data->m_progress->m_lightmap->expand();
-    }
+
     data->m_progress->notify( 1000, 0 );
-
-    data->m_progress->m_lightmap->save( "output/lm.tga" );
-
-//    data->m_progress->m_lightmap->blur();
-//    data->m_progress->notify( 1000, 0 );
 }
 
 unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const

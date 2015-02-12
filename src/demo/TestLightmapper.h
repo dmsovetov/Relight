@@ -49,8 +49,12 @@ public:
 };
 
 struct WorkerData {
-    relight::Scene*     m_scene;
-    BakingProgress*     m_progress;
+    relight::Scene*                     m_scene;
+    relight::IndirectLightSettings      m_indirectLightSettings;
+    relight::AmbientOcclusionSettings   m_aoSettings;
+    BakingProgress*                     m_progress;
+    int                                 m_startIndex;
+    int                                 m_step;
 };
 
 // ** class cTestLightmapper
@@ -80,6 +84,8 @@ private:
 
     unsigned int    createTextureFromLightmap( const relight::Lightmap* lightmap ) const;
     void            renderInstance( const relight::Mesh* mesh ) const;
+
+    void            startThread( int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
 
 private:
 
