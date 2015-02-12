@@ -61,8 +61,8 @@ void AmbientOcclusion::bakeLumel( Lumel& lumel )
         value = powf( value, m_exponent );
     }
 
-    lumel.m_color = Color( value, value, value );
-//    lumel.m_color *= value;
+//    lumel.m_color = Color( value, value, value );
+    lumel.m_color *= value;
 }
 
 } // namespace bake
