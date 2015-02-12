@@ -34,6 +34,126 @@
 
 namespace relight {
 
+// ** IndirectLightSettings::draft
+IndirectLightSettings IndirectLightSettings::draft( float photonMaxDistance, float finalGatherDistance )
+{
+    IndirectLightSettings settings;
+
+    settings.m_photonPassCount          = 8;
+    settings.m_photonBounceCount        = 1;
+    settings.m_photonEnergyThreshold    = 0.05f;
+    settings.m_photonMaxDistance        = photonMaxDistance;
+
+    settings.m_finalGatherSamples       = 32;
+    settings.m_finalGatherDistance      = finalGatherDistance;
+    settings.m_finalGatherRadius        = 7;
+    
+    return settings;
+}
+
+// ** IndirectLightSettings::fast
+IndirectLightSettings IndirectLightSettings::fast( float photonMaxDistance, float finalGatherDistance )
+{
+    IndirectLightSettings settings;
+
+    settings.m_photonPassCount          = 16;
+    settings.m_photonBounceCount        = 3;
+    settings.m_photonEnergyThreshold    = 0.05f;
+    settings.m_photonMaxDistance        = photonMaxDistance;
+
+    settings.m_finalGatherSamples       = 64;
+    settings.m_finalGatherDistance      = finalGatherDistance;
+    settings.m_finalGatherRadius        = 7;
+
+    return settings;
+}
+
+// ** IndirectLightSettings::best
+IndirectLightSettings IndirectLightSettings::best( float photonMaxDistance, float finalGatherDistance )
+{
+    IndirectLightSettings settings;
+
+    settings.m_photonPassCount          = 32;
+    settings.m_photonBounceCount        = 3;
+    settings.m_photonEnergyThreshold    = 0.05f;
+    settings.m_photonMaxDistance        = photonMaxDistance;
+
+    settings.m_finalGatherSamples       = 128;
+    settings.m_finalGatherDistance      = finalGatherDistance;
+    settings.m_finalGatherRadius        = 7;
+
+    return settings;
+}
+
+// ** IndirectLightSettings::production
+IndirectLightSettings IndirectLightSettings::production( float photonMaxDistance, float finalGatherDistance )
+{
+    IndirectLightSettings settings;
+
+    settings.m_photonPassCount          = 64;
+    settings.m_photonBounceCount        = 4;
+    settings.m_photonEnergyThreshold    = 0.05f;
+    settings.m_photonMaxDistance        = photonMaxDistance;
+
+    settings.m_finalGatherSamples       = 1024;
+    settings.m_finalGatherDistance      = finalGatherDistance;
+    settings.m_finalGatherRadius        = 7;
+
+    return settings;
+}
+
+// ** AmbientOcclusionSettings::draft
+AmbientOcclusionSettings AmbientOcclusionSettings::draft( float occludedFraction, float maxDistance, float exponent )
+{
+    AmbientOcclusionSettings settings;
+
+    settings.m_samples          = 128;
+    settings.m_maxDistance      = maxDistance;
+    settings.m_exponent         = exponent;
+    settings.m_occludedFraction = occludedFraction;
+
+    return settings;
+}
+
+// ** AmbientOcclusionSettings::draft
+AmbientOcclusionSettings AmbientOcclusionSettings::fast( float occludedFraction, float maxDistance, float exponent )
+{
+    AmbientOcclusionSettings settings;
+
+    settings.m_samples          = 256;
+    settings.m_maxDistance      = maxDistance;
+    settings.m_exponent         = exponent;
+    settings.m_occludedFraction = occludedFraction;
+
+    return settings;
+}
+
+// ** AmbientOcclusionSettings::best
+AmbientOcclusionSettings AmbientOcclusionSettings::best( float occludedFraction, float maxDistance, float exponent )
+{
+    AmbientOcclusionSettings settings;
+
+    settings.m_samples          = 1024;
+    settings.m_maxDistance      = maxDistance;
+    settings.m_exponent         = exponent;
+    settings.m_occludedFraction = occludedFraction;
+
+    return settings;
+}
+
+// ** AmbientOcclusionSettings::production
+AmbientOcclusionSettings AmbientOcclusionSettings::production( float occludedFraction, float maxDistance, float exponent )
+{
+    AmbientOcclusionSettings settings;
+
+    settings.m_samples          = 2048;
+    settings.m_maxDistance      = maxDistance;
+    settings.m_exponent         = exponent;
+    settings.m_occludedFraction = occludedFraction;
+
+    return settings;
+}
+
 // ** Relight::bakeDirectLight
 RelightStatus Relight::bakeDirectLight( const Scene* scene, Progress* progress, bake::BakeIterator* iterator )
 {
@@ -50,27 +170,34 @@ RelightStatus Relight::bakeDirectLight( const Scene* scene, Progress* progress, 
 }
 
 // ** Relight::bakeIndirectLight
-RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress, bake::BakeIterator* iterator )
+RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator )
 {
-    TimeMeasure measure( "Indirect Lighting" );
-    bake::Photons* photons = new bake::Photons( scene, progress, NULL, 64, 3, 0.05f, 10.0f );
-    photons->bake();
+    RelightStatus status;
 
-    bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, 2048, 50, 7 );
-//    bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, 256, 50, 7 );
-    RelightStatus status = indirect->bake();
+    {
+        TimeMeasure measure( "Photon tracing" );
 
-    delete photons;
-    delete indirect;
+        bake::Photons* photons = new bake::Photons( scene, progress, NULL, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
+        status = photons->bake();
+        delete photons;
+    }
+
+    {
+        TimeMeasure measure( "Indirect Lighting" );
+
+        bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, settings.m_finalGatherSamples, settings.m_finalGatherDistance, settings.m_finalGatherRadius );
+        status = indirect->bake();
+        delete indirect;
+    }
 
     return status;
 }
 
 // ** Relight::bakeAmbientOcclusion
-RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, Progress* progress, bake::BakeIterator* iterator )
+RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator )
 {
     TimeMeasure measure( "Ambient Occlusion" );
-    bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( scene, progress, iterator, 4096, 0.8f, 0.6f );
+    bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( scene, progress, iterator, settings.m_samples, settings.m_occludedFraction, settings.m_maxDistance, settings.m_exponent );
     RelightStatus status = ao->bake();
     delete ao;
 

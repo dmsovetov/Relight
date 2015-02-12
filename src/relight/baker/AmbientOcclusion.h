@@ -42,10 +42,12 @@ namespace bake {
                              \param samples Amount of samples to be taken.
                              \param progress Progress callback.
                              \param iterator Bake iterator.
+                             \param samples Number of ambient occlusion samples.
                              \param occludedFraction Fraction of samples taken that must be occluded in order to reach full occlusion.
                              \param maxDistance Maximum distance for an object to cause occlusion on another object.
+                             \param exponent Final occlusion value exponent.
                              */
-                            AmbientOcclusion( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float occludedFraction, float maxDistance );
+                            AmbientOcclusion( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float occludedFraction, float maxDistance, float exponent );
 
     protected:
 
@@ -62,6 +64,9 @@ namespace bake {
 
         //! Max occlusion distance.
         float               m_maxDistance;
+
+        //! Occlusion exponent.
+        float               m_exponent;
     };
 
 } // namespace bake

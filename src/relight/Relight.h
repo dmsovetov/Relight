@@ -80,6 +80,10 @@ namespace relight {
         class ITracer;
     }
 
+    namespace bake {
+        class BakeIterator;
+    }
+
     //! Relight status codes.
     enum RelightStatus {
         RelightSuccess,         //!< Everything is OK.
@@ -93,6 +97,64 @@ namespace relight {
 
         //! Notifies about a task progress.
         virtual void            notify( int step, int stepCount ) {}
+    };
+
+    //! Indirect light settings.
+    struct IndirectLightSettings {
+        int                             m_photonPassCount;          //!< Number of photon passes.
+        int                             m_photonBounceCount;        //!< Maximum photon tracing depth (number of light bounces).
+        float                           m_photonEnergyThreshold;    //!< The minimum energy that photon should have to continue tracing.
+        float                           m_photonMaxDistance;        //!< The reflected light maximum distance. All intersections above this value will be ignored.
+
+        int                             m_finalGatherSamples;       //!< Number of final gather samples.
+        float                           m_finalGatherDistance;      //!< Maximum distance to gather photons at.
+        int                             m_finalGatherRadius;        //!< A radius of circle in which samples are gathered from photon map.
+
+        //! Returns a fast quality settings.
+        static IndirectLightSettings    fast( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+
+        //! Returns a draft quality settings.
+        static IndirectLightSettings    draft( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+
+        //! Returns a best quality settings.
+        static IndirectLightSettings    best( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+
+        //! Returns a production quality settings.
+        static IndirectLightSettings    production( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+    };
+
+    //! Ambient occlusion settings.
+    struct AmbientOcclusionSettings {
+        int                             m_samples;          //!< Number of ambient occlusion samples.
+        float                           m_occludedFraction; //!< Fraction of samples taken that must be occluded in order to reach full occlusion.
+        float                           m_maxDistance;      //!< Maximum distance for an object to cause occlusion on another object.
+        float                           m_exponent;         //!< Final occlusion value exponent.
+
+        //! Returns a fast quality settings.
+        static AmbientOcclusionSettings fast( float occludedFraction = 0.8f, float maxDistance = 0.6f, float exponent = 1.0f );
+
+        //! Returns a draft quality settings.
+        static AmbientOcclusionSettings draft( float occludedFraction = 0.8f, float maxDistance = 0.6f, float exponent = 1.0f );
+
+        //! Returns a best quality settings.
+        static AmbientOcclusionSettings best( float occludedFraction = 0.8f, float maxDistance = 0.6f, float exponent = 1.0f );
+
+        //! Returns a production quality settings.
+        static AmbientOcclusionSettings production( float occludedFraction = 0.8f, float maxDistance = 0.6f, float exponent = 1.0f );
+    };
+
+    //! Relight class.
+    class Relight {
+    public:
+
+        //! Bakes direct lighting.
+        static RelightStatus    bakeDirectLight( const Scene* scene, Progress* progress, bake::BakeIterator* iterator = NULL );
+
+        //! Bakes indirect light to a lightmap.
+        static RelightStatus    bakeIndirectLight( const Scene* scene, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator = NULL );
+
+        //! Bakes ambient occlusion to a lightmap.
+        static RelightStatus    bakeAmbientOcclusion( const Scene* scene, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
     };
 
     // ** TimeMeasure
@@ -113,6 +175,7 @@ namespace relight {
     #include "scene/Scene.h"
     #include "scene/Mesh.h"
     #include "scene/Light.h"
+    #include "baker/Baker.h" 
 #endif
 
 #endif  /*  !defined( Relight ) */
