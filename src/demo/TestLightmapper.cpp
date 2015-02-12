@@ -63,7 +63,7 @@ void cTestLightmapper::Create( void )
 
     const int kThreads = 8;
     for( int i = 0; i < kThreads; i++ ) {
-        startThread( i, kThreads, IndirectLightSettings::production(), AmbientOcclusionSettings::production() );
+        startThread( i, kThreads, IndirectLightSettings::production(), AmbientOcclusionSettings::production( 0.8f, 0.6f, 0.5f ) );
     }
 
     m_rotation        = 0.0f;
@@ -95,11 +95,17 @@ void cTestLightmapper::createScene( const char* fileName )
     m_scene->begin();
 
     if( true ) {
-        m_scene->addLight( MeshLight::create( m_light, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
-        m_scene->addLight( MeshLight::create( m_light, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+        m_scene->addLight( Light::createAreaLight( m_light, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+        m_scene->addLight( Light::createAreaLight( m_light, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
     } else {
-        m_scene->addLight( PointLight::create( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
-        m_scene->addLight( PointLight::create( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+        Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 2.50f,  1.50f );
+        dir.normalize();
+
+    //    m_scene->addLight( Light::createPointLight( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
+    //    m_scene->addLight( Light::createPointLight( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    //    m_scene->addLight( Light::createSpotLight( Vec3( 1.50f, 2.50f,  1.50f ), dir, 0.3f, 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+
+        m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
     }
 
     // ** Add mesh
@@ -118,10 +124,12 @@ void cTestLightmapper::createScene( const char* fileName )
 void* cTestLightmapper::worker( void* userData )
 {
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
-//    Relight::bakeDirectLight( data->m_scene, data->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-//    Relight::bakeIndirectLight( data->m_scene, data->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-    Relight::bakeAmbientOcclusion( data->m_scene, data->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    Relight::bakeDirectLight( data->m_scene, data->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    Relight::bakeIndirectLight( data->m_scene, data->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+//    Relight::bakeAmbientOcclusion( data->m_scene, data->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
 
+    data->m_progress->m_lightmap->expand();
+    data->m_progress->m_lightmap->save( "output/lm.tga" );
 
     data->m_progress->notify( 1000, 0 );
 }
