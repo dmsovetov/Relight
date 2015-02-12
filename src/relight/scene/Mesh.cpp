@@ -89,6 +89,12 @@ int Mesh::faceCount( void ) const
     return ( int )m_faces.size();
 }
 
+// ** Mesh::create
+Mesh* Mesh::create( void )
+{
+    return new Mesh;
+}
+
 // ** Mesh::createFromFile
 Mesh* Mesh::createFromFile( const String& fileName )
 {

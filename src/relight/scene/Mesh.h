@@ -187,6 +187,11 @@ namespace relight {
          */
         static Mesh*        createFromFile( const String& fileName );
 
+        /*!
+         Creates an empty mesh data.
+         */
+        static Mesh*        create( void );
+
     private:
 
                             //! Constructs a new mesh.
