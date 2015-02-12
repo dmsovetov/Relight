@@ -151,16 +151,31 @@ void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& baryce
 // ** Lightmap::expand
 void Lightmap::expand( void )
 {
-    for( int y = 0; y < m_height; y++ ) {
-        for( int x = 0; x < m_width; x++ ) {
-            Lumel& lumel = m_lumels[y * m_width + x];
-            if( lumel ) {
+    for( int y = 1; y < m_height - 1; y++ ) {
+        for( int x = 1; x < m_width - 1; x++ ) {
+            Lumel& current = m_lumels[y * m_width + x];
+            if( !current ) {
                 continue;
             }
 
-            lumel.m_color = nearestColor( x, y, 1 );
+            fillInvalidAt( x - 1, y - 1, current.m_color );
+            fillInvalidAt( x - 1, y + 1, current.m_color );
+            fillInvalidAt( x + 1, y - 1, current.m_color );
+            fillInvalidAt( x + 1, y + 1, current.m_color );
         }
     }
+}
+
+// ** Lightmap::fillInvalidAt
+void Lightmap::fillInvalidAt( int x, int y, const Color& color )
+{
+    Lumel& l = lumel( x, y );
+
+    if( l ) {
+        return;
+    }
+
+    l.m_color = color;
 }
 
 // ** Lightmap::blur
@@ -188,42 +203,7 @@ void Lightmap::blur( void )
         }
     }
 }
-
-// ** Lightmap::nearestColor
-const Color& Lightmap::nearestColor( int x, int y, int radius ) const
-{
-    // ** Search range
-    int xmin = std::max( 0, x - radius );
-    int xmax = std::min( m_width - 1, x + radius );
-    int ymin = std::max( 0, y - radius );
-    int ymax = std::min( m_height - 1, y + radius );
-
-    // ** Lumel
-    const Lumel* nearest = NULL;
-    float distance       = FLT_MAX;
-
-    for( int j = ymin; j <= ymax; j++ ) {
-        for( int i = xmin; i <= xmax; i++ ) {
-            const Lumel& lumel = m_lumels[j * m_width + i];
-            if( !lumel ) {
-                continue;
-            }
-
-            float d = sqrtf( (x - i) * (x - i) + (y - j) * (y - j) );
-            if( d < distance ) {
-                distance = d;
-                nearest	 = &lumel;
-            }
-        }
-    }
     
-    if( !nearest ) {
-        return nearestColor( x, y, radius + 1 );
-    }
-    
-    return nearest->m_color;
-}
-
 // ** Lightmap::save
 bool Lightmap::save( const String& fileName ) const
 {

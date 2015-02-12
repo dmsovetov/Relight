@@ -118,8 +118,8 @@ namespace relight {
         //! Initializes a given face lumel.
         void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor );
 
-        //! Returns a nearest valid lumel color.
-        const Color&            nearestColor( int x, int y, int radius ) const;
+        //! Fills invalid lumel.
+        void                    fillInvalidAt( int x, int y, const Color& color );
 
     protected:
 
