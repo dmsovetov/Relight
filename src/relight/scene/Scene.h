@@ -32,16 +32,6 @@
 namespace relight {
 
     /*!
-     A bake mask bits.
-     */
-    enum BakeMask {
-        BakeDirect              = 0x1,                                              //!< Bake direct light.
-        BakeIndirect            = 0x2,                                              //!< Bake indirect (reflected) light (aka GlobalIllumination).
-        BakeAmbientOcclusion    = 0x4,                                              //!< Bake ambient occlusion.
-        BakeAll                 = BakeDirect | BakeIndirect | BakeAmbientOcclusion  //!< Bakes all light data.
-    };
-
-    /*!
      Instance of a Scene class holds all lights, mesh instances
      and rendering settings.
      */
@@ -94,12 +84,6 @@ namespace relight {
 
         //! Returns a mesh by index.
         const Mesh*             mesh( int index ) const;
-
-        /*!
-         Backes a lightmap to a texture.
-         \param bake A bake mask.
-         */
-        RelightStatus           bake( int mask = BakeAll, Progress* progress = NULL );
 
         //! Creates a new scene.
         static Scene*           create( void );

@@ -29,10 +29,6 @@
 #include "Scene.h"
 #include "Mesh.h"
 #include "../Lightmap.h"
-#include "../baker/AmbientOcclusion.h"
-#include "../baker/Photons.h"
-#include "../baker/IndirectLight.h"
-#include "../baker/DirectLight.h"
 #include "../rt/Embree.h"
 
 namespace relight {
@@ -106,39 +102,6 @@ Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
     Mesh* transformed = mesh->transformed( transform );
     m_meshes.push_back( transformed );
     return transformed;
-}
-
-// ** Scene::bake
-RelightStatus Scene::bake( int mask, Progress* progress )
-{
-    if( m_state != StateReadyToBake ) {
-        return RelightInvalidCall;
-    }
-
-    if( mask & BakeDirect ) {
-        bake::DirectLight* direct = new bake::DirectLight( this, progress );
-        direct->bake();
-        delete direct;
-    }
-
-    if( mask & BakeIndirect ) {
-        bake::Photons* photons = new bake::Photons( this, progress, 64, 3, 0.05f, 10.0f );
-        photons->bake();
-
-        bake::IndirectLight* indirect = new bake::IndirectLight( this, progress, 1024, 50, 7 );
-        indirect->bake();
-
-        delete photons;
-        delete indirect;
-    }
-
-    if( mask & BakeAmbientOcclusion ) {
-        bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( this, progress, 2048, 0.8f, 0.6f );
-        ao->bake();
-        delete ao;
-    }
-
-    return RelightNotImplemented;
 }
 
 // ** Scene::begin
