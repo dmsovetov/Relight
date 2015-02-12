@@ -55,7 +55,7 @@ namespace bake {
         Color                   lightFromPointSet( const Lumel& lumel, const Light* light ) const;
 
         //! Calculates a direct light from a given point.
-        float                   influenceFromPoint( const Lumel& lumel, const Vec3& point, LightInfluence* influence, LightCutoff* cutoff, LightAttenuation* attenuation, bool castsShadow ) const;
+        float                   influenceFromPoint( const Lumel& lumel, const Vec3& point, const Light* light ) const;
     };
 
 } // namespace bake

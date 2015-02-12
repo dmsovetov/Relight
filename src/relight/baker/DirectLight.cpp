@@ -62,7 +62,7 @@ void DirectLight::bakeLumel( Lumel& lumel )
 // ** DirectLight::lightFromPoint
 Color DirectLight::lightFromPoint( const Lumel& lumel, const Light* light ) const
 {
-    float influence = influenceFromPoint( lumel, light->position(), light->influence(), light->cutoff(), light->attenuation(), light->castsShadow() );
+    float influence = influenceFromPoint( lumel, light->position(), light );
 
     if( influence > 0.0f ) {
         return light->color() * light->intensity() * influence;
@@ -86,7 +86,7 @@ Color DirectLight::lightFromPointSet( const Lumel& lumel, const Light* light ) c
 
     for( int i = 0, n = vertexGenerator->vertexCount(); i < n; i++ ) {
         const LightVertex&  vertex    = vertices[i];
-        float               influence = influenceFromPoint( lumel, vertex.m_position + light->position(), light->influence(), light->cutoff(), light->attenuation(), light->castsShadow() );
+        float               influence = influenceFromPoint( lumel, vertex.m_position + light->position(), light );
 
         // ** We have a non-zero light influence - add a light color to final result
         if( influence > 0.0f ) {
@@ -98,7 +98,7 @@ Color DirectLight::lightFromPointSet( const Lumel& lumel, const Light* light ) c
 }
 
 // ** DirectLight::influenceFromPoint
-float DirectLight::influenceFromPoint( const Lumel& lumel, const Vec3& point, LightInfluence* influence, LightCutoff* cutoff, LightAttenuation* attenuation, bool castsShadow ) const
+float DirectLight::influenceFromPoint( const Lumel& lumel, const Vec3& point, const Light* light ) const
 {
     float inf       = 0.0f;
     float att       = 1.0f;
@@ -106,27 +106,22 @@ float DirectLight::influenceFromPoint( const Lumel& lumel, const Vec3& point, Li
     float distance  = 0.0f;
 
     // ** Calculate light influence.
-    if( influence ) {
+    if( const LightInfluence* influence = light->influence() ) {
         inf = influence->calculate( m_scene->tracer(), point, lumel.m_position, lumel.m_normal, distance );
     }
 
     // ** Calculate light cutoff.
-    if( cutoff ) {
+    if( const LightCutoff* cutoff = light->cutoff() ) {
         cut = cutoff->calculate( lumel.m_position );
     }
 
     // ** Calculate light attenuation
-    if( attenuation ) {
+    if( const LightAttenuation* attenuation = light->attenuation() ) {
         att = attenuation->calculate( distance );
     }
 
-    // ** Calculate final influence
-    inf = inf * att * cut;
-    if( inf <= 0.001f ) {
-        return 0.0f;
-    }
-    
-    return inf;
+    // ** Return final influence
+    return inf * att * cut;
 }
 
 } // namespace bake
