@@ -203,6 +203,9 @@ namespace relight {
         //! Sets a target photon map.
         void                setPhotonmap( Photonmap* value );
 
+        //! Builds a mesh faces array.
+        void                buildFaces( void );
+
     private:
 
         //! Mesh bounds.

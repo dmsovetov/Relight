@@ -121,16 +121,22 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, i
     m_vertices.insert( m_vertices.end(), vertices.begin(), vertices.end() );
 
     // ** Update face array
+    buildFaces();
+
+    // ** Update mesh bounds
+    for( int i = 0, n = ( int )vertices.size(); i < n; i++ ) {
+        m_bounds += vertices[i].m_position;
+    }
+}
+
+// ** Mesh::buildFaces
+void Mesh::buildFaces( void )
+{
     m_faces.clear();
 
     for( int i = 0, n = m_indices.size() / 3; i < n; i++ ) {
         Index* indices = &m_indices[i * 3];
         m_faces.push_back( Face( i, &m_vertices[indices[0]], &m_vertices[indices[1]], &m_vertices[indices[2]] ) );
-    }
-
-    // ** Update mesh bounds
-    for( int i = 0, n = ( int )vertices.size(); i < n; i++ ) {
-        m_bounds += vertices[i].m_position;
     }
 }
 
@@ -172,7 +178,7 @@ Mesh* Mesh::transformed( const Matrix4& transform ) const
     Mesh* mesh          = new Mesh;
     mesh->m_vertices    = m_vertices;
     mesh->m_indices     = m_indices;
-    mesh->m_faces       = m_faces;
+    mesh->buildFaces();
 
     for( int i = 0, n = mesh->vertexCount(); i < n; i++ ) {
         mesh->m_vertices[i].m_position = transform * mesh->m_vertices[i].m_position;
@@ -227,6 +233,25 @@ const Vertex& Triangle::centroid( void ) const
     return m_centroid;
 }
 
+// ** Triangle::area
+float Triangle::area( const Vec3& a, const Vec3& b, const Vec3& c )
+{
+    float sides[3]  = { (a - b).length(), (b - c).length(), (c - a).length() };
+    float p         = 0.0f;
+    float sum       = 1.0f;
+
+    for( int i = 0; i < 3; i++ ) {
+        p += sides[i];
+    }
+    p = p * 0.5f;
+
+    for( int i = 0; i < 3; i++ ) {
+        sum *= (p - sides[i]);
+    }
+
+    return sqrtf( p * sum );
+}
+
 // ** Triangle::tesselate
 void Triangle::tesselate( Triangle& center, Triangle triangles[3] ) const
 {
@@ -251,6 +276,12 @@ Face::Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c ) :
 Index Face::faceIdx( void ) const
 {
     return m_faceIdx;
+}
+
+// ** Face::area
+float Face::area( void ) const
+{
+    return Triangle::area( m_a->m_position, m_b->m_position, m_c->m_position );
 }
 
 // ** Face::uvRect
