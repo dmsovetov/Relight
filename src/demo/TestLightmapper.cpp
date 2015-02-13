@@ -17,6 +17,7 @@
 #include	"Lightmap.h"
 //#include	"PhotonMap.h"
 #include	"Mesh.h"
+#include "mathlib.h"
 
 #define		CALCULATE					(1)
 #define		CALCULATE_LUMELS			(1)
@@ -56,26 +57,33 @@ void BakingProgress::notify( int step, int stepCount )
 // ** cTestLightmapper::Create
 void cTestLightmapper::Create( void )
 {
-    createScene( "data/simple_scene_one_uv.obj" );
-//    createScene( "data/boxes_uv.obj" );
+    createScene();
 
-    m_progress = new BakingProgress( m_diffuse, &m_diffuseGl );
+    startLightmapsThread( IndirectLightSettings::fast(), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
 
-    const int kThreads = 8;
-    for( int i = 0; i < kThreads; i++ ) {
-        startThread( i, kThreads, IndirectLightSettings::production(), AmbientOcclusionSettings::production( 0.8f, 0.6f, 0.5f ) );
-    }
-
-    m_rotation        = 0.0f;
+    m_rotationX = m_rotationY = 0.0f;
 }
 
-void cTestLightmapper::startThread( int index, int threadCount, const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
+void cTestLightmapper::startLightmapsThread( const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
 {
     WorkerData* data = new WorkerData;
     pthread_t   thread;
 
     data->m_scene                   = m_scene;
-    data->m_progress                = m_progress;
+    data->m_instances               = &m_instances;
+    data->m_indirectLightSettings   = indirectLight;
+    data->m_aoSettings              = ambientOcclusion;
+
+    pthread_create( &thread, NULL, lightmapWorker, data );
+}
+
+void cTestLightmapper::startBakingThread( Instance* instance, int index, int threadCount, const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
+{
+    WorkerData* data = new WorkerData;
+    pthread_t   thread;
+
+    data->m_scene                   = m_scene;
+    data->m_instance                = instance;
     data->m_startIndex              = index;
     data->m_step                    = threadCount;
     data->m_indirectLightSettings   = indirectLight;
@@ -83,55 +91,273 @@ void cTestLightmapper::startThread( int index, int threadCount, const IndirectLi
 
     data->m_indirectLightSettings.m_photonPassCount /= threadCount;
 
-    pthread_create( &thread, NULL, worker, data );
+    pthread_create( &thread, NULL, bakeWorker, data );
 }
 
-void cTestLightmapper::createScene( const char* fileName )
+void cTestLightmapper::createScene( void )
 {
+    m_meshes[Mesh_Light]        = loadPrefab( "data/light.obj", NULL );
+    m_meshes[Mesh_Ground]       = createGroundPlane( 10 );
+    m_meshes[Mesh_Tomb05c]      = loadPrefab( "data/crypt/Tomb05_c.mesh", "data/textures/Tomb01_D.tga" );
+    m_meshes[Mesh_Gravestone01] = loadPrefab( "data/crypt/Gravestone01.mesh", "data/textures/Gravestone01_D.tga" );
+
     m_scene = Scene::create();
-    m_light = Mesh::createFromFile( "data/light.obj" );
 
     // ** Add lights
     m_scene->begin();
 
     if( true ) {
-        m_scene->addLight( Light::createAreaLight( m_light, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
-        m_scene->addLight( Light::createAreaLight( m_light, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
-    } else {
+        m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
+        m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
+    }
+    else if( true ) {
         Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 2.50f,  1.50f );
         dir.normalize();
+
+        m_scene->addLight( Light::createPointLight( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
+        m_scene->addLight( Light::createPointLight( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
 
     //    m_scene->addLight( Light::createPointLight( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
     //    m_scene->addLight( Light::createPointLight( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
     //    m_scene->addLight( Light::createSpotLight( Vec3( 1.50f, 2.50f,  1.50f ), dir, 0.3f, 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
 
-        m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    //    m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    }
+    else {
+        m_scene->addLight( Light::createPointLight( Vec3( 3.00f, 4.20f, 2.0f ), 6.0f, Color( 1.0f, 1.0f, 1.00f ), 10.0f, true ) );
     }
 
-    // ** Add mesh
-    Mesh* mesh      = Mesh::createFromFile( fileName );
-    Mesh* instance  = m_scene->addMesh( mesh, Matrix4::translation( 0, 0, 0 ) );
-    m_diffuse = m_scene->createLightmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-    m_photons = m_scene->createPhotonmap( DIRECT_LIGHTMAP_SIZE, DIRECT_LIGHTMAP_SIZE );
-    RelightStatus status = m_diffuse->addMesh( instance );
-    m_photons->addMesh( instance );
+
+
+    placeInstance( "tomb", m_meshes[Mesh_Tomb05c], relight::Matrix4::translation( 0, 0, 0 ), DIRECT_LIGHTMAP_SIZE );
+    placeInstance( "ground", m_meshes[Mesh_Ground], relight::Matrix4::translation( 0, 0, 0 ), DIRECT_LIGHTMAP_SIZE );
+
+    for( int i = -2; i <= 2; i++ ) {
+        for( int j = -2; j <= 2; j++ ) {
+            if( i == 0 && j == 0 ) {
+                continue;
+            }
+
+            placeInstance( "gravestone_" + std::to_string( i ) + "_" + std::to_string( j ), m_meshes[Mesh_Gravestone01], relight::Matrix4::translation( i * 1.4f, 0, j * 1.4f ), 128 );
+        }
+    }
 
     m_scene->end();
-
-    m_diffuseGl = createTextureFromLightmap( m_diffuse );
 }
 
-void* cTestLightmapper::worker( void* userData )
+Prefab cTestLightmapper::createGroundPlane( int size, const relight::Color& color ) const
+{
+    Prefab prefab;
+
+    prefab.m_diffuse = createTextureFromFile( "data/textures/Ground07_D.tga" );
+    prefab.m_mesh    = Mesh::create();
+
+    VertexBuffer vertexBuffer;
+    IndexBuffer  indexBuffer;
+
+    // ** Vertices
+    Vertex a;
+    a.m_position                = Vec3( -size / 2, 0, -size / 2 );
+    a.m_normal                  = Vec3( 0, 1, 0 );
+    a.m_color                   = color;
+    a.m_uv[Vertex::Lightmap]    = Uv( 0, 0 );
+    a.m_uv[Vertex::Diffuse]     = Uv( 0, 0 );
+    vertexBuffer.push_back( a );
+
+    Vertex b;
+    b.m_position                = Vec3(  size / 2, 0, -size / 2 );
+    b.m_normal                  = Vec3( 0, 1, 0 );
+    b.m_color                   = color;
+    b.m_uv[Vertex::Lightmap]    = Uv( 0.99f, 0 );
+    b.m_uv[Vertex::Diffuse]     = Uv( size, 0 );
+    vertexBuffer.push_back( b );
+
+    Vertex c;
+    c.m_position                = Vec3(  size / 2, 0,  size / 2 );
+    c.m_normal                  = Vec3( 0, 1, 0 );
+    c.m_color                   = color;
+    c.m_uv[Vertex::Lightmap]    = Uv( 0.99f, 0.99f );
+    c.m_uv[Vertex::Diffuse]     = Uv( size, size );
+    vertexBuffer.push_back( c );
+
+    Vertex d;
+    d.m_position                = Vec3( -size / 2, 0,  size / 2 );
+    d.m_normal                  = Vec3( 0, 1, 0 );
+    d.m_color                   = color;
+    d.m_uv[Vertex::Lightmap]    = Uv( 0, 0.99f );
+    d.m_uv[Vertex::Diffuse]     = Uv( 0, size );
+    vertexBuffer.push_back( d );
+
+    // ** Indices
+    indexBuffer.push_back( 2 );
+    indexBuffer.push_back( 1 );
+    indexBuffer.push_back( 0 );
+
+    indexBuffer.push_back( 3 );
+    indexBuffer.push_back( 2 );
+    indexBuffer.push_back( 0 );
+
+    // ** Add buffer
+    prefab.m_mesh->addFaces( vertexBuffer, indexBuffer );
+
+    return prefab;
+}
+
+Prefab cTestLightmapper::loadPrefab( const char *fileName, const char *diffuse )
+{
+    Prefab prefab;
+
+    prefab.m_mesh    = strstr( fileName, ".obj" ) ? Mesh::createFromFile( fileName ) : loadMesh( fileName );
+    prefab.m_diffuse = diffuse ? createTextureFromFile( diffuse ) : 0;
+
+    return prefab;
+}
+
+Mesh* cTestLightmapper::loadMesh( const char* fileName ) const
+{
+    FILE* file = fopen( fileName, "rb" );
+    if( !file ) {
+        return NULL;
+    }
+
+    Mesh* mesh = Mesh::create();
+    int   kTmpStrLen = 1024;
+
+    ::Matrix4 T;
+    T.rotate( Vector3( 1, 0, 0 ), -90 );
+
+    unsigned int magik = 0;
+    unsigned int boneCount = 0;
+    unsigned int submeshCount = 0;
+
+    struct Str {
+        static std::string read( FILE* file ) {
+            unsigned int len;
+            fread( &len, sizeof( int ), 1, file );
+            std::string str;
+            str.resize( len );
+            fread( &str[0], len, 1, file );
+            return str;
+        }
+    };
+
+    fread(&magik, sizeof(unsigned int), 1, file); //magick
+
+    // skeleton data
+    fread(&boneCount, sizeof(unsigned int), 1, file);
+    if( boneCount != 0 )
+    {
+        assert( false );
+        return NULL;
+    }
+
+    // submesh count
+    fread(&submeshCount, sizeof(unsigned int), 1, file);
+
+    struct MeshVertex {
+        Vec3 position;
+        Vec3 normal;
+        Vec3 tangent;
+        Uv   texture;
+        Uv   lightmap;
+    };
+
+    for( unsigned int i = 0; i < submeshCount; ++i )
+    {
+        size_t       reads = 0;
+        unsigned int indexCount = 0;
+        unsigned int vertexCount = 0;
+        unsigned int vertexStride = 0;
+
+        std::string surfaceMeshName = Str::read( file );
+        std::string surfaceMaterialName = Str::read( file );
+        std::string vertexDeclStr = Str::read( file );
+
+        reads = fread(&vertexCount,  sizeof(unsigned int), 1, file);  //vertex count
+        reads = fread(&vertexStride, sizeof(unsigned int), 1, file);  //vertex stride
+        reads = fread(&indexCount,   sizeof(unsigned int), 1, file);  //index count
+
+        assert( sizeof( MeshVertex ) == vertexStride );
+        MeshVertex* vertices = new MeshVertex[vertexCount];
+
+        fread(vertices, vertexStride * vertexCount, 1, file);
+
+        Index* indices = new Index[indexCount];
+        fread( indices, sizeof(unsigned short) * indexCount, 1, file );
+
+        VertexBuffer vertexBuffer;
+        IndexBuffer  indexBuffer;
+
+        for( int j = 0; j < vertexCount; j++ ) {
+            Vector3 pos  = Vector3( vertices[j].position.x, vertices[j].position.y, vertices[j].position.z ) * T;
+            Vector3 norm = Vector3( vertices[j].normal.x, vertices[j].normal.y, vertices[j].normal.z ) * T;
+
+            Vertex v;
+            v.m_position = Vec3( pos.x * 0.005f, pos.y * 0.005f, pos.z * 0.005f );
+            v.m_normal = Vec3( norm.x, norm.y, norm.z );
+            v.m_color = Color( 1, 1, 1 );
+            v.m_uv[Vertex::Lightmap] = vertices[j].lightmap;
+            v.m_uv[Vertex::Diffuse] = vertices[j].texture;
+            vertexBuffer.push_back( v );
+        }
+
+        for( int j = 0; j < indexCount; j++ ) {
+            indexBuffer.push_back( indices[j] );
+        }
+
+        mesh->addFaces( vertexBuffer, indexBuffer );
+    }
+
+    return mesh;
+}
+
+void* cTestLightmapper::lightmapWorker( void* userData )
 {
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
-    Relight::bakeDirectLight( data->m_scene, data->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-    Relight::bakeIndirectLight( data->m_scene, data->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-//    Relight::bakeAmbientOcclusion( data->m_scene, data->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
 
-    data->m_progress->m_lightmap->expand();
-    data->m_progress->m_lightmap->save( "output/lm.tga" );
+    std::vector<pthread_t> threads(1);
 
-    data->m_progress->notify( 1000, 0 );
+    for( int i = 0; i < data->m_instances->size(); i++ ) {
+        for( int j = 0; j < threads.size(); j++ ) {
+            WorkerData* instanceData = new WorkerData;
+            instanceData->m_scene                   = data->m_scene;
+            instanceData->m_aoSettings              = data->m_aoSettings;
+            instanceData->m_indirectLightSettings   = data->m_indirectLightSettings;
+            instanceData->m_instances               = data->m_instances;
+            instanceData->m_instance                = data->m_instances->at( i );
+            instanceData->m_startIndex              = j;
+            instanceData->m_step                    = threads.size();
+            instanceData->m_indirectLightSettings.m_photonPassCount /= threads.size();
+
+            pthread_create( &threads[j], NULL, bakeWorker, instanceData );
+        }
+
+        for( int j = 0; j < threads.size(); j++ ) {
+            pthread_join( threads[j], NULL );
+        }
+
+        data->m_instances->at( i )->m_lightmap->save( ("data/lightmaps/" + data->m_instances->at( i )->m_name + ".tga").c_str() );
+    }
+
+    printf( "All baked!" );
+}
+
+void* cTestLightmapper::bakeWorker( void* userData )
+{
+    RelightStatus status;
+    WorkerData*   data = reinterpret_cast<WorkerData*>( userData );
+
+    status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    assert( status == RelightSuccess );
+
+//    status = Relight::bakeIndirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+//    assert( status == RelightSuccess );
+
+    Relight::bakeAmbientOcclusion( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+
+    data->m_instance->m_lightmap->expand();
+
+    data->m_instance->m_progress->notify( 1000, 0 );
 }
 
 unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const
@@ -142,8 +368,9 @@ unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightma
 
     glGenTextures( 1, &id );
     glBindTexture( GL_TEXTURE_2D, id );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, lightmap->width(), lightmap->height(), 0, GL_RGB, GL_FLOAT, pixels );
 
     delete[]pixels;
@@ -158,13 +385,19 @@ void cTestLightmapper::Render( void )
 	glEnable( GL_CULL_FACE );
 	glPushMatrix();
 
-    glRotatef( m_rotation, 0, 1, 0 );
-    glScalef( 0.7f, 0.7f, 0.7f );
+//    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-    m_rotation += 0.05f;
+    glRotatef( m_rotationY, 0, 1, 0 );
+    glRotatef( m_rotationX, 1, 0, 0 );
+    glScalef( 0.99f, 0.99f, 0.99f );
 
-    for( int i = 0; i < m_scene->meshCount(); i++ ) {
-        renderInstance( m_scene->mesh( i ) );
+//    m_rotation += 0.05f;
+
+//    for( int i = 0; i < m_scene->meshCount(); i++ ) {
+//        renderInstance( m_scene->mesh( i ), m_diffuseGl, m_lightmapGl );
+//    }
+    for( int i = 0; i < m_instances.size(); i++ ) {
+        renderInstance( m_instances[i] );
     }
 
     glBindTexture( GL_TEXTURE_2D, 0 );
@@ -180,61 +413,170 @@ void cTestLightmapper::Render( void )
         glTranslatef( light->position().x, light->position().y, light->position().z );
         glScalef( 0.05, 0.05, 0.05 );
 
-        renderInstance( m_light );
+    //    renderInstance( m_light, 0, 0 );
 
         glPopMatrix();
     }
     glColor3f( 1.0, 1.0, 1.0 );
 
+    glDisable( GL_DEPTH_TEST );
+    glBegin( GL_LINES );
+    glColor3f( 1, 0, 0 ); glVertex3f( 0, 0, 0 ); glVertex3f( 1, 0, 0 );
+    glColor3f( 0, 1, 0 ); glVertex3f( 0, 0, 0 ); glVertex3f( 0, 1, 0 );
+    glColor3f( 0, 0, 1 ); glVertex3f( 0, 0, 0 ); glVertex3f( 0, 0, 1 );
+    glEnd();
+    glEnable( GL_DEPTH_TEST );
+
     glPopMatrix();
 
-    if( m_progress->m_hasUpdates ) {
-        float* pixels = m_diffuse->toRgb32F();
-        glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
-        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, m_diffuse->width(), m_diffuse->height(), 0, GL_RGB, GL_FLOAT, pixels );
+    for( int i = 0; i < m_instances.size(); i++ ) {
+        Instance* instance = m_instances[i];
+
+        if( !instance->m_progress->m_hasUpdates ) {
+            continue;
+        }
+
+        float* pixels = instance->m_lightmap->toRgb32F();
+        glBindTexture( GL_TEXTURE_2D, instance->m_lightmapId );
+        glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, instance->m_lightmap->width(), instance->m_lightmap->height(), 0, GL_RGB, GL_FLOAT, pixels );
         glBindTexture( GL_TEXTURE_2D, 0 );
         delete[]pixels;
 
-        m_progress->m_hasUpdates = false;
+        instance->m_progress->m_hasUpdates = false;
     }
 }
 
-void cTestLightmapper::renderInstance( const relight::Mesh* mesh ) const
+// ** cTestLightmapper::createTextureFromFile
+unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) const
 {
-    const relight::Vertex*  vertices = mesh->vertexBuffer();
-    const relight::Index*   indices  = mesh->indexBuffer();
+    GLubyte		TGAheader[12] = {0,0,2,0,0,0,0,0,0,0,0,0};	// Uncompressed TGA Header
+    GLubyte		TGAcompare[12];								// Used To Compare TGA Header
+    GLubyte		header[6];									// First 6 Useful Bytes From The Header
 
-    glBindTexture( GL_TEXTURE_2D, m_diffuseGl );
+    FILE *file = fopen( fileName, "rb" );						// Open The TGA File
+
+    if(	file==NULL ||										// Does File Even Exist?
+       fread(TGAcompare,1,sizeof(TGAcompare),file)!=sizeof(TGAcompare) ||	// Are There 12 Bytes To Read?
+       memcmp(TGAheader,TGAcompare,sizeof(TGAheader))!=0				||	// Does The Header Match What We Want?
+       fread(header,1,sizeof(header),file)!=sizeof(header))				// If So Read Next 6 Header Bytes
+    {
+        if (file == NULL)									// Did The File Even Exist? *Added Jim Strong*
+            return 0;									// Return False
+        else
+        {
+            fclose(file);									// If Anything Failed, Close The File
+            return 0;									// Return False
+        }
+    }
+
+    int width  = header[1] * 256 + header[0];			// Determine The TGA Width	(highbyte*256+lowbyte)
+    int height = header[3] * 256 + header[2];			// Determine The TGA Height	(highbyte*256+lowbyte)
+
+    if( width <=0 || height	<=0	|| (header[4] != 24 && header[4] != 32) )
+    {
+        fclose(file);
+        return;
+    }
+
+    // ** Read pixels
+    int bytesPerPixel    = header[4] / 8;
+    int imageSize		 = width * height * bytesPerPixel;
+    unsigned char *pixels = new unsigned char[imageSize];
+    fread( pixels, 1, imageSize, file );
+    fclose( file );
+
+    unsigned int id;
+
+    glGenTextures( 1, &id );
+    glBindTexture( GL_TEXTURE_2D, id );
+    glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+
+    delete[]pixels;
+
+    return id;
+}
+
+void cTestLightmapper::renderInstance( const Instance* instance ) const
+{
+    const relight::Vertex*  vertices = instance->m_mesh->vertexBuffer();
+    const relight::Index*   indices  = instance->m_mesh->indexBuffer();
 
     glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
     glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);				// Enable texture coord arrays
     glEnableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
 
     glVertexPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_position.x );				// Vertex Pointer to triangle array
     glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
     glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
 
-    glClientActiveTextureARB( GL_TEXTURE1_ARB );
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+    if( instance->m_lightmapId ) {
+        glActiveTextureARB( GL_TEXTURE1_ARB );
+        glEnable( GL_TEXTURE_2D );
+        glBindTexture( GL_TEXTURE_2D, instance->m_lightmapId );
 
-    glClientActiveTextureARB( GL_TEXTURE0_ARB );
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+        glClientActiveTextureARB( GL_TEXTURE1_ARB );
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+    } else {
+        glActiveTextureARB( GL_TEXTURE1_ARB );
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisable( GL_TEXTURE_2D );
+    }
 
-    glDrawElements( GL_TRIANGLES, mesh->indexCount(), GL_UNSIGNED_SHORT, indices );
+    if( instance->m_diffuseId ) {
+        glActiveTextureARB( GL_TEXTURE0_ARB );
+        glEnable( GL_TEXTURE_2D );
+        glBindTexture( GL_TEXTURE_2D, instance->m_diffuseId );
+
+        glClientActiveTextureARB( GL_TEXTURE0_ARB );
+        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Diffuse].u );
+    } else {
+        glActiveTextureARB( GL_TEXTURE0_ARB );
+        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glDisable( GL_TEXTURE_2D );
+    }
+
+    glDrawElements( GL_TRIANGLES, instance->m_mesh->indexCount(), GL_UNSIGNED_SHORT, indices );
 
     glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
     glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);				// Disable texture coord arrays
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);       // Disable texture coord arrays
     glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+}
+
+Instance* cTestLightmapper::placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize )
+{
+    Instance* instance      = new Instance;
+    instance->m_name        = name;
+    instance->m_mesh        = m_scene->addMesh( prefab.m_mesh, T );
+    instance->m_lightmap    = m_scene->createLightmap( lightmapSize, lightmapSize );
+    instance->m_photons     = m_scene->createPhotonmap( lightmapSize, lightmapSize );
+    instance->m_lightmapId  = createTextureFromLightmap( instance->m_lightmap );
+    instance->m_diffuseId   = prefab.m_diffuse;
+    instance->m_progress    = new BakingProgress( instance );
+
+    instance->m_lightmap->addMesh( instance->m_mesh );
+    instance->m_photons->addMesh( instance->m_mesh );
+
+    instance->m_lightmap->save( "output/lm.tga" );
+
+    m_instances.push_back( instance );
+
+    return instance;
 }
 
 // ** cTestLightmapper::KeyPressed
 void cTestLightmapper::KeyPressed( int key )
 {
+    if( key == 'q' ) m_rotationY += 2.8f;
+    if( key == 'e' ) m_rotationY -= 2.8f;
 
+    if( key == 'w' ) m_rotationX += 2.8f;
+    if( key == 's' ) m_rotationX -= 2.8f;
 }
 
 // ** cTestLightmapper::CalculateDirectLight

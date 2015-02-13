@@ -32,29 +32,56 @@ class cLightmap;
 class cPhotonMap;
 class Model_OBJ;
 struct sLight;
+struct Instance;
 
 class BakingProgress : public relight::Progress {
 public:
 
-                                BakingProgress( relight::Lightmap* lightmap, unsigned int* textureId )
-                                    : m_lightmap( lightmap ), m_textureId( textureId ), m_hasUpdates( false ) {}
+                            BakingProgress( Instance* instance )
+                                : m_instance( instance ), m_hasUpdates( false ) {}
 
-    virtual void                notify( int step, int stepCount );
+    virtual void            notify( int step, int stepCount );
 
 public:
 
-    unsigned int*           m_textureId;
-    relight::Lightmap*      m_lightmap;
+    Instance*               m_instance;
     bool                    m_hasUpdates;
 };
+
+struct Instance {
+    BakingProgress*         m_progress;
+    std::string             m_name;
+    relight::Mesh*          m_mesh;
+    relight::Lightmap*      m_lightmap;
+    relight::Lightmap*      m_photons;
+    unsigned int            m_diffuseId;
+    unsigned int            m_lightmapId;
+};
+
+typedef std::vector<Instance*> InstanceArray;
 
 struct WorkerData {
     relight::Scene*                     m_scene;
     relight::IndirectLightSettings      m_indirectLightSettings;
     relight::AmbientOcclusionSettings   m_aoSettings;
-    BakingProgress*                     m_progress;
+    Instance*                           m_instance;
+    InstanceArray*                      m_instances;
     int                                 m_startIndex;
     int                                 m_step;
+};
+
+enum MeshList {
+    Mesh_Light = 0,
+    Mesh_Ground,
+    
+    Mesh_Tomb05c,
+    Mesh_Gravestone01,
+    TotalMeshes
+};
+
+struct Prefab {
+    relight::Mesh*  m_mesh;
+    unsigned int    m_diffuse;
 };
 
 // ** class cTestLightmapper
@@ -69,9 +96,10 @@ private:
 	void			SaveLightmaps( void );
     void            LoadLightmaps( void );
 
-    void            createScene( const char* fileName );
+    void            createScene( void );
 
-    static void*    worker( void* userData );
+    static void*    bakeWorker( void* userData );
+    static void*    lightmapWorker( void* userData );
 
 public:
 
@@ -83,23 +111,27 @@ public:
 private:
 
     unsigned int    createTextureFromLightmap( const relight::Lightmap* lightmap ) const;
-    void            renderInstance( const relight::Mesh* mesh ) const;
+    unsigned int    createTextureFromFile( const char* fileName ) const;
+    void            renderInstance( const Instance* instance ) const;
+    Instance*       placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize );
+    relight::Mesh*  loadMesh( const char* fileName ) const;
+    Prefab          createGroundPlane( int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
+    Prefab          loadPrefab( const char* fileName, const char* diffuse );
 
-    void            startThread( int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
+    void            startLightmapsThread( const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
+    void            startBakingThread( Instance* instance, int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
 
 private:
 
     pthread_t           m_thread;
     WorkerData          m_data;
 
-    BakingProgress*     m_progress;
     relight::Scene*     m_scene;
-    relight::Lightmap*  m_diffuse;
-    relight::Photonmap* m_photons;
-    relight::Mesh*      m_light;
-    float               m_rotation;
+    float               m_rotationY;
+    float               m_rotationX;
 
-    unsigned int        m_diffuseGl;
+    Prefab              m_meshes[TotalMeshes];
+    InstanceArray       m_instances;
 };
 
 #endif	/*	!__DC_TestLightmapper_H__	*/
