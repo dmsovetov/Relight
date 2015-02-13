@@ -151,13 +151,13 @@ namespace relight {
     public:
 
         //! Bakes direct lighting.
-        static RelightStatus    bakeDirectLight( const Scene* scene, Progress* progress, bake::BakeIterator* iterator = NULL );
+        static RelightStatus    bakeDirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, bake::BakeIterator* iterator = NULL );
 
         //! Bakes indirect light to a lightmap.
-        static RelightStatus    bakeIndirectLight( const Scene* scene, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator = NULL );
+        static RelightStatus    bakeIndirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator = NULL );
 
         //! Bakes ambient occlusion to a lightmap.
-        static RelightStatus    bakeAmbientOcclusion( const Scene* scene, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
+        static RelightStatus    bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
     };
 
     // ** TimeMeasure

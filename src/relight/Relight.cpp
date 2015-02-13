@@ -155,7 +155,7 @@ AmbientOcclusionSettings AmbientOcclusionSettings::production( float occludedFra
 }
 
 // ** Relight::bakeDirectLight
-RelightStatus Relight::bakeDirectLight( const Scene* scene, Progress* progress, bake::BakeIterator* iterator )
+RelightStatus Relight::bakeDirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, bake::BakeIterator* iterator )
 {
     if( !iterator ) {
         iterator = new bake::LumelBakeIterator( 0, 1 );
@@ -163,14 +163,14 @@ RelightStatus Relight::bakeDirectLight( const Scene* scene, Progress* progress, 
 
     TimeMeasure measure( "Direct Lighting" );
     bake::DirectLight* direct = new bake::DirectLight( scene, progress, iterator );
-    RelightStatus status = direct->bake();
+    RelightStatus status = direct->bakeMesh( mesh );
     delete direct;
 
     return status;
 }
 
 // ** Relight::bakeIndirectLight
-RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator )
+RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator )
 {
     RelightStatus status;
 
@@ -178,7 +178,7 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress
         TimeMeasure measure( "Photon tracing" );
 
         bake::Photons* photons = new bake::Photons( scene, progress, NULL, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
-        status = photons->bake();
+        status = photons->bakeMesh( mesh );
         delete photons;
     }
 
@@ -186,7 +186,7 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress
         TimeMeasure measure( "Indirect Lighting" );
 
         bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, settings.m_finalGatherSamples, settings.m_finalGatherDistance, settings.m_finalGatherRadius );
-        status = indirect->bake();
+        status = indirect->bakeMesh( mesh );
         delete indirect;
     }
 
@@ -194,11 +194,11 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, Progress* progress
 }
 
 // ** Relight::bakeAmbientOcclusion
-RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator )
+RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator )
 {
     TimeMeasure measure( "Ambient Occlusion" );
     bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( scene, progress, iterator, settings.m_samples, settings.m_occludedFraction, settings.m_maxDistance, settings.m_exponent );
-    RelightStatus status = ao->bake();
+    RelightStatus status = ao->bakeMesh( mesh );
     delete ao;
 
     return status;
