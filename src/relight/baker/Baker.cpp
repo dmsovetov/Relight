@@ -51,6 +51,10 @@ Baker::~Baker( void )
 // ** Baker::bakeMesh
 RelightStatus Baker::bakeMesh( const Mesh* mesh )
 {
+    if( mesh->faceCount() == 0 ) {
+        return RelightInvalidCall;
+    }
+
     if( !m_iterator ) {
         return RelightInvalidCall;
     }
@@ -200,6 +204,10 @@ int FaceBakeIterator::itemCount( void ) const
 // ** FaceBakeIterator::next
 bool FaceBakeIterator::next( void )
 {
+    if( m_index >= m_mesh->faceCount() ) {
+        return false;
+    }
+    
     const Face& face = m_mesh->face( m_index );
 
     // ** Calculate UV bounds
