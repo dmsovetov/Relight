@@ -40,14 +40,14 @@ namespace relight {
 namespace bake {
 
 // ** Photons::Photons
-Photons::Photons( const Scene* scene, Progress* progress, BakeIterator* iterator, int passCount, int maxDepth, float energyThreshold, float maxDistance )
-    : Baker( scene, progress, iterator ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_maxDistance( maxDistance )
+Photons::Photons( const Scene* scene, int passCount, int maxDepth, float energyThreshold, float maxDistance )
+    : m_scene( scene ), m_passCount( passCount ), m_maxDepth( maxDepth ), m_energyThreshold( energyThreshold ), m_maxDistance( maxDistance ), m_photonCount( 0 )
 {
 
 }
 
-// ** Photons::bake
-RelightStatus Photons::bake( void )
+// ** Photons::emit
+RelightStatus Photons::emit( void )
 {
     for( int j = 0; j < m_passCount; j++ ) {
         for( int i = 0, n = m_scene->lightCount(); i < n; i++ ) {
@@ -59,11 +59,9 @@ RelightStatus Photons::bake( void )
 
             emitPhotons( light );
         }
-
-        if( m_progress ) {
-            m_progress->notify( j + 1, m_passCount );
-        }
     }
+
+    printf( "%d photons stored\n", m_photonCount );
 
     return RelightSuccess;
 }
@@ -118,10 +116,8 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
 
     energy *= influence;
 
-    // ** Store photons with depth more that 0, because zero depth means that it's a direct light.
-    if( depth > 0 ) {
-        store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
-    }
+    // ** Store photon energy
+    store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
 
     // ** Keep tracing
     trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hitColor, energy, depth + 1 );
@@ -141,6 +137,8 @@ void Photons::store( Photonmap* photonmap, const Color& color, const Uv& uv )
 
     lumel.m_color += color;
     lumel.m_photons++;
+
+    m_photonCount++;
 }
 
 } // namespace bake

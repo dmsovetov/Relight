@@ -34,22 +34,21 @@ namespace relight {
 namespace bake {
 
     // ** class Photons
-    class Photons : public Baker {
+    class Photons {
     public:
 
                                 //! Constructs a Photons instance.
                                 /*!
                                  \param scene Scene to be baked.
-                                 \param progress Progress callback.
-                                 \param iterator Bake iterator.
                                  \param passCount Amount of photon passes.
                                  \param maxDepth Maximum photon tracing depth (number of light bounces).
                                  \param energyThreshold The minimum energy that photon should have to continue tracing.
                                  \param maxDistance The reflected light maximum distance. All intersections above this value will be ignored.
                                  */
-                                Photons( const Scene* scene, Progress* progress, BakeIterator* iterator, int passCount, int maxDepth, float energyThreshold, float maxDistance );
-        // ** Baker
-        virtual RelightStatus   bake( void );
+                                Photons( const Scene* scene, int passCount, int maxDepth, float energyThreshold, float maxDistance );
+
+        //! Emits photons from all scene lights.
+        virtual RelightStatus   emit( void );
 
     private:
 
@@ -75,6 +74,9 @@ namespace bake {
 
     private:
 
+        //! Parent scene.
+        const Scene*            m_scene;
+
         //! Amount of photon passes, at each pass there will be emitted N photons.
         int                     m_passCount;
 
@@ -86,6 +88,9 @@ namespace bake {
 
         //! Maximum intersection distance
         float                   m_maxDistance;
+
+        //! Total amount of photons stored.
+        int                     m_photonCount;
     };
 
 } // namespace bake

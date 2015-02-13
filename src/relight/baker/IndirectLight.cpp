@@ -40,19 +40,12 @@ namespace bake {
 IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius )
     : Baker( scene, progress, iterator ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius )
 {
-
-}
-
-// ** IndirectLight::bake
-RelightStatus IndirectLight::bake( void )
-{
+    TimeMeasure measure( "Photon gathering" );
     for( int i = 0; i < m_scene->meshCount(); i++ ) {
         if( Photonmap* photons = m_scene->mesh( i )->photonmap() ) {
             photons->gather( m_radius );
         }
     }
-
-    return Baker::bake();
 }
 
 // ** IndirectLight::bakeLumel

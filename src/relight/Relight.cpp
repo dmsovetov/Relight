@@ -177,9 +177,13 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, 
     {
         TimeMeasure measure( "Photon tracing" );
 
-        bake::Photons* photons = new bake::Photons( scene, progress, NULL, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
-        status = photons->bakeMesh( mesh );
+        bake::Photons* photons = new bake::Photons( scene, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
+        status = photons->emit();
         delete photons;
+
+        if( status != RelightSuccess ) {
+            return status;
+        }
     }
 
     {

@@ -48,9 +48,6 @@ namespace bake {
                                  */
                                 IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius );
 
-        //! Bakes an indirect lighting to a texture using a final gather.
-        virtual RelightStatus   bake( void );
-
     protected:
 
         //! Bakes an indirect light to a given lumel.
