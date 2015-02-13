@@ -24,7 +24,7 @@
 #define		CALCULATE_DIRECT			(1)
 #define		CALCULATE_INDIRECT			(1)
 
-#define		DIRECT_LIGHTMAP_SIZE		(512)
+#define		DIRECT_LIGHTMAP_SIZE		(1024)
 #define		INDIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_MAX_DEPTH			(3)
 #define     INDIRECT_RADIUS             (7)
@@ -62,6 +62,7 @@ void cTestLightmapper::Create( void )
     startLightmapsThread( IndirectLightSettings::fast(), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
 
     m_rotationX = m_rotationY = 0.0f;
+    m_useLightmaps = true;
 }
 
 void cTestLightmapper::startLightmapsThread( const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
@@ -97,7 +98,7 @@ void cTestLightmapper::startBakingThread( Instance* instance, int index, int thr
 void cTestLightmapper::createScene( void )
 {
     m_meshes[Mesh_Light]        = loadPrefab( "data/light.obj", NULL );
-    m_meshes[Mesh_Ground]       = createGroundPlane( 10 );
+    m_meshes[Mesh_Ground]       = createGroundPlane( "data/textures/Ground07_D.tga", 10 );
     m_meshes[Mesh_Tomb05c]      = loadPrefab( "data/crypt/Tomb05_c.mesh", "data/textures/Tomb01_D.tga" );
     m_meshes[Mesh_Gravestone01] = loadPrefab( "data/crypt/Gravestone01.mesh", "data/textures/Gravestone01_D.tga" );
 
@@ -106,11 +107,11 @@ void cTestLightmapper::createScene( void )
     // ** Add lights
     m_scene->begin();
 
-    if( true ) {
+    if( false ) {
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
     }
-    else if( true ) {
+    else if( false ) {
         Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 2.50f,  1.50f );
         dir.normalize();
 
@@ -138,18 +139,18 @@ void cTestLightmapper::createScene( void )
                 continue;
             }
 
-            placeInstance( "gravestone_" + std::to_string( i ) + "_" + std::to_string( j ), m_meshes[Mesh_Gravestone01], relight::Matrix4::translation( i * 1.4f, 0, j * 1.4f ), 128 );
+            placeInstance( "gravestone_" + std::to_string( i ) + "_" + std::to_string( j ), m_meshes[Mesh_Gravestone01], relight::Matrix4::translation( i * 1.4f, 0, j * 1.4f ), 256 );
         }
     }
 
     m_scene->end();
 }
 
-Prefab cTestLightmapper::createGroundPlane( int size, const relight::Color& color ) const
+Prefab cTestLightmapper::createGroundPlane( const char* diffuse, int size, const relight::Color& color ) const
 {
     Prefab prefab;
 
-    prefab.m_diffuse = createTextureFromFile( "data/textures/Ground07_D.tga" );
+    prefab.m_diffuse = createTextureFromFile( diffuse );
     prefab.m_mesh    = Mesh::create();
 
     VertexBuffer vertexBuffer;
@@ -198,7 +199,8 @@ Prefab cTestLightmapper::createGroundPlane( int size, const relight::Color& colo
     indexBuffer.push_back( 0 );
 
     // ** Add buffer
-    prefab.m_mesh->addFaces( vertexBuffer, indexBuffer );
+    Texture* texture = Texture::createFromFile( diffuse );
+    prefab.m_mesh->addFaces( vertexBuffer, indexBuffer, new TexturedMaterial( texture, Color( 1, 1, 1 ) ) );
 
     return prefab;
 }
@@ -207,13 +209,13 @@ Prefab cTestLightmapper::loadPrefab( const char *fileName, const char *diffuse )
 {
     Prefab prefab;
 
-    prefab.m_mesh    = strstr( fileName, ".obj" ) ? Mesh::createFromFile( fileName ) : loadMesh( fileName );
-    prefab.m_diffuse = diffuse ? createTextureFromFile( diffuse ) : 0;
+    prefab.m_mesh       = strstr( fileName, ".obj" ) ? Mesh::createFromFile( fileName ) : loadMesh( fileName, diffuse );
+    prefab.m_diffuse    = diffuse ? createTextureFromFile( diffuse ) : 0;
 
     return prefab;
 }
 
-Mesh* cTestLightmapper::loadMesh( const char* fileName ) const
+Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse ) const
 {
     FILE* file = fopen( fileName, "rb" );
     if( !file ) {
@@ -262,6 +264,8 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName ) const
         Uv   lightmap;
     };
 
+    Material* material = new TexturedMaterial( Texture::createFromFile( diffuse ), Color( 1, 1, 1 ) );
+
     for( unsigned int i = 0; i < submeshCount; ++i )
     {
         size_t       reads = 0;
@@ -305,7 +309,7 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName ) const
             indexBuffer.push_back( indices[j] );
         }
 
-        mesh->addFaces( vertexBuffer, indexBuffer );
+        mesh->addFaces( vertexBuffer, indexBuffer, material );
     }
 
     return mesh;
@@ -313,6 +317,7 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName ) const
 
 void* cTestLightmapper::lightmapWorker( void* userData )
 {
+    TimeMeasure measure( "All baked" );
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
 
     std::vector<pthread_t> threads(1);
@@ -350,10 +355,10 @@ void* cTestLightmapper::bakeWorker( void* userData )
     status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
     assert( status == RelightSuccess );
 
-//    status = Relight::bakeIndirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-//    assert( status == RelightSuccess );
+    status = Relight::bakeIndirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    assert( status == RelightSuccess );
 
-    Relight::bakeAmbientOcclusion( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+//    Relight::bakeAmbientOcclusion( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_aoSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
 
     data->m_instance->m_lightmap->expand();
 
@@ -385,17 +390,10 @@ void cTestLightmapper::Render( void )
 	glEnable( GL_CULL_FACE );
 	glPushMatrix();
 
-//    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
     glRotatef( m_rotationY, 0, 1, 0 );
     glRotatef( m_rotationX, 1, 0, 0 );
     glScalef( 0.99f, 0.99f, 0.99f );
 
-//    m_rotation += 0.05f;
-
-//    for( int i = 0; i < m_scene->meshCount(); i++ ) {
-//        renderInstance( m_scene->mesh( i ), m_diffuseGl, m_lightmapGl );
-//    }
     for( int i = 0; i < m_instances.size(); i++ ) {
         renderInstance( m_instances[i] );
     }
@@ -449,41 +447,10 @@ void cTestLightmapper::Render( void )
 // ** cTestLightmapper::createTextureFromFile
 unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) const
 {
-    GLubyte		TGAheader[12] = {0,0,2,0,0,0,0,0,0,0,0,0};	// Uncompressed TGA Header
-    GLubyte		TGAcompare[12];								// Used To Compare TGA Header
-    GLubyte		header[6];									// First 6 Useful Bytes From The Header
-
-    FILE *file = fopen( fileName, "rb" );						// Open The TGA File
-
-    if(	file==NULL ||										// Does File Even Exist?
-       fread(TGAcompare,1,sizeof(TGAcompare),file)!=sizeof(TGAcompare) ||	// Are There 12 Bytes To Read?
-       memcmp(TGAheader,TGAcompare,sizeof(TGAheader))!=0				||	// Does The Header Match What We Want?
-       fread(header,1,sizeof(header),file)!=sizeof(header))				// If So Read Next 6 Header Bytes
-    {
-        if (file == NULL)									// Did The File Even Exist? *Added Jim Strong*
-            return 0;									// Return False
-        else
-        {
-            fclose(file);									// If Anything Failed, Close The File
-            return 0;									// Return False
-        }
+    Texture* texture = Texture::createFromFile( fileName );
+    if( !texture ) {
+        return 0;
     }
-
-    int width  = header[1] * 256 + header[0];			// Determine The TGA Width	(highbyte*256+lowbyte)
-    int height = header[3] * 256 + header[2];			// Determine The TGA Height	(highbyte*256+lowbyte)
-
-    if( width <=0 || height	<=0	|| (header[4] != 24 && header[4] != 32) )
-    {
-        fclose(file);
-        return;
-    }
-
-    // ** Read pixels
-    int bytesPerPixel    = header[4] / 8;
-    int imageSize		 = width * height * bytesPerPixel;
-    unsigned char *pixels = new unsigned char[imageSize];
-    fread( pixels, 1, imageSize, file );
-    fclose( file );
 
     unsigned int id;
 
@@ -492,10 +459,9 @@ unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) con
     glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, texture->width(), texture->height(), 0, GL_RGB, GL_FLOAT, &texture->pixels()[0].r );
 
-    delete[]pixels;
-
+    delete texture;
     return id;
 }
 
@@ -512,7 +478,7 @@ void cTestLightmapper::renderInstance( const Instance* instance ) const
     glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
     glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
 
-    if( instance->m_lightmapId ) {
+    if( instance->m_lightmapId && m_useLightmaps ) {
         glActiveTextureARB( GL_TEXTURE1_ARB );
         glEnable( GL_TEXTURE_2D );
         glBindTexture( GL_TEXTURE_2D, instance->m_lightmapId );
@@ -577,6 +543,8 @@ void cTestLightmapper::KeyPressed( int key )
 
     if( key == 'w' ) m_rotationX += 2.8f;
     if( key == 's' ) m_rotationX -= 2.8f;
+
+    if( key == 'l' ) m_useLightmaps = !m_useLightmaps;
 }
 
 // ** cTestLightmapper::CalculateDirectLight

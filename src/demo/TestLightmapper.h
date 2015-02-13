@@ -58,6 +58,11 @@ struct Instance {
     unsigned int            m_lightmapId;
 };
 
+struct SceneSettings {
+    float                   m_fogIntensity;
+    relight::Color          m_fogColor;
+};
+
 typedef std::vector<Instance*> InstanceArray;
 
 struct WorkerData {
@@ -80,8 +85,8 @@ enum MeshList {
 };
 
 struct Prefab {
-    relight::Mesh*  m_mesh;
-    unsigned int    m_diffuse;
+    relight::Mesh*      m_mesh;
+    unsigned int        m_diffuse;
 };
 
 // ** class cTestLightmapper
@@ -114,8 +119,8 @@ private:
     unsigned int    createTextureFromFile( const char* fileName ) const;
     void            renderInstance( const Instance* instance ) const;
     Instance*       placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize );
-    relight::Mesh*  loadMesh( const char* fileName ) const;
-    Prefab          createGroundPlane( int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
+    relight::Mesh*  loadMesh( const char* fileName, const char* diffuse ) const;
+    Prefab          createGroundPlane( const char* diffuse, int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
     Prefab          loadPrefab( const char* fileName, const char* diffuse );
 
     void            startLightmapsThread( const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
@@ -129,6 +134,7 @@ private:
     relight::Scene*     m_scene;
     float               m_rotationY;
     float               m_rotationX;
+    bool                m_useLightmaps;
 
     Prefab              m_meshes[TotalMeshes];
     InstanceArray       m_instances;
