@@ -58,6 +58,8 @@ namespace relight {
     class Face;
     class Triangle;
     class Mesh;
+    class Material;
+    class Texture;
     class Lightmap;
         class Photonmap;
     struct Lumel;
@@ -70,14 +72,14 @@ namespace relight {
     //! Mesh vertex index.
     typedef unsigned short Index;
 
-    //! Face material.
-    typedef unsigned int Material;
-
     //! Mesh vertex buffer.
     typedef Array<struct Vertex>    VertexBuffer;
 
     //! Mesh vertex buffer.
     typedef Array<Index>            IndexBuffer;
+
+    //! Texture pixel buffer.
+    typedef Array<Color>            PixelBuffer;
 
     namespace rt {
         class ITracer;
@@ -178,6 +180,7 @@ namespace relight {
     #include "scene/Scene.h"
     #include "scene/Mesh.h"
     #include "scene/Light.h"
+    #include "scene/Material.h"
     #include "baker/Baker.h" 
 #endif
 

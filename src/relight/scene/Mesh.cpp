@@ -28,6 +28,7 @@
 
 #include "Mesh.h"
 #include "MeshLoader.h"
+#include "Material.h"
 
 namespace relight {
 
@@ -110,7 +111,7 @@ Mesh* Mesh::createFromFile( const String& fileName )
 }
 
 // ** Mesh::addFaces
-void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, int materialId )
+void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, const Material* material )
 {
     // ** Push indices
     for( int i = 0, n = ( int )indices.size(); i < n; i++ ) {
@@ -118,7 +119,14 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, i
     }
 
     // ** Append vertices
+    int index = vertexCount();
+
     m_vertices.insert( m_vertices.end(), vertices.begin(), vertices.end() );
+
+    // ** Set vertex material
+    for( int i = index, n = vertexCount(); i < n; i++ ) {
+        m_vertices[i].m_material = material;
+    }
 
     // ** Update face array
     buildFaces();
@@ -359,7 +367,12 @@ Color Face::colorAt( const Barycentric& uv ) const
     const Color& b = m_b->m_color;
     const Color& c = m_c->m_color;
 
-    return Color( a.r + (b.r - a.r) * uv.v + (c.r - a.r) * uv.u, a.g + (b.g - a.g) * uv.v + (c.g - a.g) * uv.u, a.b + (b.b - a.b) * uv.v + (c.b - a.b) * uv.u );
+    Color vertexColor = Color( a.r + (b.r - a.r) * uv.v + (c.r - a.r) * uv.u, a.g + (b.g - a.g) * uv.v + (c.g - a.g) * uv.u, a.b + (b.b - a.b) * uv.v + (c.b - a.b) * uv.u );
+    if( m_a->m_material ) {
+        vertexColor *= m_a->m_material->colorAt( uvAt( uv, Vertex::Diffuse ) );
+    }
+
+    return vertexColor;
 }
 
 // ** Face::uvAt

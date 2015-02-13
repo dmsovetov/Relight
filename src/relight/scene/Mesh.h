@@ -47,7 +47,7 @@ namespace relight {
         Vec3            m_normal;
         Color           m_color;
         Uv              m_uv[TotalUvLayers];
-        Material        m_material;
+        const Material* m_material;
 
         //! Interpolates between two vertices.
         static Vertex   interpolate( const Vertex& a, const Vertex& b, float scalar );
@@ -171,7 +171,7 @@ namespace relight {
         const Face&         face( int index ) const;
 
         //! Adds a list of faces sharing a same material.
-        void                addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, int materialId = 0 );
+        void                addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, const Material* material = NULL );
 
         //! Returns a target lightmap.
         Lightmap*           lightmap( void ) const;
