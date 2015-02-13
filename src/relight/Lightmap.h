@@ -50,7 +50,7 @@ namespace relight {
 
         int     m_flags;
 
-                Lumel( void ) : m_photons( 0 ), m_flags( 0 ) {}
+                Lumel( void ) : m_faceIdx( -1 ), m_photons( 0 ), m_flags( 0 ) {}
 
                 operator bool() const { return m_flags & Valid; }
     };
