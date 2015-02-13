@@ -75,13 +75,17 @@ void Photons::emitPhotons( const Light* light )
 
     for( int i = 0, n = emitter->photonCount(); i < n; i++ ) {
         Vec3  direction = emitter->emit();
-        float cutoff    = light->cutoff()->cutoffForDirection( direction );
+        float cut       = 1.0f;
 
-        if( cutoff <= 0.0f ) {
+        if( const LightCutoff* cutoff = light->cutoff() ) {
+            cut = cutoff->cutoffForDirection( direction );
+        }
+
+        if( cut <= 0.0f ) {
             continue;
         }
 
-        trace( light->attenuation(), light->position(), direction, light->color(), light->intensity() * cutoff, 0 );
+        trace( light->attenuation(), light->position(), direction, light->color(), light->intensity() * cut, 0 );
     }
 }
 
@@ -101,7 +105,10 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
     }
 
     // ** Energy attenuation after a photon has passed the traced segment
-    float att = attenuation->calculate( (position - hit.m_point).length() );
+    float att = 1.0f;
+    if( attenuation ) {
+        attenuation->calculate( (position - hit.m_point).length() );
+    }
 
     // ** Energy after reflection
     float influence = LightInfluence::lambert( -direction, hit.m_normal ) * att;
