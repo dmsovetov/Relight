@@ -1,1 +1,2 @@
-StaticLibrary( 'relight', sources = [ '.', 'baker', 'scene', 'rt' ], paths = [ '../../externals/include' ], defines = [ 'RELIGHT_BUILD_LIBRARY' ] )
+relight = StaticLibrary( 'relight', sources = [ '.', 'baker', 'scene', 'rt' ], defines = [ 'RELIGHT_BUILD_LIBRARY' ] )
+relight.linkExternal( Library( 'embree2', True ) )

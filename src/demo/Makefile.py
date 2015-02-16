@@ -1,2 +1,2 @@
-demo = Executable( 'demo', sources = [ '.' ], paths = [ 'L:../../externals/lib/$(PLATFORM)', '../relight', '../../externals/include' ], link = [ 'relight', 'embree', 'sys', 'simd', 'embree_sse41', 'embree_sse42' ] )
+demo = Executable( 'demo', sources = [ '.' ], paths = [ '../relight' ], link = [ 'relight' ] )
 demo.frameworks( 'OpenGL', 'GLUT' )
