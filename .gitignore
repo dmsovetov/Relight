@@ -28,7 +28,9 @@
 
 #
 output
-
+xcuserdata
+xcshareddata
+DerivedData
 relight-512
 relight-1024
 run-512.command
