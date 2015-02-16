@@ -119,9 +119,9 @@ private:
     unsigned int    createTextureFromFile( const char* fileName ) const;
     void            renderInstance( const Instance* instance ) const;
     Instance*       placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize );
-    relight::Mesh*  loadMesh( const char* fileName, const char* diffuse ) const;
+    relight::Mesh*  loadMesh( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
     Prefab          createGroundPlane( const char* diffuse, int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
-    Prefab          loadPrefab( const char* fileName, const char* diffuse );
+    Prefab          loadPrefab( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) );
 
     void            startLightmapsThread( const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
     void            startBakingThread( Instance* instance, int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );

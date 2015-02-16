@@ -107,7 +107,7 @@ void cTestLightmapper::createScene( void )
     // ** Add lights
     m_scene->begin();
 
-    if( false ) {
+    if( true ) {
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
     }
@@ -205,17 +205,17 @@ Prefab cTestLightmapper::createGroundPlane( const char* diffuse, int size, const
     return prefab;
 }
 
-Prefab cTestLightmapper::loadPrefab( const char *fileName, const char *diffuse )
+Prefab cTestLightmapper::loadPrefab( const char *fileName, const char *diffuse, const relight::Color& color )
 {
     Prefab prefab;
 
-    prefab.m_mesh       = strstr( fileName, ".obj" ) ? Mesh::createFromFile( fileName ) : loadMesh( fileName, diffuse );
+    prefab.m_mesh       = strstr( fileName, ".obj" ) ? Mesh::createFromFile( fileName ) : loadMesh( fileName, diffuse, color );
     prefab.m_diffuse    = diffuse ? createTextureFromFile( diffuse ) : 0;
 
     return prefab;
 }
 
-Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse ) const
+Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse, const relight::Color& color ) const
 {
     FILE* file = fopen( fileName, "rb" );
     if( !file ) {
@@ -264,7 +264,7 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse ) co
         Uv   lightmap;
     };
 
-    Material* material = new TexturedMaterial( Texture::createFromFile( diffuse ), Color( 1, 1, 1 ) );
+    Material* material = new TexturedMaterial( Texture::createFromFile( diffuse ), color );
 
     for( unsigned int i = 0; i < submeshCount; ++i )
     {
@@ -320,7 +320,7 @@ void* cTestLightmapper::lightmapWorker( void* userData )
     TimeMeasure measure( "All baked" );
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
 
-    std::vector<pthread_t> threads(1);
+    std::vector<pthread_t> threads(8);
 
     for( int i = 0; i < data->m_instances->size(); i++ ) {
         for( int j = 0; j < threads.size(); j++ ) {
