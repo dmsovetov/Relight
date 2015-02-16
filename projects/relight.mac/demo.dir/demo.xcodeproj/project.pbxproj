@@ -1,0 +1,336 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFiles section */
+		72F8BB4F540A5992077D2207 /* camera.cpp in demo */ = {isa = PBXBuildFile; fileRef = 555E5147DBB8E941C7CC2CBD /* camera.cpp */; };
+		C40D6EAEB653C9694560B638 /* input.cpp in demo */ = {isa = PBXBuildFile; fileRef = B17086C78D268E4D3A044EB8 /* input.cpp */; };
+		34265C566D520C2D6CAFC3AA /* main.cpp in demo */ = {isa = PBXBuildFile; fileRef = E7093AA6BCB7ED42345DDADD /* main.cpp */; };
+		EE8CAC9B9FA6AA19CC9D4255 /* mathlib.cpp in demo */ = {isa = PBXBuildFile; fileRef = 8AAFFE88A8F21FE9D416EFA4 /* mathlib.cpp */; };
+		EF9F3BA48733F6B8E62C96BD /* TestLightmapper.cpp in demo */ = {isa = PBXBuildFile; fileRef = B53028446E0F6CC3B3D9BD73 /* TestLightmapper.cpp */; };
+		7B28A11FC6C01D33ED28A42F /* TestRadiosity.cpp in demo */ = {isa = PBXBuildFile; fileRef = 52C5A9BEE95E545E7375131A /* TestRadiosity.cpp */; };
+		E4349F18DA9E5AC1426AEECC /* librelight.a in demo */ = {isa = PBXBuildFile; fileRef = BB08D6636085DA1A92243017 /* librelight.a */; };
+		89BECD5B90CFA8382BB839B1 /* libembree.a in demo */ = {isa = PBXBuildFile; fileRef = 6B9D730BD960B84F705CA9FB /* libembree.a */; };
+		691F09C9ABB45BE3BFFBA7D2 /* libsys.a in demo */ = {isa = PBXBuildFile; fileRef = 0C139CFEB17EF0168F388D78 /* libsys.a */; };
+		D20FD8C27FE37615D40F6CED /* libsimd.a in demo */ = {isa = PBXBuildFile; fileRef = 93E480B69C2C78185975B82E /* libsimd.a */; };
+		114A35DC8AD40B9C5F10FAB1 /* libembree_sse41.a in demo */ = {isa = PBXBuildFile; fileRef = 398FB2A153A7C33CAC1576D9 /* libembree_sse41.a */; };
+		7B3E0D255AE8C74B1202D5C0 /* libembree_sse42.a in demo */ = {isa = PBXBuildFile; fileRef = 2546E583FB72582B60A23900 /* libembree_sse42.a */; };
+		A99F4096EC67C4067A051EAB /* OpenGL.framework in demo */ = {isa = PBXBuildFile; fileRef = 64561487EFF18DD3DAD02146 /* OpenGL.framework */; };
+		9326BD053F31F4399266F8E0 /* QuartzCore.framework in demo */ = {isa = PBXBuildFile; fileRef = F7B3C095D982A3571D673F55 /* QuartzCore.framework */; };
+		199C2C8F22B234CF92BDD06B /* GLUT.framework in demo */ = {isa = PBXBuildFile; fileRef = 81BFD4FF848A686CF112A790 /* GLUT.framework */; };
+
+/* End PBXBuildFiles section */
+
+/* Begin PBXContainerItemProxy section */
+
+		285D0308B22BE2A676F4C02B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1AEA7301D70C911FEA5B1BF5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F0B57A6A12F5A9DC6BB3102E;
+			remoteInfo = relight;
+		};
+
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2BF10D88865368788A872993 /* demo */ = {isa = PBXFileReference; explicitFileType = compiled.mach-o.executable; includeInIndex = 0; name = demo; path = demo; sourceTree = BUILT_PRODUCTS_DIR; };
+		555E5147DBB8E941C7CC2CBD /* camera.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = camera.cpp; path = ../../../src/demo/camera.cpp; sourceTree = "<group>"; };
+		A3B57B2D83FBEB32070A318E /* camera.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = camera.h; path = ../../../src/demo/camera.h; sourceTree = "<group>"; };
+		B17086C78D268E4D3A044EB8 /* input.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = input.cpp; path = ../../../src/demo/input.cpp; sourceTree = "<group>"; };
+		1691FECABBBF7BDC11132264 /* input.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = input.h; path = ../../../src/demo/input.h; sourceTree = "<group>"; };
+		E7093AA6BCB7ED42345DDADD /* main.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = main.cpp; path = ../../../src/demo/main.cpp; sourceTree = "<group>"; };
+		FD110E45C91CF9DAE2882111 /* Makefile.py */ = {isa = PBXFileReference; explicitFileType = sourcecode; includeInIndex = 0; name = Makefile.py; path = ../../../src/demo/Makefile.py; sourceTree = "<group>"; };
+		8AAFFE88A8F21FE9D416EFA4 /* mathlib.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = mathlib.cpp; path = ../../../src/demo/mathlib.cpp; sourceTree = "<group>"; };
+		41CABF1BE8D066E13BBAEBB0 /* mathlib.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = mathlib.h; path = ../../../src/demo/mathlib.h; sourceTree = "<group>"; };
+		D147A43D48649CDE9BEEE9DC /* Mesh.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Mesh.h; path = ../../../src/demo/Mesh.h; sourceTree = "<group>"; };
+		FD389E296615DC2272280D49 /* Test.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Test.h; path = ../../../src/demo/Test.h; sourceTree = "<group>"; };
+		B53028446E0F6CC3B3D9BD73 /* TestLightmapper.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = TestLightmapper.cpp; path = ../../../src/demo/TestLightmapper.cpp; sourceTree = "<group>"; };
+		4FC7CB06F3E31FE73AE64262 /* TestLightmapper.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = TestLightmapper.h; path = ../../../src/demo/TestLightmapper.h; sourceTree = "<group>"; };
+		52C5A9BEE95E545E7375131A /* TestRadiosity.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = TestRadiosity.cpp; path = ../../../src/demo/TestRadiosity.cpp; sourceTree = "<group>"; };
+		D28F63DFE04573BA18DE47F0 /* TestRadiosity.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = TestRadiosity.h; path = ../../../src/demo/TestRadiosity.h; sourceTree = "<group>"; };
+		BB08D6636085DA1A92243017 /* librelight.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = librelight.a; path = librelight.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6B9D730BD960B84F705CA9FB /* libembree.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libembree.a; path = libembree.a; sourceTree = "<group>"; };
+		0C139CFEB17EF0168F388D78 /* libsys.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libsys.a; path = libsys.a; sourceTree = "<group>"; };
+		93E480B69C2C78185975B82E /* libsimd.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libsimd.a; path = libsimd.a; sourceTree = "<group>"; };
+		398FB2A153A7C33CAC1576D9 /* libembree_sse41.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libembree_sse41.a; path = libembree_sse41.a; sourceTree = "<group>"; };
+		2546E583FB72582B60A23900 /* libembree_sse42.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = libembree_sse42.a; path = libembree_sse42.a; sourceTree = "<group>"; };
+		64561487EFF18DD3DAD02146 /* OpenGL.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		F7B3C095D982A3571D673F55 /* QuartzCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		81BFD4FF848A686CF112A790 /* GLUT.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+
+		EEE09C8C778DF1CDA92CB0ED /* None */ = {
+			isa = PBXGroup;
+			children = (
+				62326DC5316EBCA8719BDA77 /* Sources */,
+				62B8617F3B0B7A408C88A27B /* Frameworks */,
+				A66C14CF3321DF4E6A9093DE /* Products */,
+
+			);
+			
+			sourceTree = "<group>";
+		};
+
+		62326DC5316EBCA8719BDA77 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				555E5147DBB8E941C7CC2CBD /* camera.cpp */,
+				A3B57B2D83FBEB32070A318E /* camera.h */,
+				B17086C78D268E4D3A044EB8 /* input.cpp */,
+				1691FECABBBF7BDC11132264 /* input.h */,
+				E7093AA6BCB7ED42345DDADD /* main.cpp */,
+				FD110E45C91CF9DAE2882111 /* Makefile.py */,
+				8AAFFE88A8F21FE9D416EFA4 /* mathlib.cpp */,
+				41CABF1BE8D066E13BBAEBB0 /* mathlib.h */,
+				D147A43D48649CDE9BEEE9DC /* Mesh.h */,
+				FD389E296615DC2272280D49 /* Test.h */,
+				B53028446E0F6CC3B3D9BD73 /* TestLightmapper.cpp */,
+				4FC7CB06F3E31FE73AE64262 /* TestLightmapper.h */,
+				52C5A9BEE95E545E7375131A /* TestRadiosity.cpp */,
+				D28F63DFE04573BA18DE47F0 /* TestRadiosity.h */,
+
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+
+		62B8617F3B0B7A408C88A27B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				BB08D6636085DA1A92243017 /* librelight.a */,
+				6B9D730BD960B84F705CA9FB /* libembree.a */,
+				0C139CFEB17EF0168F388D78 /* libsys.a */,
+				93E480B69C2C78185975B82E /* libsimd.a */,
+				398FB2A153A7C33CAC1576D9 /* libembree_sse41.a */,
+				2546E583FB72582B60A23900 /* libembree_sse42.a */,
+				64561487EFF18DD3DAD02146 /* OpenGL.framework */,
+				F7B3C095D982A3571D673F55 /* QuartzCore.framework */,
+				81BFD4FF848A686CF112A790 /* GLUT.framework */,
+
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+
+		A66C14CF3321DF4E6A9093DE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2BF10D88865368788A872993 /* demo */,
+
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+
+		945AAA1CDA32E8A7F2C57D16 /* demo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6CF2AB48F532544F3294B318 /* Build configuration list for PBXNativeTarget "demo" */;
+			buildPhases = (
+				5BF51EAF7908C7BD2092946D /* Sources */,
+				D2184F6D12A1F6F1776AB577 /* Frameworks */,
+
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B2BD7204E7EB46E5754A3CF8 /* relight */,
+
+			);
+			name = demo;
+			productName = demo;
+			productReference = 2BF10D88865368788A872993 /* demo */;
+			productType = "com.apple.product-type.tool";
+		};
+
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+
+		1AEA7301D70C911FEA5B1BF5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = YAP;
+				TargetAttributes = {
+
+				};
+			};
+			buildConfigurationList = FE59501B6F6FE0A9A72E9AD2 /* Build configuration list for PBXProject "demo" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = EEE09C8C778DF1CDA92CB0ED;
+			productRefGroup = A66C14CF3321DF4E6A9093DE /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				945AAA1CDA32E8A7F2C57D16 /* demo */,
+
+			);
+		};
+
+/* End PBXProject section */
+
+/* Begin PBXBuildPhase section */
+
+		5BF51EAF7908C7BD2092946D /* demo */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				72F8BB4F540A5992077D2207 /* camera.cpp */,
+				C40D6EAEB653C9694560B638 /* input.cpp */,
+				34265C566D520C2D6CAFC3AA /* main.cpp */,
+				EE8CAC9B9FA6AA19CC9D4255 /* mathlib.cpp */,
+				EF9F3BA48733F6B8E62C96BD /* TestLightmapper.cpp */,
+				7B28A11FC6C01D33ED28A42F /* TestRadiosity.cpp */,
+
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+		D2184F6D12A1F6F1776AB577 /* demo */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E4349F18DA9E5AC1426AEECC /* librelight.a */,
+				89BECD5B90CFA8382BB839B1 /* libembree.a */,
+				691F09C9ABB45BE3BFFBA7D2 /* libsys.a */,
+				D20FD8C27FE37615D40F6CED /* libsimd.a */,
+				114A35DC8AD40B9C5F10FAB1 /* libembree_sse41.a */,
+				7B3E0D255AE8C74B1202D5C0 /* libembree_sse42.a */,
+				A99F4096EC67C4067A051EAB /* OpenGL.framework */,
+				9326BD053F31F4399266F8E0 /* QuartzCore.framework */,
+				199C2C8F22B234CF92BDD06B /* GLUT.framework */,
+
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+
+/* End PBXBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+
+		B2BD7204E7EB46E5754A3CF8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F0B57A6A12F5A9DC6BB3102E /* relight */;
+			targetProxy = 285D0308B22BE2A676F4C02B /* PBXContainerItemProxy */;
+		};
+
+/* End PBXTargetDependency section */
+
+/* Begin PBXConfiguration section */
+
+		AEF7A5D3F91FEEFDC9709C23 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				SDKROOT = macosx10.10;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+
+			};
+			name = Debug;
+		};
+
+		9EFA05118204E55CC9CFCF4D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				SDKROOT = macosx10.10;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+
+			};
+			name = Release;
+		};
+
+		D69E0B8611B0ABBBAC21FF1E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"../../../externals/lib/MacOS",
+					"$(inherited)",
+					"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"../../../src/relight",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DC_PLATFORM_MACOS",
+					"",
+					"DC_PLATFORM=MacOS",
+				);
+
+			};
+			name = Debug;
+		};
+
+		7B19F2A7EE6A9519207A4598 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				LIBRARY_SEARCH_PATHS = (
+					"../../../externals/lib/MacOS",
+					"$(inherited)",
+					"",
+				);
+				HEADER_SEARCH_PATHS = (
+					"../../../src/relight",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DC_PLATFORM_MACOS",
+					"",
+					"DC_PLATFORM=MacOS",
+				);
+
+			};
+			name = Release;
+		};
+
+/* End PBXConfiguration section */
+
+/* Begin PBXConfigurationList section */
+
+		FE59501B6F6FE0A9A72E9AD2 /* Build configuration list for PBXProject demo */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AEF7A5D3F91FEEFDC9709C23 /* Debug */,
+				9EFA05118204E55CC9CFCF4D /* Release */,
+
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+
+		6CF2AB48F532544F3294B318 /* Build configuration list for PBXNativeTarget demo */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D69E0B8611B0ABBBAC21FF1E /* Debug */,
+				7B19F2A7EE6A9519207A4598 /* Release */,
+
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+
+/* End PBXConfigurationList section */
+
+	};
+	rootObject = 1AEA7301D70C911FEA5B1BF5 /* Project object */;
+}

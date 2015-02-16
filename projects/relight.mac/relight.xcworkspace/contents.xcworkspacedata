@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Workspace version='1.0'>
+<FileRef location='group:demo.dir/demo.xcodeproj'/>
+<FileRef location='group:relight.dir/relight.xcodeproj'/>
+
+</Workspace>
