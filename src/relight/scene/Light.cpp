@@ -218,9 +218,9 @@ Light* Light::createAreaLight( const Mesh* mesh, const Vec3& position, const Col
     light->setAttenuation( new LinearLightAttenuation( light, mesh->bounds().volume() ) );
     light->setPhotonEmitter( new PhotonEmitter( light ) );
     light->setCutoff( new LightCutoff( light ) );
-    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 3 ) );
+//    light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 3 ) );
 //  light->setVertexGenerator( new FaceLightVertexGenerator( mesh, false, 0 ) );
-//  light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 0 ) );
+  light->setVertexGenerator( new FaceLightVertexGenerator( mesh, true, 0 ) );
 //  light->setVertexGenerator( new LightVertexGenerator( mesh ) );
     light->setCastsShadow( castsShadow );
     light->setPosition( position );
