@@ -6,370 +6,308 @@
 	objectVersion = 46;
 	objects = {
 
-/* Begin PBXBuildFiles section */
-		14C09A4541B4B23729AEFCF0 /* Lightmap.cpp in relight */ = {isa = PBXBuildFile; fileRef = F9A1B3F959006CEDE9188FA3 /* Lightmap.cpp */; };
-		F12F9DA6C5DACADE7F454E74 /* Radiosity.cpp in relight */ = {isa = PBXBuildFile; fileRef = 345430A83CCD6719A0E794CB /* Radiosity.cpp */; };
-		29B6AAD36746F10CE6912E7F /* Relight.cpp in relight */ = {isa = PBXBuildFile; fileRef = 0736F9167E25AC76D0B38196 /* Relight.cpp */; };
-		58B329FD72C9AA252F053271 /* Vector.cpp in relight */ = {isa = PBXBuildFile; fileRef = 35B6303890807F16547DA239 /* Vector.cpp */; };
-		006D6331FC96387A314B999A /* Embree.cpp in relight */ = {isa = PBXBuildFile; fileRef = AE33204B7FC4722007C7D2F3 /* Embree.cpp */; };
-		19B792F7FDAAC6F71D44B4B1 /* AmbientOcclusion.cpp in relight */ = {isa = PBXBuildFile; fileRef = 91421C0C45B036237B2D926B /* AmbientOcclusion.cpp */; };
-		2E8D0D12CBE43F6F33E7A687 /* Baker.cpp in relight */ = {isa = PBXBuildFile; fileRef = 9AAAD836C8771643191FDC5A /* Baker.cpp */; };
-		FE7068085C354B687B3D04D5 /* DirectLight.cpp in relight */ = {isa = PBXBuildFile; fileRef = CD9A1C9E41892E60F337A93E /* DirectLight.cpp */; };
-		D7EC7FF4A492F6C004770790 /* IndirectLight.cpp in relight */ = {isa = PBXBuildFile; fileRef = D61BE5532339BE5957173F94 /* IndirectLight.cpp */; };
-		83501F009EF8EF28C4225ECA /* Photons.cpp in relight */ = {isa = PBXBuildFile; fileRef = 713FA92C8E7FF92F51C86B4C /* Photons.cpp */; };
-		C362FD1166D858911CB0B9DE /* Light.cpp in relight */ = {isa = PBXBuildFile; fileRef = 9DAB7898D102B1065EC91067 /* Light.cpp */; };
-		4A833C860099032BBE709563 /* Material.cpp in relight */ = {isa = PBXBuildFile; fileRef = FB5A574A8681EDEF871C8439 /* Material.cpp */; };
-		8349AD95E703B5BED7BFA5F6 /* Mesh.cpp in relight */ = {isa = PBXBuildFile; fileRef = 70449848217910BE63212586 /* Mesh.cpp */; };
-		77C231C2C56D852FC224A8F2 /* MeshLoader.cpp in relight */ = {isa = PBXBuildFile; fileRef = 01A1F0ADA6428537040DF398 /* MeshLoader.cpp */; };
-		3873E089EF7599CC2F01E86A /* Scene.cpp in relight */ = {isa = PBXBuildFile; fileRef = DF74C24A54BE0BA54C9A68CF /* Scene.cpp */; };
-
-/* End PBXBuildFiles section */
-
-/* Begin PBXContainerItemProxy section */
-
-/* End PBXContainerItemProxy section */
+/* Begin PBXBuildFile section */
+		0DCF566FCF7C0DEF4AEE917F /* MeshLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE97302FC37D3FC35C8A026F /* MeshLoader.cpp */; };
+		226940A7FC523D1EBEC06A76 /* Scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = CEB3CABB0D353CA9A27F4FED /* Scene.cpp */; };
+		3E777172ACA08042816AD94D /* Embree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7F4B324A0A9623A710750CC1 /* Embree.cpp */; };
+		4701907EDEFD19C904983FA5 /* Photons.cpp in Sources */ = {isa = PBXBuildFile; fileRef = DCA6033C7310477755B2045E /* Photons.cpp */; };
+		4D24A0A38F3AED4B5AC8FF3F /* Relight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A0B28C10C39A74AE807AFCCB /* Relight.cpp */; };
+		72115D15C07FE842C79D24BF /* AmbientOcclusion.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30EEB1DB0F1E98D04D2524EC /* AmbientOcclusion.cpp */; };
+		7E18547FE489BBDD07C59DEE /* Mesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E109C590B12D4FD8FA61D799 /* Mesh.cpp */; };
+		9F06142971A2D196B66B6E3C /* Light.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A77256D4505A2536F7254520 /* Light.cpp */; };
+		B851EE3AF65E90D2B42B8C3B /* Material.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B62D72D924F48C5040538E0D /* Material.cpp */; };
+		BBC8595A7629AA61A3520C56 /* Baker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 69A24213F5FB2F7A51AD1C0F /* Baker.cpp */; };
+		CD9DCFA952D2512243380485 /* Vector.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 296D27E8070B37DB5BB16E76 /* Vector.cpp */; };
+		D3B3A8F26411E177CAC1D526 /* IndirectLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A19E41FEDCE4D84EE82B1409 /* IndirectLight.cpp */; };
+		D849F83B08B12DE93B5B47C9 /* Radiosity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 30960D231593EC78879E270A /* Radiosity.cpp */; };
+		E14D0666335611645B19FF53 /* DirectLight.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0721D8AEC85CEE2B83EF08E /* DirectLight.cpp */; };
+		FAC4EFF63EC22DFE3F6690BE /* Lightmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 191536C3DE42B86155E43119 /* Lightmap.cpp */; };
+/* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4982F92A95DE15B7EA728979 /* librelight.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; name = librelight.a; path = librelight.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		61A8CF608540DB59142769A2 /* BuildCheck.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = BuildCheck.h; path = ../../../src/relight/BuildCheck.h; sourceTree = "<group>"; };
-		F9A1B3F959006CEDE9188FA3 /* Lightmap.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Lightmap.cpp; path = ../../../src/relight/Lightmap.cpp; sourceTree = "<group>"; };
-		9F83D8665D8AD29686409A92 /* Lightmap.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Lightmap.h; path = ../../../src/relight/Lightmap.h; sourceTree = "<group>"; };
-		D65D06EC237BBA0C77786CF4 /* Makefile.py */ = {isa = PBXFileReference; explicitFileType = sourcecode; includeInIndex = 0; name = Makefile.py; path = ../../../src/relight/Makefile.py; sourceTree = "<group>"; };
-		345430A83CCD6719A0E794CB /* Radiosity.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Radiosity.cpp; path = ../../../src/relight/Radiosity.cpp; sourceTree = "<group>"; };
-		2335AA4E7D14A05697C433CE /* Radiosity.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Radiosity.h; path = ../../../src/relight/Radiosity.h; sourceTree = "<group>"; };
-		0736F9167E25AC76D0B38196 /* Relight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Relight.cpp; path = ../../../src/relight/Relight.cpp; sourceTree = "<group>"; };
-		7794142532F6FF248C332246 /* Relight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Relight.h; path = ../../../src/relight/Relight.h; sourceTree = "<group>"; };
-		35B6303890807F16547DA239 /* Vector.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Vector.cpp; path = ../../../src/relight/Vector.cpp; sourceTree = "<group>"; };
-		969C850278AD59D62FB5EBF7 /* Vector.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Vector.h; path = ../../../src/relight/Vector.h; sourceTree = "<group>"; };
-		AE33204B7FC4722007C7D2F3 /* Embree.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Embree.cpp; path = ../../../src/relight/rt/Embree.cpp; sourceTree = "<group>"; };
-		BF0AF2BA6ED3291A72BB565F /* Embree.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Embree.h; path = ../../../src/relight/rt/Embree.h; sourceTree = "<group>"; };
-		493F089F8A4739AD5BA09583 /* Tracer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Tracer.h; path = ../../../src/relight/rt/Tracer.h; sourceTree = "<group>"; };
-		91421C0C45B036237B2D926B /* AmbientOcclusion.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = AmbientOcclusion.cpp; path = ../../../src/relight/baker/AmbientOcclusion.cpp; sourceTree = "<group>"; };
-		34B7E7AF55079DF1B55EEE38 /* AmbientOcclusion.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = AmbientOcclusion.h; path = ../../../src/relight/baker/AmbientOcclusion.h; sourceTree = "<group>"; };
-		9AAAD836C8771643191FDC5A /* Baker.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Baker.cpp; path = ../../../src/relight/baker/Baker.cpp; sourceTree = "<group>"; };
-		59FAF7B325A649703FA0BDDB /* Baker.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Baker.h; path = ../../../src/relight/baker/Baker.h; sourceTree = "<group>"; };
-		CD9A1C9E41892E60F337A93E /* DirectLight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = DirectLight.cpp; path = ../../../src/relight/baker/DirectLight.cpp; sourceTree = "<group>"; };
-		8FF44630295944B53FB6FCED /* DirectLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = DirectLight.h; path = ../../../src/relight/baker/DirectLight.h; sourceTree = "<group>"; };
-		D61BE5532339BE5957173F94 /* IndirectLight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = IndirectLight.cpp; path = ../../../src/relight/baker/IndirectLight.cpp; sourceTree = "<group>"; };
-		0972B3E142EEB68859661CBD /* IndirectLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = IndirectLight.h; path = ../../../src/relight/baker/IndirectLight.h; sourceTree = "<group>"; };
-		713FA92C8E7FF92F51C86B4C /* Photons.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Photons.cpp; path = ../../../src/relight/baker/Photons.cpp; sourceTree = "<group>"; };
-		726DD7D02EF163488CC77FD1 /* Photons.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Photons.h; path = ../../../src/relight/baker/Photons.h; sourceTree = "<group>"; };
-		9DAB7898D102B1065EC91067 /* Light.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Light.cpp; path = ../../../src/relight/scene/Light.cpp; sourceTree = "<group>"; };
-		55581893D586B927804B0036 /* Light.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Light.h; path = ../../../src/relight/scene/Light.h; sourceTree = "<group>"; };
-		FB5A574A8681EDEF871C8439 /* Material.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Material.cpp; path = ../../../src/relight/scene/Material.cpp; sourceTree = "<group>"; };
-		FF71327B969A8686B0BCADAA /* Material.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Material.h; path = ../../../src/relight/scene/Material.h; sourceTree = "<group>"; };
-		70449848217910BE63212586 /* Mesh.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Mesh.cpp; path = ../../../src/relight/scene/Mesh.cpp; sourceTree = "<group>"; };
-		60EC310C2982EEE83F7904F0 /* Mesh.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Mesh.h; path = ../../../src/relight/scene/Mesh.h; sourceTree = "<group>"; };
-		01A1F0ADA6428537040DF398 /* MeshLoader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = MeshLoader.cpp; path = ../../../src/relight/scene/MeshLoader.cpp; sourceTree = "<group>"; };
-		E98B54A6E99CBFF44A4B8E95 /* MeshLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = MeshLoader.h; path = ../../../src/relight/scene/MeshLoader.h; sourceTree = "<group>"; };
-		DF74C24A54BE0BA54C9A68CF /* Scene.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Scene.cpp; path = ../../../src/relight/scene/Scene.cpp; sourceTree = "<group>"; };
-		3C404CEE5C4CB28ABAE0F6DF /* Scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Scene.h; path = ../../../src/relight/scene/Scene.h; sourceTree = "<group>"; };
-
+		191536C3DE42B86155E43119 /* Lightmap.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Lightmap.cpp; path = ../../../src/relight/Lightmap.cpp; sourceTree = "<group>"; };
+		19CEF5AC38F673D2B6D5073A /* IndirectLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = IndirectLight.h; path = ../../../src/relight/baker/IndirectLight.h; sourceTree = "<group>"; };
+		1DD605458AA322F96C14F8D2 /* Photons.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Photons.h; path = ../../../src/relight/baker/Photons.h; sourceTree = "<group>"; };
+		1E8AD7C28AC31C97D4C10100 /* Scene.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Scene.h; path = ../../../src/relight/scene/Scene.h; sourceTree = "<group>"; };
+		296D27E8070B37DB5BB16E76 /* Vector.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Vector.cpp; path = ../../../src/relight/Vector.cpp; sourceTree = "<group>"; };
+		2A19919DD4E6B1B700FA694A /* librelight.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = librelight.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		30960D231593EC78879E270A /* Radiosity.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Radiosity.cpp; path = ../../../src/relight/Radiosity.cpp; sourceTree = "<group>"; };
+		30EEB1DB0F1E98D04D2524EC /* AmbientOcclusion.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = AmbientOcclusion.cpp; path = ../../../src/relight/baker/AmbientOcclusion.cpp; sourceTree = "<group>"; };
+		3CA8E7245BB5158B1931DE5E /* Mesh.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Mesh.h; path = ../../../src/relight/scene/Mesh.h; sourceTree = "<group>"; };
+		419BFE8F528F16BE72257442 /* Embree.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Embree.h; path = ../../../src/relight/rt/Embree.h; sourceTree = "<group>"; };
+		483D0726227F0823794795A9 /* Radiosity.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Radiosity.h; path = ../../../src/relight/Radiosity.h; sourceTree = "<group>"; };
+		5B490B144F758E29B9EA36DD /* Relight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Relight.h; path = ../../../src/relight/Relight.h; sourceTree = "<group>"; };
+		69A24213F5FB2F7A51AD1C0F /* Baker.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Baker.cpp; path = ../../../src/relight/baker/Baker.cpp; sourceTree = "<group>"; };
+		75EAFB4C563F76CD1B81EDC0 /* Makefile.py */ = {isa = PBXFileReference; explicitFileType = sourcecode; includeInIndex = 0; name = Makefile.py; path = ../../../src/relight/Makefile.py; sourceTree = "<group>"; };
+		7F4B324A0A9623A710750CC1 /* Embree.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Embree.cpp; path = ../../../src/relight/rt/Embree.cpp; sourceTree = "<group>"; };
+		8DDDC8782C9AED3116BC3F67 /* BuildCheck.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = BuildCheck.h; path = ../../../src/relight/BuildCheck.h; sourceTree = "<group>"; };
+		A0B28C10C39A74AE807AFCCB /* Relight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Relight.cpp; path = ../../../src/relight/Relight.cpp; sourceTree = "<group>"; };
+		A19E41FEDCE4D84EE82B1409 /* IndirectLight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = IndirectLight.cpp; path = ../../../src/relight/baker/IndirectLight.cpp; sourceTree = "<group>"; };
+		A77256D4505A2536F7254520 /* Light.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Light.cpp; path = ../../../src/relight/scene/Light.cpp; sourceTree = "<group>"; };
+		AB95A6F6EB5675A962D84F7C /* Lightmap.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Lightmap.h; path = ../../../src/relight/Lightmap.h; sourceTree = "<group>"; };
+		AD67CE12C4E6B886D0EA1E14 /* MeshLoader.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = MeshLoader.h; path = ../../../src/relight/scene/MeshLoader.h; sourceTree = "<group>"; };
+		B62D72D924F48C5040538E0D /* Material.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Material.cpp; path = ../../../src/relight/scene/Material.cpp; sourceTree = "<group>"; };
+		C0721D8AEC85CEE2B83EF08E /* DirectLight.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = DirectLight.cpp; path = ../../../src/relight/baker/DirectLight.cpp; sourceTree = "<group>"; };
+		C4A1D4F18B2E3AE750AB8A79 /* Material.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Material.h; path = ../../../src/relight/scene/Material.h; sourceTree = "<group>"; };
+		C6B5D8FFD6E63A8679CAE27D /* DirectLight.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = DirectLight.h; path = ../../../src/relight/baker/DirectLight.h; sourceTree = "<group>"; };
+		C6D621BCDE3C6136E4131588 /* Vector.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Vector.h; path = ../../../src/relight/Vector.h; sourceTree = "<group>"; };
+		CEB3CABB0D353CA9A27F4FED /* Scene.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Scene.cpp; path = ../../../src/relight/scene/Scene.cpp; sourceTree = "<group>"; };
+		DC52C775313B271F2B13CD38 /* Light.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Light.h; path = ../../../src/relight/scene/Light.h; sourceTree = "<group>"; };
+		DCA6033C7310477755B2045E /* Photons.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Photons.cpp; path = ../../../src/relight/baker/Photons.cpp; sourceTree = "<group>"; };
+		E109C590B12D4FD8FA61D799 /* Mesh.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = Mesh.cpp; path = ../../../src/relight/scene/Mesh.cpp; sourceTree = "<group>"; };
+		E46123896ED76CF7DDDD0CBA /* AmbientOcclusion.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = AmbientOcclusion.h; path = ../../../src/relight/baker/AmbientOcclusion.h; sourceTree = "<group>"; };
+		E4F0808FEEE11DA04EC3CF51 /* Tracer.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Tracer.h; path = ../../../src/relight/rt/Tracer.h; sourceTree = "<group>"; };
+		EE61590862CC57F5BF633D21 /* Baker.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; includeInIndex = 0; name = Baker.h; path = ../../../src/relight/baker/Baker.h; sourceTree = "<group>"; };
+		EE97302FC37D3FC35C8A026F /* MeshLoader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; includeInIndex = 0; name = MeshLoader.cpp; path = ../../../src/relight/scene/MeshLoader.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		53298465893368962CE1E342 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
-
-		A5BBFAA8685C7D5CD63C9388 /* None */ = {
+		020D1590E9ACB0A34A5DB45D /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				91F5F610371D9C8B1222068C /* Sources */,
-				98696C58690C4BD7B9C853E3 /* Frameworks */,
-				E8FF02AC0DE86D0409714841 /* Products */,
-
-			);
-			
-			sourceTree = "<group>";
-		};
-
-		91F5F610371D9C8B1222068C /* Sources */ = {
-			isa = PBXGroup;
-			children = (
-				61A8CF608540DB59142769A2 /* BuildCheck.h */,
-				F9A1B3F959006CEDE9188FA3 /* Lightmap.cpp */,
-				9F83D8665D8AD29686409A92 /* Lightmap.h */,
-				D65D06EC237BBA0C77786CF4 /* Makefile.py */,
-				345430A83CCD6719A0E794CB /* Radiosity.cpp */,
-				2335AA4E7D14A05697C433CE /* Radiosity.h */,
-				0736F9167E25AC76D0B38196 /* Relight.cpp */,
-				7794142532F6FF248C332246 /* Relight.h */,
-				35B6303890807F16547DA239 /* Vector.cpp */,
-				969C850278AD59D62FB5EBF7 /* Vector.h */,
-				2C1E19830052B7A5BFF15BA0 /* rt */,
-				CBA970E8DA998C6FAB3EB34D /* baker */,
-				C1F707F97B7F2EB58174D7BB /* scene */,
-
-			);
-			name = Sources;
-			sourceTree = "<group>";
-		};
-
-		98696C58690C4BD7B9C853E3 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-
-		E8FF02AC0DE86D0409714841 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4982F92A95DE15B7EA728979 /* librelight.a */,
-
+				2A19919DD4E6B1B700FA694A /* librelight.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-
-		2C1E19830052B7A5BFF15BA0 /* rt */ = {
+		17E64B6A847AAC0C4DC54D98 /* rt */ = {
 			isa = PBXGroup;
 			children = (
-				AE33204B7FC4722007C7D2F3 /* Embree.cpp */,
-				BF0AF2BA6ED3291A72BB565F /* Embree.h */,
-				493F089F8A4739AD5BA09583 /* Tracer.h */,
-
+				7F4B324A0A9623A710750CC1 /* Embree.cpp */,
+				419BFE8F528F16BE72257442 /* Embree.h */,
+				E4F0808FEEE11DA04EC3CF51 /* Tracer.h */,
 			);
 			name = rt;
 			sourceTree = "<group>";
 		};
-
-		CBA970E8DA998C6FAB3EB34D /* baker */ = {
+		2D9A9865F2A68506C21A1BE9 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				91421C0C45B036237B2D926B /* AmbientOcclusion.cpp */,
-				34B7E7AF55079DF1B55EEE38 /* AmbientOcclusion.h */,
-				9AAAD836C8771643191FDC5A /* Baker.cpp */,
-				59FAF7B325A649703FA0BDDB /* Baker.h */,
-				CD9A1C9E41892E60F337A93E /* DirectLight.cpp */,
-				8FF44630295944B53FB6FCED /* DirectLight.h */,
-				D61BE5532339BE5957173F94 /* IndirectLight.cpp */,
-				0972B3E142EEB68859661CBD /* IndirectLight.h */,
-				713FA92C8E7FF92F51C86B4C /* Photons.cpp */,
-				726DD7D02EF163488CC77FD1 /* Photons.h */,
-
+				8DDDC8782C9AED3116BC3F67 /* BuildCheck.h */,
+				191536C3DE42B86155E43119 /* Lightmap.cpp */,
+				AB95A6F6EB5675A962D84F7C /* Lightmap.h */,
+				75EAFB4C563F76CD1B81EDC0 /* Makefile.py */,
+				30960D231593EC78879E270A /* Radiosity.cpp */,
+				483D0726227F0823794795A9 /* Radiosity.h */,
+				A0B28C10C39A74AE807AFCCB /* Relight.cpp */,
+				5B490B144F758E29B9EA36DD /* Relight.h */,
+				296D27E8070B37DB5BB16E76 /* Vector.cpp */,
+				C6D621BCDE3C6136E4131588 /* Vector.h */,
+				17E64B6A847AAC0C4DC54D98 /* rt */,
+				8D6E295D9B704EA02F6F7407 /* baker */,
+				9A62EA81FC88572875189CAF /* scene */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		31A07C42FE9335848A52EB66 = {
+			isa = PBXGroup;
+			children = (
+				2D9A9865F2A68506C21A1BE9 /* Sources */,
+				BBEC78CFFFD54C9466DF6C77 /* Frameworks */,
+				020D1590E9ACB0A34A5DB45D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8D6E295D9B704EA02F6F7407 /* baker */ = {
+			isa = PBXGroup;
+			children = (
+				30EEB1DB0F1E98D04D2524EC /* AmbientOcclusion.cpp */,
+				E46123896ED76CF7DDDD0CBA /* AmbientOcclusion.h */,
+				69A24213F5FB2F7A51AD1C0F /* Baker.cpp */,
+				EE61590862CC57F5BF633D21 /* Baker.h */,
+				C0721D8AEC85CEE2B83EF08E /* DirectLight.cpp */,
+				C6B5D8FFD6E63A8679CAE27D /* DirectLight.h */,
+				A19E41FEDCE4D84EE82B1409 /* IndirectLight.cpp */,
+				19CEF5AC38F673D2B6D5073A /* IndirectLight.h */,
+				DCA6033C7310477755B2045E /* Photons.cpp */,
+				1DD605458AA322F96C14F8D2 /* Photons.h */,
 			);
 			name = baker;
 			sourceTree = "<group>";
 		};
-
-		C1F707F97B7F2EB58174D7BB /* scene */ = {
+		9A62EA81FC88572875189CAF /* scene */ = {
 			isa = PBXGroup;
 			children = (
-				9DAB7898D102B1065EC91067 /* Light.cpp */,
-				55581893D586B927804B0036 /* Light.h */,
-				FB5A574A8681EDEF871C8439 /* Material.cpp */,
-				FF71327B969A8686B0BCADAA /* Material.h */,
-				70449848217910BE63212586 /* Mesh.cpp */,
-				60EC310C2982EEE83F7904F0 /* Mesh.h */,
-				01A1F0ADA6428537040DF398 /* MeshLoader.cpp */,
-				E98B54A6E99CBFF44A4B8E95 /* MeshLoader.h */,
-				DF74C24A54BE0BA54C9A68CF /* Scene.cpp */,
-				3C404CEE5C4CB28ABAE0F6DF /* Scene.h */,
-
+				A77256D4505A2536F7254520 /* Light.cpp */,
+				DC52C775313B271F2B13CD38 /* Light.h */,
+				B62D72D924F48C5040538E0D /* Material.cpp */,
+				C4A1D4F18B2E3AE750AB8A79 /* Material.h */,
+				E109C590B12D4FD8FA61D799 /* Mesh.cpp */,
+				3CA8E7245BB5158B1931DE5E /* Mesh.h */,
+				EE97302FC37D3FC35C8A026F /* MeshLoader.cpp */,
+				AD67CE12C4E6B886D0EA1E14 /* MeshLoader.h */,
+				CEB3CABB0D353CA9A27F4FED /* Scene.cpp */,
+				1E8AD7C28AC31C97D4C10100 /* Scene.h */,
 			);
 			name = scene;
 			sourceTree = "<group>";
 		};
-
+		BBEC78CFFFD54C9466DF6C77 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-
-		F0B57A6A12F5A9DC6BB3102E /* relight */ = {
+		36DEEE5AFEAADC3C683690F9 /* relight */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 507C79B92BC324783A0DC176 /* Build configuration list for PBXNativeTarget "relight" */;
+			buildConfigurationList = 7414C95106A45CD71FC17300 /* Build configuration list for PBXNativeTarget "relight" */;
 			buildPhases = (
-				CEBF79B720AB69762182327F /* Sources */,
-				AEDE2BD97A60A7079A906A76 /* Frameworks */,
-
+				4201DEF7B1B9273D909E5F70 /* Sources */,
+				53298465893368962CE1E342 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-
 			);
 			name = relight;
 			productName = relight;
-			productReference = 4982F92A95DE15B7EA728979 /* librelight.a */;
+			productReference = 2A19919DD4E6B1B700FA694A /* librelight.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-
-		2493A4D7B5C274C42467E9FA /* Project object */ = {
+		991EB2B131CF6D13F2239987 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = YAP;
-				TargetAttributes = {
-
-				};
 			};
-			buildConfigurationList = 606B2B7FC12C7A625DBA431D /* Build configuration list for PBXProject "relight" */;
+			buildConfigurationList = 4E4C8A5B6D2633803A2CB55E /* Build configuration list for PBXProject "relight" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 			);
-			mainGroup = A5BBFAA8685C7D5CD63C9388;
-			productRefGroup = E8FF02AC0DE86D0409714841 /* Products */;
+			mainGroup = 31A07C42FE9335848A52EB66;
+			productRefGroup = 020D1590E9ACB0A34A5DB45D /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F0B57A6A12F5A9DC6BB3102E /* relight */,
-
+				36DEEE5AFEAADC3C683690F9 /* relight */,
 			);
 		};
-
 /* End PBXProject section */
 
-/* Begin PBXBuildPhase section */
-
-		CEBF79B720AB69762182327F /* relight */ = {
+/* Begin PBXSourcesBuildPhase section */
+		4201DEF7B1B9273D909E5F70 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				14C09A4541B4B23729AEFCF0 /* Lightmap.cpp */,
-				F12F9DA6C5DACADE7F454E74 /* Radiosity.cpp */,
-				29B6AAD36746F10CE6912E7F /* Relight.cpp */,
-				58B329FD72C9AA252F053271 /* Vector.cpp */,
-				006D6331FC96387A314B999A /* Embree.cpp */,
-				19B792F7FDAAC6F71D44B4B1 /* AmbientOcclusion.cpp */,
-				2E8D0D12CBE43F6F33E7A687 /* Baker.cpp */,
-				FE7068085C354B687B3D04D5 /* DirectLight.cpp */,
-				D7EC7FF4A492F6C004770790 /* IndirectLight.cpp */,
-				83501F009EF8EF28C4225ECA /* Photons.cpp */,
-				C362FD1166D858911CB0B9DE /* Light.cpp */,
-				4A833C860099032BBE709563 /* Material.cpp */,
-				8349AD95E703B5BED7BFA5F6 /* Mesh.cpp */,
-				77C231C2C56D852FC224A8F2 /* MeshLoader.cpp */,
-				3873E089EF7599CC2F01E86A /* Scene.cpp */,
-
+				FAC4EFF63EC22DFE3F6690BE /* Lightmap.cpp in Sources */,
+				D849F83B08B12DE93B5B47C9 /* Radiosity.cpp in Sources */,
+				4D24A0A38F3AED4B5AC8FF3F /* Relight.cpp in Sources */,
+				CD9DCFA952D2512243380485 /* Vector.cpp in Sources */,
+				3E777172ACA08042816AD94D /* Embree.cpp in Sources */,
+				72115D15C07FE842C79D24BF /* AmbientOcclusion.cpp in Sources */,
+				BBC8595A7629AA61A3520C56 /* Baker.cpp in Sources */,
+				E14D0666335611645B19FF53 /* DirectLight.cpp in Sources */,
+				D3B3A8F26411E177CAC1D526 /* IndirectLight.cpp in Sources */,
+				4701907EDEFD19C904983FA5 /* Photons.cpp in Sources */,
+				9F06142971A2D196B66B6E3C /* Light.cpp in Sources */,
+				B851EE3AF65E90D2B42B8C3B /* Material.cpp in Sources */,
+				7E18547FE489BBDD07C59DEE /* Mesh.cpp in Sources */,
+				0DCF566FCF7C0DEF4AEE917F /* MeshLoader.cpp in Sources */,
+				226940A7FC523D1EBEC06A76 /* Scene.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXSourcesBuildPhase section */
 
-		AEDE2BD97A60A7079A906A76 /* relight */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-
-/* End PBXBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-
-/* End PBXTargetDependency section */
-
-/* Begin PBXConfiguration section */
-
-		E611047735380957C54CD0D9 /* Debug */ = {
+/* Begin XCBuildConfiguration section */
+		0958BFAADD190610159ABB3E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SDKROOT = macosx10.10;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = x86_64;
-
+				SDKROOT = macosx10.10;
 			};
 			name = Debug;
 		};
-
-		FA68C846E88247101ED54086 /* Release */ = {
+		3F24FF4A07543A5125FC6D5B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				SDKROOT = macosx10.10;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = x86_64;
-
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					DC_PLATFORM_MACOS,
+					"DC_PLATFORM=MacOS",
+					RELIGHT_BUILD_LIBRARY,
+					HAVE_EMBREE2,
+				);
+				HEADER_SEARCH_PATHS = (
+					../../../externals/include,
+					"$(inherited)",
+				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
-
-		040E8ED9D15E0480ECC2C014 /* Debug */ = {
+		B4438500FC1FCE6C26118A39 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					DC_PLATFORM_MACOS,
+					"DC_PLATFORM=MacOS",
+					RELIGHT_BUILD_LIBRARY,
+					HAVE_EMBREE2,
 				);
 				HEADER_SEARCH_PATHS = (
-					"../../../externals/include",
+					../../../externals/include,
 					"$(inherited)",
 				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DC_PLATFORM_MACOS",
-					"",
-					"DC_PLATFORM=MacOS",
-					"",
-					"RELIGHT_BUILD_LIBRARY",
-					"",
-					"HAVE_EMBREE2",
-				);
-
 			};
 			name = Debug;
 		};
-
-		B6C7DA516224BE1EFCF1E0E1 /* Release */ = {
+		BF2270DBA00A87A9EBC703DC /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
-				HEADER_SEARCH_PATHS = (
-					"../../../externals/include",
-					"$(inherited)",
-				);
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DC_PLATFORM_MACOS",
-					"",
-					"DC_PLATFORM=MacOS",
-					"",
-					"RELIGHT_BUILD_LIBRARY",
-					"",
-					"HAVE_EMBREE2",
-				);
-
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = x86_64;
+				SDKROOT = macosx10.10;
 			};
 			name = Release;
 		};
+/* End XCBuildConfiguration section */
 
-/* End PBXConfiguration section */
-
-/* Begin PBXConfigurationList section */
-
-		606B2B7FC12C7A625DBA431D /* Build configuration list for PBXProject relight */ = {
+/* Begin XCConfigurationList section */
+		4E4C8A5B6D2633803A2CB55E /* Build configuration list for PBXProject "relight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				E611047735380957C54CD0D9 /* Debug */,
-				FA68C846E88247101ED54086 /* Release */,
-
+				0958BFAADD190610159ABB3E /* Debug */,
+				BF2270DBA00A87A9EBC703DC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-
-		507C79B92BC324783A0DC176 /* Build configuration list for PBXNativeTarget relight */ = {
+		7414C95106A45CD71FC17300 /* Build configuration list for PBXNativeTarget "relight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				040E8ED9D15E0480ECC2C014 /* Debug */,
-				B6C7DA516224BE1EFCF1E0E1 /* Release */,
-
+				B4438500FC1FCE6C26118A39 /* Debug */,
+				3F24FF4A07543A5125FC6D5B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-
-/* End PBXConfigurationList section */
-
+/* End XCConfigurationList section */
 	};
-	rootObject = 2493A4D7B5C274C42467E9FA /* Project object */;
+	rootObject = 991EB2B131CF6D13F2239987 /* Project object */;
 }

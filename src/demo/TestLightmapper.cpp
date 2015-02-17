@@ -112,22 +112,24 @@ void cTestLightmapper::createScene( void )
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
     }
     else if( false ) {
-        Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 2.50f,  1.50f );
-        dir.normalize();
-
         m_scene->addLight( Light::createPointLight( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
         m_scene->addLight( Light::createPointLight( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
 
     //    m_scene->addLight( Light::createPointLight( Vec3( -1.00f, 0.20f, -1.50f ), 5.0f, Color( 0.25f, 0.50f, 1.00f ), 1.0f, true ) );
     //    m_scene->addLight( Light::createPointLight( Vec3(  1.50f, 2.50f,  1.50f ), 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
     //    m_scene->addLight( Light::createSpotLight( Vec3( 1.50f, 2.50f,  1.50f ), dir, 0.3f, 5.0f, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+    }
+    else if( true ) {
+        Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 4.50f,  1.50f );
+        dir.normalize();
 
-    //    m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 0.50f, 0.25f ), 1.0f, true ) );
+        printf( "%f %f %f\n", dir.x, dir.y, dir.z );
+
+        m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 1.00f, 1.0f ), 3.0f, true ) );
     }
     else {
         m_scene->addLight( Light::createPointLight( Vec3( 3.00f, 4.20f, 2.0f ), 6.0f, Color( 1.0f, 1.0f, 1.00f ), 10.0f, true ) );
     }
-
 
 
     placeInstance( "tomb", m_meshes[Mesh_Tomb05c], relight::Matrix4::translation( 0, 0, 0 ), DIRECT_LIGHTMAP_SIZE );
@@ -362,6 +364,8 @@ void* cTestLightmapper::bakeWorker( void* userData )
 
     data->m_instance->m_lightmap->expand();
 
+    data->m_instance->m_photons->save( "output/photons/" + data->m_instance->m_name + ".tga" );
+
     data->m_instance->m_progress->notify( 1000, 0 );
 }
 
@@ -392,12 +396,39 @@ void cTestLightmapper::Render( void )
 
     glRotatef( m_rotationY, 0, 1, 0 );
     glRotatef( m_rotationX, 1, 0, 0 );
-    glScalef( 0.99f, 0.99f, 0.99f );
+    glScalef( 0.9f, 0.9f, 0.9f );
+/*
+    static std::vector<Vec3> vertices;
+
+    if( vertices.empty() ) {
+        Vec3   dir    = Vec3( -0.457496, -0.762493, -0.457496 ); dir.normalize();
+        Bounds bounds = m_scene->bounds();
+        Plane  plane( dir, dir * 2 );
+
+        for( int i = 0; i < 10000; i++ ) {
+            Vec3 v = bounds.randomPointInside();
+            vertices.push_back( plane * v );
+        }
+    }
+
+    glPointSize( 2 );
+    glBegin( GL_POINTS );
+    for( int i = 0; i < vertices.size(); i++ ) {
+        glColor3f( 1.0f, 1.0f, 0.0f );
+        glVertex3fv( &vertices[i].x );
+    }
+    glEnd();
+*/
 
     for( int i = 0; i < m_instances.size(); i++ ) {
         renderInstance( m_instances[i] );
     }
 
+
+    glActiveTextureARB( GL_TEXTURE1 );
+    glBindTexture( GL_TEXTURE_2D, 0 );
+
+    glActiveTextureARB( GL_TEXTURE0 );
     glBindTexture( GL_TEXTURE_2D, 0 );
 
     // ** Render lights
