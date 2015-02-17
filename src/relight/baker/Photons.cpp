@@ -89,15 +89,15 @@ void Photons::emitPhotons( const Light* light )
         }
 
         // ** Trace photon
-        trace( light->attenuation(), position, direction, light->color(), light->intensity() * cut, 0 );
+        trace( light->attenuation(), position, direction, light->color() * light->intensity() * cut, 0 );
     }
 }
 
 // ** Photons::trace
-void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, float energy, int depth )
+void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, int depth )
 {
     // ** Maximum depth or energy threshold exceeded
-    if( depth > m_maxDepth || energy < m_energyThreshold ) {
+    if( depth > m_maxDepth || color.luminance() < m_energyThreshold ) {
         return;
     }
 
@@ -118,15 +118,13 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
     float influence = LightInfluence::lambert( -direction, hit.m_normal ) * att;
 
     // ** Final photon color
-    Color hitColor  = color * hit.m_color * influence;
-
-    energy *= influence;
+    Color hitColor = color * hit.m_color * influence;
 
     // ** Store photon energy
     store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
 
     // ** Keep tracing
-    trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hitColor, energy, depth + 1 );
+    trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hitColor, depth + 1 );
 }
 
 // ** Photons::store
