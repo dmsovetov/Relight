@@ -34,6 +34,8 @@
 #include <assert.h>
 #include <float.h>
 
+#include "Vector.h"
+
 #define lmTYPE float
 #define sVector2 relight::Uv
 #define sVector3 relight::Vec3
@@ -116,17 +118,19 @@ namespace relight {
         float                           m_finalGatherDistance;      //!< Maximum distance to gather photons at.
         int                             m_finalGatherRadius;        //!< A radius of circle in which samples are gathered from photon map.
 
+        Color                           m_skyColor;                 //!< A sky color is used when the ray didn't hit anything.
+
         //! Returns a fast quality settings.
-        static IndirectLightSettings    fast( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    fast( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a draft quality settings.
-        static IndirectLightSettings    draft( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    draft( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a best quality settings.
-        static IndirectLightSettings    best( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    best( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a production quality settings.
-        static IndirectLightSettings    production( float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    production( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
     };
 
     //! Ambient occlusion settings.

@@ -45,8 +45,9 @@ namespace bake {
                                  \param samples Amount of final gather samples.
                                  \param maxDistance Maximum distance to gather photons at.
                                  \param radius Final gather radius.
+                                 \param skyColor A sky color.
                                  */
-                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius );
+                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Color& skyColor );
 
     protected:
 
@@ -66,6 +67,9 @@ namespace bake {
 
         //! Final gather radius.
         int                     m_radius;
+
+        //! Sky color.
+        Color                   m_skyColor;
     };
 
 } // namespace bake
