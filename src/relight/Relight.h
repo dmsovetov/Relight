@@ -67,6 +67,7 @@ namespace relight {
     class Matrix4;
     class Vec3;
     class Color;
+    class Bounds;
     class Uv;
 
     //! Mesh vertex index.

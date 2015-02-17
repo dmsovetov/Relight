@@ -69,11 +69,16 @@ RelightStatus Photons::emit( void )
 // ** Photons::emitPhotons
 void Photons::emitPhotons( const Light* light )
 {
-    PhotonEmitter* emitter = light->photonEmitter();
+    PhotonEmitter* emitter   = light->photonEmitter();
+    Vec3           direction;
+    Vec3           position;
 
     for( int i = 0, n = emitter->photonCount(); i < n; i++ ) {
-        Vec3  direction = emitter->emit();
-        float cut       = 1.0f;
+        // ** Emit photon
+        emitter->emit( m_scene, position, direction );
+
+        // ** Calculate light cutoff
+        float cut = 1.0f;
 
         if( const LightCutoff* cutoff = light->cutoff() ) {
             cut = cutoff->cutoffForDirection( direction );
@@ -83,7 +88,8 @@ void Photons::emitPhotons( const Light* light )
             continue;
         }
 
-        trace( light->attenuation(), light->position(), direction, light->color(), light->intensity() * cut, 0 );
+        // ** Trace photon
+        trace( light->attenuation(), position, direction, light->color(), light->intensity() * cut, 0 );
     }
 }
 

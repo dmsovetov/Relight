@@ -40,6 +40,11 @@ namespace relight {
         return rand() * invRAND_MAX;
     }
 
+    //! Does a linear interpolation between two values.
+    inline float lerp( float a, float b, float scalar ) {
+        return a * scalar + b * (1.0f - scalar);
+    }
+
     //! Returns a minimum value of two.
     inline float min( float a, float b ) {
         return a < b ? a : b;
@@ -248,11 +253,6 @@ namespace relight {
     // ** Vec3::GetRandomDirection
     inline Vec3 Vec3::randomHemisphereDirection( const Vec3& point, const Vec3& normal )
     {
-        // "outgoing" in a physical sense
-        // "outgoing_direction" is actually an incoming direction in path tracing
-    //    extern double random0to1();
-    //    extern void RotateAroundAxis( double *rotation_axis, double theta, double *vec_in, double *vec_out );
-
         float theta = acosf( sqrtf( rand0to1() ) );
         float phi   = rand0to1() * 6.28318531f;	// ** TwoPi
 
@@ -271,11 +271,47 @@ namespace relight {
 
         rotation_axis.normalize();
 
-    //    Vec3 _axis = Vec3( rotation_axis.x, rotation_axis.y, rotation_axis.z );
-    //    Vec3 _out[3];
         return Vec3::rotateAroundAxis( rotation_axis, angle_between, temp );
-        
-    //    return Vec3( _out[0], _out[1], _out[2] );
+    }
+
+    /*!
+     A plane in a 3-dimensinal space.
+     */
+    class Plane {
+    public:
+
+                        //! Constructs a Plane instance.
+                        /*!
+                         \param normal Plane normal.
+                         \param point Point on plane.
+                         */
+                        Plane( const Vec3& normal = Vec3( 0, 0, 0 ), float distance = 0.0f )
+                            : m_normal( normal ), m_distance( distance ) {}
+
+        //! Projects a point onto this plane
+        Vec3            operator * ( const Vec3& point ) const;
+
+        //! Create plane from point and normal.
+        static Plane    calculate( const Vec3& normal, const Vec3& point );
+
+    private:
+
+        //! Plane normal.
+        Vec3            m_normal;
+
+        //! Plane distance to origin.
+        float           m_distance;
+    };
+
+    // ** Plane::calculate
+    inline Plane Plane::calculate( const Vec3& normal, const Vec3& point) {
+        return Plane( normal, -(normal * point) );
+    }
+
+    // ** Plane::operator *
+    inline Vec3 Plane::operator * ( const Vec3& point ) const {
+        float distanceToPoint = m_normal * point + m_distance;
+        return point - m_normal * distanceToPoint;
     }
 
     /*!
@@ -294,8 +330,20 @@ namespace relight {
         //! Adds a new point to a bounding box (extends a bounds if needed).
         const Bounds&   operator += ( const Vec3& point );
 
+        //! Adds two bounding volumes.
+        const Bounds&   operator += ( const Bounds& other );
+
         //! Returns a bounds volume.
         float           volume( void ) const;
+
+        //! Returns a minimum bound point.
+        const Vec3&     min( void ) const;
+
+        //! Returns a maximum bound point.
+        const Vec3&     max( void ) const;
+
+        //! Returns a random point in bounding box.
+        Vec3            randomPointInside( void ) const;
 
     private:
 
@@ -311,17 +359,42 @@ namespace relight {
 
     }
 
+    // ** Bounds::randomPointInside
+    inline Vec3 Bounds::randomPointInside( void ) const
+    {
+        return Vec3(  lerp( m_min.x, m_max.x, rand0to1() )
+                    , lerp( m_min.y, m_max.y, rand0to1() )
+                    , lerp( m_min.z, m_max.z, rand0to1() ) );
+    }
+
     // ** Bounds::volume
     inline float Bounds::volume( void ) const {
         return (m_max.x - m_min.x) * (m_max.y - m_min.y) * (m_max.z - m_min.z);
     }
 
+    // ** Bounds::min
+    inline const Vec3& Bounds::min( void ) const {
+        return m_min;
+    }
+
+    // ** Bounds::max
+    inline const Vec3& Bounds::max( void ) const {
+        return m_max;
+    }
+
     // ** Bounds::operator +=
     inline const Bounds& Bounds::operator += ( const Vec3& point ) {
         for( int i = 0; i < 3; i++ ) {
-            m_min[i] = min( m_min[i], point[i] );
-            m_max[i] = max( m_max[i], point[i] );
+            m_min[i] = ::relight::min( m_min[i], point[i] );
+            m_max[i] = ::relight::max( m_max[i], point[i] );
         }
+        return *this;
+    }
+
+    // ** Bounds::operator +=
+    inline const Bounds& Bounds::operator += ( const Bounds& other ) {
+        *this += other.m_min;
+        *this += other.m_max;
         return *this;
     }
 
@@ -373,10 +446,18 @@ namespace relight {
         Color           operator * ( const Color& other ) const;
         Color           operator / ( float scalar ) const;
 
+        //! Calculates color luminance,
+        float           luminance( void ) const;
+
     public:
 
         float           r, g, b;
     };
+
+    // ** Color::luminance
+    inline float Color::luminance( void ) const {
+        return 0.2126f * r + 0.7152f * g + 0.0722f * b;
+    }
 
     // ** Color::operator +=
     inline const Color& Color::operator += ( const Color& other ) {

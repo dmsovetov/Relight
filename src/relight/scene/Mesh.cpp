@@ -130,11 +130,6 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, c
 
     // ** Update face array
     buildFaces();
-
-    // ** Update mesh bounds
-    for( int i = 0, n = ( int )vertices.size(); i < n; i++ ) {
-        m_bounds += vertices[i].m_position;
-    }
 }
 
 // ** Mesh::buildFaces
@@ -142,9 +137,14 @@ void Mesh::buildFaces( void )
 {
     m_faces.clear();
 
-    for( int i = 0, n = m_indices.size() / 3; i < n; i++ ) {
+    for( int i = 0, n = indexCount() / 3; i < n; i++ ) {
         Index* indices = &m_indices[i * 3];
         m_faces.push_back( Face( i, &m_vertices[indices[0]], &m_vertices[indices[1]], &m_vertices[indices[2]] ) );
+    }
+
+    // ** Update mesh bounds
+    for( int i = 0, n = vertexCount(); i < n; i++ ) {
+        m_bounds += m_vertices[i].m_position;
     }
 }
 

@@ -28,6 +28,7 @@
 #define __Relight_Scene_H__
 
 #include "../Relight.h"
+#include "../Vector.h"
 
 namespace relight {
 
@@ -85,6 +86,9 @@ namespace relight {
         //! Returns a mesh by index.
         const Mesh*             mesh( int index ) const;
 
+        //! Returns a scene bounding box.
+        const Bounds&           bounds( void ) const;
+
         //! Creates a new scene.
         static Scene*           create( void );
 
@@ -92,6 +96,9 @@ namespace relight {
 
                                 //! Constructs a new Scene instance.
                                 Scene( void );
+
+        //! Updates scene bounds.
+        void                    updateBounds( void );
 
     private:
 
@@ -113,6 +120,9 @@ namespace relight {
 
         //! Ray tracer instance.
         rt::ITracer*            m_tracer;
+
+        //! Scene bounds.
+        Bounds                  m_bounds;
     };
 
 } // namespace relight

@@ -28,6 +28,7 @@
 
 #include "Light.h"
 #include "Mesh.h"
+#include "Scene.h"
 #include "../rt/Tracer.h"
 
 namespace relight {
@@ -201,7 +202,7 @@ Light* Light::createDirectionalLight( const Vec3& direction, const Color& color,
     Light* light = new Light;
 
     light->setInfluence( new DirectionalLightInfluence( light, direction ) );
-    light->setPhotonEmitter( new PhotonEmitter( light ) );
+    light->setPhotonEmitter( new DirectionalPhotonEmitter( light, direction ) );
     light->setCastsShadow( castsShadow );
     light->setColor( color );
     light->setIntensity( intensity );
@@ -336,10 +337,27 @@ int PhotonEmitter::photonCount( void ) const
 }
 
 // ** PhotonEmitter::emit
-Vec3 PhotonEmitter::emit( void ) const
+void PhotonEmitter::emit( const Scene* scene, Vec3& position, Vec3& direction ) const
 {
-    return Vec3::randomDirection();
+    position  = m_light->position();
+    direction = Vec3::randomDirection();
+}
 
+// --------------------------------------------------- DirectinalPhotonEmitter ---------------------------------------------------- //
+
+// ** DirectionalPhotonEmitter::DirectionalPhotonEmitter
+DirectionalPhotonEmitter::DirectionalPhotonEmitter( const Light* light, const Vec3& direction ) : PhotonEmitter( light ), m_direction( direction )
+{
+    m_plane = Plane::calculate( direction, light->position() );
+}
+
+// ** DirectionalPhotonEmitter::emit
+void DirectionalPhotonEmitter::emit( const Scene* scene, Vec3& position, Vec3& direction ) const
+{
+    const Bounds& bounds = scene->bounds();
+
+    position  = m_plane * bounds.randomPointInside() - m_direction * 5;
+    direction = m_direction;
 }
 
 // ------------------------------------------------------- LightInfluence --------------------------------------------------------- //

@@ -188,12 +188,37 @@ namespace relight {
         virtual int         photonCount( void ) const;
 
         //! Emits a new photon.
-        virtual Vec3        emit( void ) const;
+        virtual void        emit( const Scene* scene, Vec3& position, Vec3& direction ) const;
 
-    private:
+    protected:
 
         //! Parent light source.
         const Light*        m_light;
+    };
+
+    /*!
+     Directional photon emitter emits photons with a given direction.
+     */
+    class DirectionalPhotonEmitter : public PhotonEmitter {
+    public:
+
+                            //! Constructs a new DirectionalPhotonEmitter instance.
+                            /*!
+                             \param light Parent light source.
+                             \param direction Emission direction.
+                             */
+                            DirectionalPhotonEmitter( const Light* light, const Vec3& direction );
+
+        //! Emits a new photon.
+        virtual void        emit( const Scene* scene, Vec3& position, Vec3& direction ) const;
+
+    private:
+
+        //! Emission direction.
+        Vec3                m_direction;
+
+        //! Emission plane.
+        Plane               m_plane;
     };
 
     /*!

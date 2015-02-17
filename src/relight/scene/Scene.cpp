@@ -64,6 +64,12 @@ Photonmap* Scene::createPhotonmap( int width, int height ) const
     return new Photonmap( width, height );
 }
 
+// ** Scene::bounds
+const Bounds& Scene::bounds( void ) const
+{
+    return m_bounds;
+}
+
 // ** Scene::lightCount
 int Scene::lightCount( void ) const
 {
@@ -90,6 +96,16 @@ const Mesh* Scene::mesh( int index ) const
     return m_meshes[index];
 }
 
+// ** Scene::updateBounds
+void Scene::updateBounds( void )
+{
+    m_bounds = Bounds();
+
+    for( int i = 0; i < meshCount(); i++ ) {
+        m_bounds += mesh( i )->bounds();
+    }
+}
+
 // ** Scene::addLight
 RelightStatus Scene::addLight( const Light* light )
 {
@@ -101,6 +117,7 @@ Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
 {
     Mesh* transformed = mesh->transformed( transform );
     m_meshes.push_back( transformed );
+    updateBounds();
     return transformed;
 }
 
