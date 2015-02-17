@@ -275,15 +275,22 @@ void display()
 		test->Update();
 	}
 
-	glClearColor( 0.1, 0.2, 0.3, 1.0 );
+//	glClearColor( 0.1, 0.2, 0.3, 1.0 );
+
+    glClearColor( 0.52734375f, 0.8046875f, 0.91796875f, 1.0f ); // Sky blue
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-    float fogColor[] = { 0.05, 0.1, 0.15, 1.0 };
-    glEnable( GL_FOG );
+//    float fogColor[] = { 0.05, 0.1, 0.15, 1.0 };
+//    float fogStart = 5;
+
+    float fogColor[] = { 0.52734375f, 0.8046875f, 0.91796875f, 1.0f };
+    float fogStart = 0.05f;
+
+//    glEnable( GL_FOG );
     glFogi( GL_FOG_MODE, GL_LINEAR);
     glFogfv( GL_FOG_COLOR, fogColor );
     glFogf( GL_FOG_DENSITY, 0.2f );
-    glFogf( GL_FOG_START, 5 );
+    glFogf( GL_FOG_START, fogStart );
     glFogf( GL_FOG_END, 8 );
 
     glMatrixMode(GL_PROJECTION);

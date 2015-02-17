@@ -135,6 +135,7 @@ private:
     float               m_rotationY;
     float               m_rotationX;
     bool                m_useLightmaps;
+    bool                m_useDiffuse;
 
     Prefab              m_meshes[TotalMeshes];
     InstanceArray       m_instances;

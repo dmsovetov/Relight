@@ -24,7 +24,7 @@
 #define		CALCULATE_DIRECT			(1)
 #define		CALCULATE_INDIRECT			(1)
 
-#define		DIRECT_LIGHTMAP_SIZE		(1024)
+#define		DIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_LIGHTMAP_SIZE		(512)
 #define		INDIRECT_MAX_DEPTH			(3)
 #define     INDIRECT_RADIUS             (7)
@@ -59,10 +59,11 @@ void cTestLightmapper::Create( void )
 {
     createScene();
 
-    startLightmapsThread( IndirectLightSettings::fast(), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
+    startLightmapsThread( IndirectLightSettings::production( Color( 0.52734375f, 0.8046875f, 0.91796875f ) ), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
 
     m_rotationX = m_rotationY = 0.0f;
     m_useLightmaps = true;
+    m_useDiffuse = true;
 }
 
 void cTestLightmapper::startLightmapsThread( const IndirectLightSettings& indirectLight, const AmbientOcclusionSettings& ambientOcclusion )
@@ -107,7 +108,7 @@ void cTestLightmapper::createScene( void )
     // ** Add lights
     m_scene->begin();
 
-    if( true ) {
+    if( false ) {
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3( -1.00f, 0.20f, -1.50f ), Color( 0.25f, 0.50f, 1.00f ), 2.0f, true ) );
         m_scene->addLight( Light::createAreaLight( m_meshes[Mesh_Light].m_mesh, Vec3(  1.50f, 2.50f,  1.50f ), Color( 1.00f, 0.50f, 0.25f ), 2.0f, true ) );
     }
@@ -123,9 +124,7 @@ void cTestLightmapper::createScene( void )
         Vec3 dir = Vec3( 0, 2, 0 ) - Vec3( 1.50f, 4.50f,  1.50f );
         dir.normalize();
 
-        printf( "%f %f %f\n", dir.x, dir.y, dir.z );
-
-        m_scene->addLight( Light::createDirectionalLight( dir, Color( 1.00f, 1.00f, 1.0f ), 3.0f, true ) );
+        m_scene->addLight( Light::createDirectionalLight( dir, Color( 0.75f, 0.74609375f, 0.67578125f ), 3.0f, true ) );
     }
     else {
         m_scene->addLight( Light::createPointLight( Vec3( 3.00f, 4.20f, 2.0f ), 6.0f, Color( 1.0f, 1.0f, 1.00f ), 10.0f, true ) );
@@ -266,7 +265,7 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse, con
         Uv   lightmap;
     };
 
-    Material* material = new TexturedMaterial( Texture::createFromFile( diffuse ), color );
+    Material* material = diffuse ? new TexturedMaterial( Texture::createFromFile( diffuse ), color ) : new Material( color );
 
     for( unsigned int i = 0; i < submeshCount; ++i )
     {
@@ -354,8 +353,8 @@ void* cTestLightmapper::bakeWorker( void* userData )
     RelightStatus status;
     WorkerData*   data = reinterpret_cast<WorkerData*>( userData );
 
-    status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-    assert( status == RelightSuccess );
+//    status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+//    assert( status == RelightSuccess );
 
     status = Relight::bakeIndirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
     assert( status == RelightSuccess );
@@ -365,6 +364,7 @@ void* cTestLightmapper::bakeWorker( void* userData )
     data->m_instance->m_lightmap->expand();
 
     data->m_instance->m_photons->save( "output/photons/" + data->m_instance->m_name + ".tga" );
+    data->m_instance->m_lightmap->save( "output/lightmaps/" + data->m_instance->m_name + ".tga" );
 
     data->m_instance->m_progress->notify( 1000, 0 );
 }
@@ -397,28 +397,6 @@ void cTestLightmapper::Render( void )
     glRotatef( m_rotationY, 0, 1, 0 );
     glRotatef( m_rotationX, 1, 0, 0 );
     glScalef( 0.9f, 0.9f, 0.9f );
-/*
-    static std::vector<Vec3> vertices;
-
-    if( vertices.empty() ) {
-        Vec3   dir    = Vec3( -0.457496, -0.762493, -0.457496 ); dir.normalize();
-        Bounds bounds = m_scene->bounds();
-        Plane  plane( dir, dir * 2 );
-
-        for( int i = 0; i < 10000; i++ ) {
-            Vec3 v = bounds.randomPointInside();
-            vertices.push_back( plane * v );
-        }
-    }
-
-    glPointSize( 2 );
-    glBegin( GL_POINTS );
-    for( int i = 0; i < vertices.size(); i++ ) {
-        glColor3f( 1.0f, 1.0f, 0.0f );
-        glVertex3fv( &vertices[i].x );
-    }
-    glEnd();
-*/
 
     for( int i = 0; i < m_instances.size(); i++ ) {
         renderInstance( m_instances[i] );
@@ -498,6 +476,9 @@ unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) con
 
 void cTestLightmapper::renderInstance( const Instance* instance ) const
 {
+    const int diffuseStage  = 1;
+    const int lightmapStage = 0;
+
     const relight::Vertex*  vertices = instance->m_mesh->vertexBuffer();
     const relight::Index*   indices  = instance->m_mesh->indexBuffer();
 
@@ -510,30 +491,34 @@ void cTestLightmapper::renderInstance( const Instance* instance ) const
     glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
 
     if( instance->m_lightmapId && m_useLightmaps ) {
-        glActiveTextureARB( GL_TEXTURE1_ARB );
+        glActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
         glEnable( GL_TEXTURE_2D );
         glBindTexture( GL_TEXTURE_2D, instance->m_lightmapId );
 
-        glClientActiveTextureARB( GL_TEXTURE1_ARB );
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glEnableClientState( GL_TEXTURE_COORD_ARRAY );
         glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
     } else {
-        glActiveTextureARB( GL_TEXTURE1_ARB );
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+        glActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
         glDisable( GL_TEXTURE_2D );
     }
 
-    if( instance->m_diffuseId ) {
-        glActiveTextureARB( GL_TEXTURE0_ARB );
+    if( instance->m_diffuseId && m_useDiffuse ) {
+        glActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
         glEnable( GL_TEXTURE_2D );
         glBindTexture( GL_TEXTURE_2D, instance->m_diffuseId );
 
-        glClientActiveTextureARB( GL_TEXTURE0_ARB );
-        glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glEnableClientState( GL_TEXTURE_COORD_ARRAY );
         glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Diffuse].u );
     } else {
-        glActiveTextureARB( GL_TEXTURE0_ARB );
-        glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+        glActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
         glDisable( GL_TEXTURE_2D );
     }
 
@@ -576,6 +561,7 @@ void cTestLightmapper::KeyPressed( int key )
     if( key == 's' ) m_rotationX -= 2.8f;
 
     if( key == 'l' ) m_useLightmaps = !m_useLightmaps;
+    if( key == 'k' ) m_useDiffuse   = !m_useDiffuse;
 }
 
 // ** cTestLightmapper::CalculateDirectLight
