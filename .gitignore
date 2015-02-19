@@ -27,6 +27,7 @@
 *.app
 
 #
+Assets
 output
 xcuserdata
 xcshareddata
