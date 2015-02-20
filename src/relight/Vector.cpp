@@ -73,12 +73,39 @@ Matrix4::Matrix4( void )
     m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
 }
 
+// ** Matrix4::operator[]
+float Matrix4::operator[]( int index ) const
+{
+    assert( index >= 0 && index < 16 );
+    return m[index];
+}
+
+// ** Matrix4::operator[]
+float& Matrix4::operator[]( int index )
+{
+    assert( index >= 0 && index < 16 );
+    return m[index];
+}
+
 // ** Matrix4::translation
 Matrix4 Matrix4::translation( float x, float y, float z )
 {
-    Matrix4 result;
-    result.m[12] = x; result.m[13] = y; result.m[14] = z;
-    return result;
+    Matrix4 m;
+    m[12] = x; m[13] = y; m[14] = z;
+    return m;
+}
+
+// ** Matrix4::scale
+Matrix4 Matrix4::scale( float x, float y, float z )
+{
+    Matrix4 m;
+
+    m[0 ] = x;    m[1 ] = 0.0f; m[2 ] = 0.0f; m[3 ] = 0.0f;
+    m[4 ] = 0.0f; m[5 ] = y;    m[6 ] = 0.0f; m[7 ] = 0.0f;
+    m[8 ] = 0.0f; m[9 ] = 0.0f; m[10] = z;    m[11] = 0.0f;
+    m[12] = 0.0f; m[13] = 0.0f; m[14] = 0.0f; m[15] = 1.0f;
+
+    return m;
 }
 
 } // namespace relight

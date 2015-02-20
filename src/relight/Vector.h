@@ -342,6 +342,15 @@ namespace relight {
         //! Returns a maximum bound point.
         const Vec3&     max( void ) const;
 
+        //! Returns bounds width.
+        float           width( void ) const;
+
+        //! Returns bounds height.
+        float           height( void ) const;
+
+        //! Returns bounds depth.
+        float           depth( void ) const;
+
         //! Returns a random point in bounding box.
         Vec3            randomPointInside( void ) const;
 
@@ -382,6 +391,21 @@ namespace relight {
         return m_max;
     }
 
+    // ** Bounds::width
+    inline float Bounds::width( void ) const {
+        return fabsf( m_max.x - m_min.x );
+    }
+
+    // ** Bounds::height
+    inline float Bounds::height( void ) const {
+        return fabsf( m_max.y - m_min.y );
+    }
+
+    // ** Bounds::depth
+    inline float Bounds::depth( void ) const {
+        return fabsf( m_max.z - m_min.z );
+    }
+
     // ** Bounds::operator +=
     inline const Bounds& Bounds::operator += ( const Vec3& point ) {
         for( int i = 0; i < 3; i++ ) {
@@ -407,11 +431,17 @@ namespace relight {
                         //! Constructs an identity matrix.
                         Matrix4( void );
 
+        float           operator[] ( int index ) const;
+        float&          operator[] ( int index );
+
         Matrix4         operator * ( const Matrix4& other ) const;
         Vec3            operator * ( const Vec3& v ) const;
 
         //! Constructs a translation transform matrix.
         static Matrix4  translation( float x, float y, float z );
+
+        //! Constructs a scale transform matrix.
+        static Matrix4  scale( float x, float y, float z );
 
     public:
 
