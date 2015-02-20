@@ -65,7 +65,7 @@ namespace relight {
          \param mesh A mesh data to create an instance from.
          \param transform mesh instance transform.
          */
-        Mesh*                   addMesh( const Mesh* mesh, const Matrix4& transform );
+        Mesh*                   addMesh( const Mesh* mesh, const Matrix4& transform, const Material* material = NULL );
 
         /*!
          Adds a Light instance to a scene.

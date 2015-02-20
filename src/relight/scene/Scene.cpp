@@ -113,9 +113,12 @@ RelightStatus Scene::addLight( const Light* light )
 }
 
 // ** Scene::addMesh
-Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform )
+Mesh* Scene::addMesh( const Mesh* mesh, const Matrix4& transform, const Material* material )
 {
     Mesh* transformed = mesh->transformed( transform );
+    if( material ) {
+        transformed->overrideMaterial( material );
+    }
     m_meshes.push_back( transformed );
     updateBounds();
     return transformed;
