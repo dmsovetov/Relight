@@ -180,6 +180,17 @@ void Mesh::setPhotonmap( Photonmap* value )
     m_photonmap = value;
 }
 
+// ** Mesh::transform
+void Mesh::transform( const Matrix4& transform )
+{
+    for( int i = 0, n = vertexCount(); i < n; i++ ) {
+        m_vertices[i].m_position = transform * m_vertices[i].m_position;
+        m_vertices[i].m_normal   = transform * m_vertices[i].m_normal;
+
+        m_vertices[i].m_normal.normalize();
+    }
+}
+
 // ** Mesh::transformed
 Mesh* Mesh::transformed( const Matrix4& transform ) const
 {
@@ -188,9 +199,7 @@ Mesh* Mesh::transformed( const Matrix4& transform ) const
     mesh->m_indices     = m_indices;
     mesh->buildFaces();
 
-    for( int i = 0, n = mesh->vertexCount(); i < n; i++ ) {
-        mesh->m_vertices[i].m_position = transform * mesh->m_vertices[i].m_position;
-    }
+    mesh->transform( transform );
 
     return mesh;
 }

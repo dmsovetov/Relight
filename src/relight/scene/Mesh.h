@@ -179,6 +179,9 @@ namespace relight {
         //! Returns a target photonmap.
         Photonmap*          photonmap( void ) const;
 
+        //! Transforms a mesh with a affine matrix.
+        void                transform( const Matrix4& transform );
+
         //! Creates a clone of this mesh with applied transform.
         Mesh*               transformed( const Matrix4& transform ) const;
 
