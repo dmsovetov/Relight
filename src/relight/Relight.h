@@ -36,10 +36,10 @@
 
 #include "Vector.h"
 
-#define lmTYPE float
-#define sVector2 relight::Uv
-#define sVector3 relight::Vec3
-#define sColor relight::Color
+//#define lmTYPE float
+//#define sVector2 relight::Uv
+//#define sVector3 relight::Vec3
+//#define sColor relight::Color
 
 namespace relight {
 

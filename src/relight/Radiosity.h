@@ -14,8 +14,7 @@
 */
 
 #include	<vector>
-#include	"Relight.h"     // ** sVector3
-//#include	"PathTracer.h"	// ** sColor
+#include	"Relight.h"
 
 /*
 =========================================================================================
@@ -44,11 +43,11 @@ typedef std::vector< sFormFactor >		tFormFactorVector;
 
 // ** struct sRadiositySample
 struct sRadiositySample {
-	sVector3			position;
-	sVector3			normal;
-	sColor				injected;
-	sColor				diffuse;
-	sColor				indirect;
+    relight::Vec3       position;
+	relight::Vec3       normal;
+    relight::Color		injected;
+	relight::Color      diffuse;
+	relight::Color      indirect;
 	tFormFactorVector	formFactors;
 	bool				isValid;
 

@@ -426,20 +426,20 @@ bool LoadTGA(TextureImage *texture, char *filename)			// Loads A TGA File Into M
 }
 
 struct sTriangle {
-	sVector3	A, B, C;
+	relight::Vec3	A, B, C;
 };
 
 void Triangulate4( const sTriangle& face, sTriangle result[4] )
 {
 	// ** Source triangle
-	const sVector3& A = face.A;
-	const sVector3& B = face.B;
-	const sVector3& C = face.C;
+	const relight::Vec3& A = face.A;
+	const relight::Vec3& B = face.B;
+	const relight::Vec3& C = face.C;
 
 	// ** Tesselation points
-	sVector3 xA = (A + B) * 0.5f;
-	sVector3 xB = (B + C) * 0.5f;
-	sVector3 xC = (C + A) * 0.5f;
+	relight::Vec3 xA = (A + B) * 0.5f;
+	relight::Vec3 xB = (B + C) * 0.5f;
+	relight::Vec3 xC = (C + A) * 0.5f;
 
 	// ** Triangles
 	sTriangle ta, tb, tc, td;
@@ -470,7 +470,7 @@ void Triangulate4( const sTriangle& face, sTriangle result[4] )
 	result[3] = td;
 }
 
-float TriangleArea( const sVector3& A, const sVector3& B, const sVector3& C )
+float TriangleArea( const relight::Vec3& A, const relight::Vec3& B, const relight::Vec3& C )
 {
 	float a = (A - B).length();
 	float b = (B - C).length();

@@ -257,7 +257,7 @@ void cTestRadiosity::BlurLightmap( void )
 {
 	for( int y = 1; y < RADIOSITY_LIGHTMAP_SIZE - 1; y++ ) {
 		for( int x = 1; x < RADIOSITY_LIGHTMAP_SIZE - 1; x++ ) {
-			sColor color = sColor( 0.0f, 0.0f, 0.0f );
+			relight::Color color = relight::Color( 0.0f, 0.0f, 0.0f );
 
 			for( int j = y - 1; j <= y + 1; j++ ) {
 				for( int i = x - 1; i <= x + 1; i++ ) {
