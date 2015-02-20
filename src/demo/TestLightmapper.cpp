@@ -98,6 +98,34 @@ void cTestLightmapper::startBakingThread( Instance* instance, int index, int thr
 
 void cTestLightmapper::createScene( void )
 {
+    m_uassets = uscene::parseAssets( "Assets/assets" );
+    assert( m_uassets );
+
+    m_uscene  = uscene::parseScene( m_uassets, "Assets/Crypt/Scenes/Test.scene" );
+    assert( m_uscene );
+
+    m_scene = Scene::create();
+
+    m_scene->begin();
+
+    Prefab ground = createGroundPlane( "data/textures/Ground07_D.tga", 20 );
+    uscene::SceneObject* object = new uscene::SceneObject;
+    object->m_mesh      = ground.m_mesh;
+    object->m_material  = uscene::createMaterialFromTexture( "data/textures/Ground07_D.tga" );
+    m_textures[object->m_material->m_texture] = createTexture( object->m_material->m_texture );
+    Mesh* mesh = m_scene->addMesh( ground.m_mesh, relight::Matrix4() );
+    mesh->setUserData( object );
+
+    for( int i = 0; i < m_uscene->m_objects.size(); i++ ) {
+        uscene::SceneObject* object = m_uscene->m_objects[i];
+        Mesh* mesh = m_scene->addMesh( object->m_mesh, object->m_transform, object->m_material->m_material );
+        mesh->setUserData( object );
+
+        m_textures[object->m_material->m_texture] = createTexture( object->m_material->m_texture );
+    }
+
+    m_scene->end();
+/*
     m_meshes[Mesh_Light]        = loadPrefab( "data/light.obj", NULL );
     m_meshes[Mesh_Ground]       = createGroundPlane( "data/textures/Ground07_D.tga", 10 );
     m_meshes[Mesh_Tomb05c]      = loadPrefab( "data/crypt/Tomb05_c.mesh", "data/textures/Tomb01_D.tga" );
@@ -145,6 +173,7 @@ void cTestLightmapper::createScene( void )
     }
 
     m_scene->end();
+*/
 }
 
 Prefab cTestLightmapper::createGroundPlane( const char* diffuse, int size, const relight::Color& color ) const
@@ -394,14 +423,27 @@ void cTestLightmapper::Render( void )
 	glEnable( GL_CULL_FACE );
 	glPushMatrix();
 
+    const Bounds& bounds = m_scene->bounds();
+    float         scale  = max3( bounds.width(), bounds.height(), bounds.depth() );
+
     glRotatef( m_rotationY, 0, 1, 0 );
     glRotatef( m_rotationX, 1, 0, 0 );
-    glScalef( 0.9f, 0.9f, 0.9f );
+    glScalef( 5.0f / scale, 5.0f / scale, 5.0f / scale );
 
+    for( int i = 0; i < m_scene->meshCount(); i++ ) {
+        const Mesh*          mesh        = m_scene->mesh( i );
+        uscene::SceneObject* sceneObject = reinterpret_cast<uscene::SceneObject*>( mesh->userData() );
+        Material*            material    = sceneObject->m_material->m_material;
+        const Color&         diffuse     = material->color();
+
+        glColor3f( diffuse.r, diffuse.g, diffuse.b );
+        renderMesh( mesh, m_textures[sceneObject->m_material->m_texture], 0 );
+    }
+
+/*
     for( int i = 0; i < m_instances.size(); i++ ) {
         renderInstance( m_instances[i] );
     }
-
 
     glActiveTextureARB( GL_TEXTURE1 );
     glBindTexture( GL_TEXTURE_2D, 0 );
@@ -425,6 +467,7 @@ void cTestLightmapper::Render( void )
         glPopMatrix();
     }
     glColor3f( 1.0, 1.0, 1.0 );
+*/
 
     glDisable( GL_DEPTH_TEST );
     glBegin( GL_LINES );
@@ -458,6 +501,7 @@ unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) con
 {
     Texture* texture = Texture::createFromFile( fileName );
     if( !texture ) {
+        assert( false );
         return 0;
     }
 
@@ -474,8 +518,25 @@ unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) con
     return id;
 }
 
+// ** cTestLightmapper::createTexture
+unsigned int cTestLightmapper::createTexture( const Texture* texture ) const
+{
+    unsigned int id;
+
+    glGenTextures( 1, &id );
+    glBindTexture( GL_TEXTURE_2D, id );
+    glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, texture->width(), texture->height(), 0, GL_BGR, GL_FLOAT, &texture->pixels()[0].r );
+
+    return id;
+}
+
 void cTestLightmapper::renderInstance( const Instance* instance ) const
 {
+    renderMesh( instance->m_mesh, instance->m_diffuseId, instance->m_lightmapId );
+/*
     const int diffuseStage  = 1;
     const int lightmapStage = 0;
 
@@ -527,7 +588,63 @@ void cTestLightmapper::renderInstance( const Instance* instance ) const
     glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
     glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);       // Disable texture coord arrays
-    glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+    glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays*/
+}
+
+void cTestLightmapper::renderMesh( const Mesh *mesh, unsigned int diffuse, unsigned int lightmap ) const
+{
+    const int diffuseStage  = 1;
+    const int lightmapStage = 0;
+
+    const relight::Vertex*  vertices = mesh->vertexBuffer();
+    const relight::Index*   indices  = mesh->indexBuffer();
+
+    glEnableClientState(GL_VERTEX_ARRAY);						// Enable vertex arrays
+    glEnableClientState(GL_NORMAL_ARRAY);						// Enable normal arrays
+//    glEnableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
+
+    glVertexPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_position.x );				// Vertex Pointer to triangle array
+    glNormalPointer( GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_normal.x );						// Normal pointer to normal array
+//    glColorPointer( 3, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_color.r );						// Normal pointer to normal array
+
+    if( lightmap && m_useLightmaps ) {
+        glActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glEnable( GL_TEXTURE_2D );
+        glBindTexture( GL_TEXTURE_2D, lightmap );
+
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].x );
+    } else {
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+        glActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
+        glDisable( GL_TEXTURE_2D );
+    }
+
+    if( diffuse && m_useDiffuse ) {
+        glActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glEnable( GL_TEXTURE_2D );
+        glBindTexture( GL_TEXTURE_2D, diffuse );
+
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Diffuse].x );
+    } else {
+        glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glDisableClientState( GL_TEXTURE_COORD_ARRAY );
+
+        glActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
+        glDisable( GL_TEXTURE_2D );
+    }
+
+    glDrawElements( GL_TRIANGLES, mesh->indexCount(), GL_UNSIGNED_SHORT, indices );
+
+    glDisableClientState(GL_VERTEX_ARRAY);						// Disable vertex arrays
+    glDisableClientState(GL_NORMAL_ARRAY);						// Disable normal arrays
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);       // Disable texture coord arrays
+//    glDisableClientState(GL_COLOR_ARRAY);				// Enable texture coord arrays
 }
 
 Instance* cTestLightmapper::placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize )

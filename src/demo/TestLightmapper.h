@@ -16,6 +16,7 @@
 #include	"Test.h"
 #include    <Relight.h>
 #include    <pthread.h>
+#include    "Assets.h"
 
 #define		MAX_LIGHTMAPS	(16)
 
@@ -89,6 +90,8 @@ struct Prefab {
     unsigned int        m_diffuse;
 };
 
+typedef std::map<const relight::Texture*, unsigned int> TextureMapping;
+
 // ** class cTestLightmapper
 class cTestLightmapper : public cTest {
 private:
@@ -117,7 +120,9 @@ private:
 
     unsigned int    createTextureFromLightmap( const relight::Lightmap* lightmap ) const;
     unsigned int    createTextureFromFile( const char* fileName ) const;
+    unsigned int    createTexture( const relight::Texture* texture ) const;
     void            renderInstance( const Instance* instance ) const;
+    void            renderMesh( const relight::Mesh* mesh, unsigned int diffuse, unsigned int lightmap ) const;
     Instance*       placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize );
     relight::Mesh*  loadMesh( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
     Prefab          createGroundPlane( const char* diffuse, int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
@@ -127,6 +132,10 @@ private:
     void            startBakingThread( Instance* instance, int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
 
 private:
+
+    uscene::Assets*     m_uassets;
+    uscene::Scene*      m_uscene;
+    TextureMapping      m_textures;
 
     pthread_t           m_thread;
     WorkerData          m_data;
