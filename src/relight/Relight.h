@@ -42,6 +42,7 @@
 #include <math/Matrix4.h>
 #include <math/Bounds.h>
 #include <math/Plane.h>
+#include <math/Quat.h>
 
 namespace relight {
 
