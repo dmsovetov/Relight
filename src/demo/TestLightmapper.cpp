@@ -353,8 +353,8 @@ void* cTestLightmapper::bakeWorker( void* userData )
     RelightStatus status;
     WorkerData*   data = reinterpret_cast<WorkerData*>( userData );
 
-//    status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
-//    assert( status == RelightSuccess );
+    status = Relight::bakeDirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
+    assert( status == RelightSuccess );
 
     status = Relight::bakeIndirectLight( data->m_scene, data->m_instance->m_mesh, data->m_instance->m_progress, data->m_indirectLightSettings, new bake::FaceBakeIterator( data->m_startIndex, data->m_step ) );
     assert( status == RelightSuccess );
@@ -497,7 +497,7 @@ void cTestLightmapper::renderInstance( const Instance* instance ) const
 
         glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
         glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].u );
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Lightmap].x );
     } else {
         glClientActiveTextureARB( GL_TEXTURE0_ARB + lightmapStage );
         glDisableClientState( GL_TEXTURE_COORD_ARRAY );
@@ -513,7 +513,7 @@ void cTestLightmapper::renderInstance( const Instance* instance ) const
 
         glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
         glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Diffuse].u );
+        glTexCoordPointer( 2, GL_FLOAT, sizeof( relight::Vertex ), &vertices->m_uv[relight::Vertex::Diffuse].x );
     } else {
         glClientActiveTextureARB( GL_TEXTURE0_ARB + diffuseStage );
         glDisableClientState( GL_TEXTURE_COORD_ARRAY );
