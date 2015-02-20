@@ -29,7 +29,6 @@
 #define __Relight_RT_Tracer_H__
 
 #include "../Relight.h"
-#include "../Vector.h"
 
 namespace relight {
 

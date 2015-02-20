@@ -85,10 +85,10 @@ void Baker::bakeFace( const Mesh* mesh, Index index )
     Uv min, max;
     face.uvRect( min, max );
 
-    int uStart = min.u * lightmap->width();
-    int uEnd   = max.u * lightmap->width();
-    int vStart = min.v * lightmap->height();
-    int vEnd   = max.v * lightmap->height();
+    int uStart = min.x * lightmap->width();
+    int uEnd   = max.x * lightmap->width();
+    int vStart = min.y * lightmap->height();
+    int vEnd   = max.y * lightmap->height();
 
     // ** Initialize lumels
     for( int v = vStart; v <= vEnd; v++ ) {
@@ -214,10 +214,10 @@ bool FaceBakeIterator::next( void )
     Uv min, max;
     face.uvRect( min, max );
 
-    int uStart = min.u * m_lightmap->width();
-    int uEnd   = max.u * m_lightmap->width();
-    int vStart = min.v * m_lightmap->height();
-    int vEnd   = max.v * m_lightmap->height();
+    int uStart = min.x * m_lightmap->width();
+    int uEnd   = max.x * m_lightmap->width();
+    int vStart = min.y * m_lightmap->height();
+    int vEnd   = max.y * m_lightmap->height();
 
     // ** Process face lumels
     for( int v = vStart; v <= vEnd; v++ ) {

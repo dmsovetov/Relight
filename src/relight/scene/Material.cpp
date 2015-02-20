@@ -82,8 +82,8 @@ const Color& Texture::colorAt( const Uv& uv ) const
 {
     static Color invalid( 1, 0, 1 );
 
-    int x = int( uv.u * m_width  ) % m_width;
-    int y = int( uv.v * m_height ) % m_height;
+    int x = int( uv.x * m_width  ) % m_width;
+    int y = int( uv.y * m_height ) % m_height;
 
     if( x >= 0 && x < m_width && y >= 0 && y < m_height ) {
         return m_pixels[y * m_width + y];

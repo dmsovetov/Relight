@@ -28,7 +28,6 @@
 #define __Relight_Scene_Material_H__
 
 #include "../Relight.h"
-#include "../Vector.h"
 
 namespace relight {
 

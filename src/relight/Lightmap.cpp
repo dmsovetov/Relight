@@ -60,13 +60,13 @@ Lumel* Lightmap::lumels( void )
 // ** Lightmap::lumel
 Lumel& Lightmap::lumel( const Uv& uv )
 {
-    return lumel( uv.u * m_width, uv.v * m_height );
+    return lumel( uv.x * m_width, uv.y * m_height );
 }
 
 // ** Lightmap::lumel
 const Lumel& Lightmap::lumel( const Uv& uv ) const
 {
-    return lumel( uv.u * m_width, uv.v * m_height );
+    return lumel( uv.x * m_width, uv.y * m_height );
 }
 
 // ** Lightmap::lumel
@@ -116,10 +116,10 @@ void Lightmap::initializeLumels( const Face& face, bool copyVertexColor )
     // ** Calculate UV bounds
     face.uvRect( min, max );
 
-    int uStart = min.u * m_width;
-    int uEnd   = max.u * m_width;
-    int vStart = min.v * m_height;
-    int vEnd   = max.v * m_height;
+    int uStart = min.x * m_width;
+    int uEnd   = max.x * m_width;
+    int vStart = min.y * m_height;
+    int vEnd   = max.y * m_height;
 
     // ** Initialize lumels
     for( int v = vStart; v <= vEnd; v++ ) {

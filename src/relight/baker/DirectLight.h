@@ -28,7 +28,6 @@
 #define __Relight_Bake_DirectLight_H__
 
 #include "Baker.h"
-#include "../Vector.h"
 
 namespace relight {
 

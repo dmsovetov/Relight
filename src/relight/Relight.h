@@ -34,12 +34,14 @@
 #include <assert.h>
 #include <float.h>
 
-#include "Vector.h"
+#define MATH_NAMESPACE relight
 
-//#define lmTYPE float
-//#define sVector2 relight::Uv
-//#define sVector3 relight::Vec3
-//#define sColor relight::Color
+#include <math/Vec2.h>
+#include <math/Vec3.h>
+#include <math/Color.h>
+#include <math/Matrix4.h>
+#include <math/Bounds.h>
+#include <math/Plane.h>
 
 namespace relight {
 
@@ -47,6 +49,8 @@ namespace relight {
     class Array : public std::vector<T> {};
 
     typedef std::string String;
+    typedef Vec2        Uv;
+    typedef Uv          Barycentric;
 
     class Scene;
     class LightAttenuation;
@@ -65,12 +69,6 @@ namespace relight {
     class Lightmap;
         class Photonmap;
     struct Lumel;
-
-    class Matrix4;
-    class Vec3;
-    class Color;
-    class Bounds;
-    class Uv;
 
     //! Mesh vertex index.
     typedef unsigned short Index;

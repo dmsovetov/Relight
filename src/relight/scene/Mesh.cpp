@@ -304,10 +304,15 @@ float Face::area( void ) const
 // ** Face::uvRect
 void Face::uvRect( Uv& min, Uv& max ) const
 {
-    min.u = std::min( m_a->m_uv[Vertex::Lightmap].u, std::min( m_b->m_uv[Vertex::Lightmap].u, m_c->m_uv[Vertex::Lightmap].u ) );
-    max.u = std::max( m_a->m_uv[Vertex::Lightmap].u, std::max( m_b->m_uv[Vertex::Lightmap].u, m_c->m_uv[Vertex::Lightmap].u ) );
-    min.v = std::min( m_a->m_uv[Vertex::Lightmap].v, std::min( m_b->m_uv[Vertex::Lightmap].v, m_c->m_uv[Vertex::Lightmap].v ) );
-    max.v = std::max( m_a->m_uv[Vertex::Lightmap].v, std::max( m_b->m_uv[Vertex::Lightmap].v, m_c->m_uv[Vertex::Lightmap].v ) );
+    const Uv& a = m_a->m_uv[Vertex::Lightmap];
+    const Uv& b = m_b->m_uv[Vertex::Lightmap];
+    const Uv& c = m_c->m_uv[Vertex::Lightmap];
+
+    min.x = min3( a.x, b.x, c.x );
+    max.x = max3( a.x, b.x, c.x );
+
+    min.y = min3( a.y, b.y, c.y );
+    max.y = max3( a.y, b.y, c.y );
 }
 
 // ** Face::isUvInside
@@ -356,7 +361,7 @@ Vec3 Face::normalAt( const Barycentric& uv ) const
     const Vec3& b = m_b->m_normal;
     const Vec3& c = m_c->m_normal;
 
-    return Vec3( a.x + (b.x - a.x) * uv.v + (c.x - a.x) * uv.u, a.y + (b.y - a.y) * uv.v + (c.y - a.y) * uv.u, a.z + (b.z - a.z) * uv.v + (c.z - a.z) * uv.u );
+    return Vec3( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x, a.z + (b.z - a.z) * uv.y + (c.z - a.z) * uv.x );
 }
 
 // ** Face::positionAt
@@ -366,7 +371,7 @@ Vec3 Face::positionAt( const Barycentric& uv ) const
     const Vec3& b = m_b->m_position;
     const Vec3& c = m_c->m_position;
 
-    return Vec3( a.x + (b.x - a.x) * uv.v + (c.x - a.x) * uv.u, a.y + (b.y - a.y) * uv.v + (c.y - a.y) * uv.u, a.z + (b.z - a.z) * uv.v + (c.z - a.z) * uv.u );
+    return Vec3( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x, a.z + (b.z - a.z) * uv.y + (c.z - a.z) * uv.x );
 }
 
 // ** Face::colorAt
@@ -376,7 +381,7 @@ Color Face::colorAt( const Barycentric& uv ) const
     const Color& b = m_b->m_color;
     const Color& c = m_c->m_color;
 
-    Color vertexColor = Color( a.r + (b.r - a.r) * uv.v + (c.r - a.r) * uv.u, a.g + (b.g - a.g) * uv.v + (c.g - a.g) * uv.u, a.b + (b.b - a.b) * uv.v + (c.b - a.b) * uv.u );
+    Color vertexColor = Color( a.r + (b.r - a.r) * uv.y + (c.r - a.r) * uv.x, a.g + (b.g - a.g) * uv.y + (c.g - a.g) * uv.x, a.b + (b.b - a.b) * uv.y + (c.b - a.b) * uv.x );
     if( m_a->m_material ) {
         vertexColor *= m_a->m_material->colorAt( uvAt( uv, Vertex::Diffuse ) );
     }
@@ -391,7 +396,7 @@ Uv Face::uvAt( const Barycentric& uv, Vertex::UvLayer layer ) const
     const Uv& b = m_b->m_uv[layer];
     const Uv& c = m_c->m_uv[layer];
 
-    return Uv( a.u + (b.u - a.u) * uv.v + (c.u - a.u) * uv.u, a.v + (b.v - a.v) * uv.v + (c.v - a.v) * uv.u );
+    return Uv( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x );
 }
 
 } // namespace relight
