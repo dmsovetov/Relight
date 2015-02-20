@@ -37,8 +37,8 @@ namespace relight {
     struct Vertex {
         //! UV coordinates layer
         enum UvLayer {
-            Lightmap,
             Diffuse,
+            Lightmap,
             TotalUvLayers
         };
 
@@ -184,6 +184,15 @@ namespace relight {
         //! Creates a clone of this mesh with applied transform.
         Mesh*               transformed( const Matrix4& transform ) const;
 
+        //! Sets a material for entire mesh.
+        void                overrideMaterial( const Material* material );
+
+        //! Returns a user data.
+        void*               userData( void ) const;
+
+        //! Sets a user data.
+        void                setUserData( void* value );
+
         /*!
          Creates a mesh data from a file. Only OBJ file format is supported.
          */
@@ -227,6 +236,9 @@ namespace relight {
 
         //! Target photonmap.
         Photonmap*          m_photonmap;
+
+        //! User data associated with this instance.
+        void*               m_userData;
     };
 
 } // namespace relight

@@ -110,6 +110,26 @@ Mesh* Mesh::createFromFile( const String& fileName )
     return mesh;
 }
 
+// ** Mesh::overrideMaterial
+void Mesh::overrideMaterial( const Material* material )
+{
+    for( int i = 0; i < vertexCount(); i++ ) {
+        m_vertices[i].m_material = material;
+    }
+}
+
+// ** Mesh::setUserData
+void Mesh::setUserData( void* value )
+{
+    m_userData = value;
+}
+
+// ** Mesh::userData
+void* Mesh::userData( void ) const
+{
+    return m_userData;
+}
+
 // ** Mesh::addFaces
 void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, const Material* material )
 {
