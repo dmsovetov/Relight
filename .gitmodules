@@ -1,3 +1,0 @@
-[submodule "externals/include/math"]
-	path = externals/include/math
-	url = https://github.com/dmsovetov/math.git
