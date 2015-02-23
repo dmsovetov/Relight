@@ -72,7 +72,21 @@ namespace uscene {
     SceneObject*    parseSceneObject( Assets* assets, const Yaml& node );
     Scene*          parseScene( Assets* assets, const char* fileName );
     SceneMaterial*  createMaterialFromTexture( const char* fileName, const Color& color = Color( 1, 1, 1 ) );
+/*
+    class Object {
+    public:
+    };
 
+    class Component : public Object {
+    public:
+    };
+
+//    typedef std::
+
+    class SceneObject : public Object {
+    public:
+    };
+*/
 }
 
 #endif /* defined(__demo__Assets__) */

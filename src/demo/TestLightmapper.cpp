@@ -16,8 +16,8 @@
 //#include	"Lightmapper.h"
 #include	"Lightmap.h"
 //#include	"PhotonMap.h"
-#include	"Mesh.h"
-#include "mathlib.h"
+//#include	"Mesh.h"
+//#include "mathlib.h"
 
 #define		CALCULATE					(1)
 #define		CALCULATE_LUMELS			(1)
@@ -107,7 +107,7 @@ void cTestLightmapper::createScene( void )
     m_scene = Scene::create();
 
     m_scene->begin();
-
+/*
     Prefab ground = createGroundPlane( "data/textures/Ground07_D.tga", 20 );
     uscene::SceneObject* object = new uscene::SceneObject;
     object->m_mesh      = ground.m_mesh;
@@ -115,7 +115,7 @@ void cTestLightmapper::createScene( void )
     m_textures[object->m_material->m_texture] = createTexture( object->m_material->m_texture );
     Mesh* mesh = m_scene->addMesh( ground.m_mesh, relight::Matrix4() );
     mesh->setUserData( object );
-
+*/
     for( int i = 0; i < m_uscene->m_objects.size(); i++ ) {
         uscene::SceneObject* object = m_uscene->m_objects[i];
         Mesh* mesh = m_scene->addMesh( object->m_mesh, object->m_transform, object->m_material->m_material );
@@ -175,7 +175,7 @@ void cTestLightmapper::createScene( void )
     m_scene->end();
 */
 }
-
+/*
 Prefab cTestLightmapper::createGroundPlane( const char* diffuse, int size, const relight::Color& color ) const
 {
     Prefab prefab;
@@ -255,8 +255,8 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse, con
     Mesh* mesh = Mesh::create();
     int   kTmpStrLen = 1024;
 
-    ::Matrix4 T;
-    T.rotate( Vector3( 1, 0, 0 ), -90 );
+    Matrix4 T;
+    T.rotate( Vec3( 1, 0, 0 ), -90 );
 
     unsigned int magik = 0;
     unsigned int boneCount = 0;
@@ -344,7 +344,7 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse, con
 
     return mesh;
 }
-
+*/
 void* cTestLightmapper::lightmapWorker( void* userData )
 {
     TimeMeasure measure( "All baked" );

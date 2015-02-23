@@ -124,9 +124,9 @@ private:
     void            renderInstance( const Instance* instance ) const;
     void            renderMesh( const relight::Mesh* mesh, unsigned int diffuse, unsigned int lightmap ) const;
     Instance*       placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize );
-    relight::Mesh*  loadMesh( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
-    Prefab          createGroundPlane( const char* diffuse, int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
-    Prefab          loadPrefab( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) );
+//    relight::Mesh*  loadMesh( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
+//    Prefab          createGroundPlane( const char* diffuse, int size, const relight::Color& color = relight::Color( 1, 1, 1 ) ) const;
+//    Prefab          loadPrefab( const char* fileName, const char* diffuse, const relight::Color& color = relight::Color( 1, 1, 1 ) );
 
     void            startLightmapsThread( const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );
     void            startBakingThread( Instance* instance, int index, int threadCount, const relight::IndirectLightSettings& indirectLight, const relight::AmbientOcclusionSettings& ambientOcclusion );

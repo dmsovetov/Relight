@@ -13,7 +13,7 @@
 #include	"TestRadiosity.h"
 //#include	"Lightmapper.h"
 #include	"Lightmap.h"
-#include	"Mesh.h"
+//#include	"Mesh.h"
 
 #define		RADIOSITY_LIGHTMAP_SIZE	(256)
 #define		MAX_RADIOSITY_SAMPLES	(0)
