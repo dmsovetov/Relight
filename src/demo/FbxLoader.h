@@ -8,24 +8,32 @@
 #include <assert.h>
 #include <fbxsdk.h>
 #include <vector>
-#include <Relight.h>
 
-//struct FbxSubMesh {
-//    relight::VertexBuffer   m_vertices;
-//    relight::IndexBuffer    m_indices;
-//};
+namespace fbx {
+
+struct Vertex {
+    FbxVector4  position;
+    FbxVector4  normal;
+    FbxVector2  uv[2];
+};
+
+typedef std::vector<unsigned short> IndexBuffer;
+typedef std::vector<Vertex>         VertexBuffer;
 
 class FbxLoader {
 public:
 
     //! Loads an FBX from file.
-    relight::Mesh*  load( const char* filePath );
+    bool            load( const char* filePath );
+
+    const VertexBuffer& vertexBuffer() const { return m_vertexBuffer; }
+    const IndexBuffer&  indexBuffer() const { return m_indexBuffer; }
 
 private:
 
-    void            extractObject(FbxNode * fbxNode);
-    void            loadMesh(FbxNode* pNode);
-    void            loadGeometryInfo( FbxMesh* pFbxMesh/*, FbxSubMesh& mesh */);
+    void            extractObject( FbxNode* fbxNode );
+    void            loadMesh( FbxNode* pNode );
+    void            loadGeometryInfo( FbxMesh* pFbxMesh );
 
 private:
 
@@ -35,8 +43,13 @@ private:
     //! FBX scene.
     FbxScene*       m_scene;
 
-    relight::Mesh*  m_mesh;
-    std::vector<FbxNode*> m_fbxMeshes;
+    //! Mesh vertex buffer.
+    VertexBuffer    m_vertexBuffer;
+
+    //! Mesh index buffer.
+    IndexBuffer     m_indexBuffer;
 };
+
+} // namespace fbx
 
 #endif /* defined(__demo__FbxLoader__) */

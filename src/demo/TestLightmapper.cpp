@@ -98,6 +98,7 @@ void cTestLightmapper::startBakingThread( Instance* instance, int index, int thr
 
 void cTestLightmapper::createScene( void )
 {
+/*
     m_uassets = uscene::parseAssets( "Assets/assets" );
     assert( m_uassets );
 
@@ -107,7 +108,7 @@ void cTestLightmapper::createScene( void )
     m_scene = Scene::create();
 
     m_scene->begin();
-/*
+
     Prefab ground = createGroundPlane( "data/textures/Ground07_D.tga", 20 );
     uscene::SceneObject* object = new uscene::SceneObject;
     object->m_mesh      = ground.m_mesh;
@@ -115,7 +116,7 @@ void cTestLightmapper::createScene( void )
     m_textures[object->m_material->m_texture] = createTexture( object->m_material->m_texture );
     Mesh* mesh = m_scene->addMesh( ground.m_mesh, relight::Matrix4() );
     mesh->setUserData( object );
-*/
+
     for( int i = 0; i < m_uscene->m_objects.size(); i++ ) {
         uscene::SceneObject* object = m_uscene->m_objects[i];
         Mesh* mesh = m_scene->addMesh( object->m_mesh, object->m_transform, object->m_material->m_material );
@@ -125,6 +126,7 @@ void cTestLightmapper::createScene( void )
     }
 
     m_scene->end();
+*/
 /*
     m_meshes[Mesh_Light]        = loadPrefab( "data/light.obj", NULL );
     m_meshes[Mesh_Ground]       = createGroundPlane( "data/textures/Ground07_D.tga", 10 );
@@ -429,7 +431,7 @@ void cTestLightmapper::Render( void )
     glRotatef( m_rotationY, 0, 1, 0 );
     glRotatef( m_rotationX, 1, 0, 0 );
     glScalef( 5.0f / scale, 5.0f / scale, 5.0f / scale );
-
+/*
     for( int i = 0; i < m_scene->meshCount(); i++ ) {
         const Mesh*          mesh        = m_scene->mesh( i );
         uscene::SceneObject* sceneObject = reinterpret_cast<uscene::SceneObject*>( mesh->userData() );
@@ -439,7 +441,7 @@ void cTestLightmapper::Render( void )
         glColor3f( diffuse.r, diffuse.g, diffuse.b );
         renderMesh( mesh, m_textures[sceneObject->m_material->m_texture], 0 );
     }
-
+*/
 /*
     for( int i = 0; i < m_instances.size(); i++ ) {
         renderInstance( m_instances[i] );

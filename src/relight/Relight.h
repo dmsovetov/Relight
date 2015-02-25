@@ -39,10 +39,10 @@
 #include <math/Vec2.h>
 #include <math/Vec3.h>
 #include <math/Color.h>
+#include <math/Quat.h>
 #include <math/Matrix4.h>
 #include <math/Bounds.h>
 #include <math/Plane.h>
-#include <math/Quat.h>
 
 namespace relight {
 

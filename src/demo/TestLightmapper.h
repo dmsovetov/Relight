@@ -16,7 +16,7 @@
 #include	"Test.h"
 #include    <Relight.h>
 #include    <pthread.h>
-#include    "Assets.h"
+//#include    "Assets.h"
 
 #define		MAX_LIGHTMAPS	(16)
 
@@ -133,8 +133,8 @@ private:
 
 private:
 
-    uscene::Assets*     m_uassets;
-    uscene::Scene*      m_uscene;
+//    uscene::Assets*     m_uassets;
+//    uscene::Scene*      m_uscene;
     TextureMapping      m_textures;
 
     pthread_t           m_thread;
