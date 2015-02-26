@@ -381,6 +381,7 @@ void* cTestLightmapper::lightmapWorker( void* userData )
 
 void* cTestLightmapper::bakeWorker( void* userData )
 {
+/*
     RelightStatus status;
     WorkerData*   data = reinterpret_cast<WorkerData*>( userData );
 
@@ -398,6 +399,7 @@ void* cTestLightmapper::bakeWorker( void* userData )
     data->m_instance->m_lightmap->save( "output/lightmaps/" + data->m_instance->m_name + ".tga" );
 
     data->m_instance->m_progress->notify( 1000, 0 );
+*/
 }
 
 unsigned int cTestLightmapper::createTextureFromLightmap( const relight::Lightmap* lightmap ) const
@@ -651,6 +653,7 @@ void cTestLightmapper::renderMesh( const Mesh *mesh, unsigned int diffuse, unsig
 
 Instance* cTestLightmapper::placeInstance( const std::string& name, const Prefab& prefab, const relight::Matrix4& T, int lightmapSize )
 {
+/*
     Instance* instance      = new Instance;
     instance->m_name        = name;
     instance->m_mesh        = m_scene->addMesh( prefab.m_mesh, T );
@@ -668,6 +671,7 @@ Instance* cTestLightmapper::placeInstance( const std::string& name, const Prefab
     m_instances.push_back( instance );
 
     return instance;
+*/
 }
 
 // ** cTestLightmapper::KeyPressed

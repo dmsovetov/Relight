@@ -29,6 +29,7 @@
 
 #include "RelightDemo.h"
 #include <uscene/src/uScene.h>
+#include <pthread.h>
 
 // ** struct SceneVertex
 struct SceneVertex {
@@ -56,6 +57,30 @@ struct SceneMeshInstance {
     relight::Photonmap*     m_pm;
 };
 
+//! Relight background worker.
+class ThreadWorker : public relight::Worker {
+public:
+
+                    //! Constructs a ThreadWorker instance.
+                    ThreadWorker( relight::Progress* progress = NULL );
+
+    //! Pushes a new job to this worker.
+    virtual void    push( relight::Job* job, relight::JobData* data );
+
+    //! Waits for completion of this worker.
+    virtual void    wait( void );
+
+private:
+
+    //! Thread worker callback.
+    static void*    worker( void* userData );
+
+private:
+
+    //! Thread handle.
+    pthread_t       m_thread;
+};
+
 // ** class Lightmapping
 class Lightmapping : public platform::WindowDelegate {
 public:
@@ -70,7 +95,6 @@ private:
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTextureFromAsset( const uscene::Asset* asset );
-    void                createGroundPlane( int size, relight::VertexBuffer& vertices, relight::IndexBuffer& indices );
 
 private:
 
@@ -82,7 +106,10 @@ private:
 
     uscene::Assets*                 m_assets;
     uscene::Scene*                  m_scene;
+
+    relight::Relight*               m_relight;
     relight::Scene*                 m_relightScene;
+    relight::Workers                m_relightWorkers;
 
     Meshes                          m_meshes;
     Textures                        m_textures;

@@ -30,7 +30,10 @@
 #include <OpenGL/gl.h>
 
 // ** Lightmap size
-const int k_LightmapSize = 256;
+const int k_LightmapSize = 1024;
+
+// ** Background workers
+const int k_Workers      = 8;
 
 // ** Blue sky color
 const relight::Color k_BlueSky  = relight::Color( 0.52734375f, 0.8046875f, 0.91796875f );
@@ -48,12 +51,13 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     m_assets = Assets::parse( "Assets/assets" );
     m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Test.scene" );
 
-    m_relightScene = relight::Scene::create();
+    m_relight      = relight::Relight::create();
+    m_relightScene = m_relight->createScene();
     m_relightScene->begin();
 
     // ** Add directional light
     relight::Vec3 direction = relight::Vec3::normalize( relight::Vec3( 0, 2, 0 ) - relight::Vec3( 1.50f, 4.50f,  1.50f ) );
-    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, 3.0f, true ) );
+    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, 1.0f, true ) );
 
     // ** Add objects
     for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
@@ -66,36 +70,34 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         instance->m_transform = affineTransform( transform );
         instance->m_lightmap  = NULL;
         instance->m_mesh      = findMesh( mesh->asset(), renderer );
-        instance->m_lm        = m_relightScene->createLightmap( k_LightmapSize, k_LightmapSize );
-        instance->m_pm        = m_relightScene->createPhotonmap( k_LightmapSize, k_LightmapSize );
+        instance->m_lm        = m_relight->createLightmap( k_LightmapSize, k_LightmapSize );
+        instance->m_pm        = m_relight->createPhotonmap( k_LightmapSize, k_LightmapSize );
 
         sceneObject->setUserData( instance );
         relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform );
+        m->setUserData( instance );
 
         instance->m_lm->addMesh( m );
         instance->m_pm->addMesh( m );
     }
     m_relightScene->end();
 
-    // ** Bake meshes
-    for( int i = 0; i < m_relightScene->meshCount(); i++ ) {
-        relight::Relight::bakeDirectLight( m_relightScene, m_relightScene->mesh( i ), new relight::Progress );
-        relight::Relight::bakeIndirectLight( m_relightScene, m_relightScene->mesh( i ), new relight::Progress, relight::IndirectLightSettings::fast( k_BlueSky ) );
+
+    struct Bake : public relight::Job {
+    public:
+
+        virtual void execute( relight::JobData* data ) {
+            data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_progress, data->m_iterator );
+            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_progress, relight::IndirectLightSettings::production( k_BlueSky ), data->m_iterator );
+        }
+    };
+
+    // ** Bake scene
+    ThreadWorker root;
+    for( int i = 0; i < k_Workers; i++ ) {
+        m_relightWorkers.push_back( new ThreadWorker( new relight::Progress ) );
     }
-
-    // ** Create lightmap textures
-    for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
-        SceneMeshInstance* instance = reinterpret_cast<SceneMeshInstance*>( m_scene->sceneObject( i )->userData() );
-        relight::Lightmap* lm       = instance->m_lm;
-
-        lm->expand();
-        lm->blur();
-
-        float* pixels = lm->toRgb32F();
-        instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
-        instance->m_lightmap->setData( 0, pixels );
-        delete[]pixels;
-    }
+    m_relight->bake( m_relightScene, new Bake, &root, m_relightWorkers );
 }
 
 // ** Lightmapping::affineTransform
@@ -191,54 +193,6 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
     return &m_meshes[asset];
 }
 
-// ** Lightmapping::createGroundPlane
-void Lightmapping::createGroundPlane( int size, relight::VertexBuffer& vertexBuffer, relight::IndexBuffer& indexBuffer )
-{
-    using namespace relight;
-
-    // ** Vertices
-    Vertex a;
-    a.m_position                = Vec3( -size / 2, 0, -size / 2 );
-    a.m_normal                  = Vec3( 0, 1, 0 );
-    a.m_color                   = Color( 1, 1, 1 );
-    a.m_uv[Vertex::Lightmap]    = Uv( 0, 0 );
-    a.m_uv[Vertex::Diffuse]     = Uv( 0, 0 );
-    vertexBuffer.push_back( a );
-
-    Vertex b;
-    b.m_position                = Vec3(  size / 2, 0, -size / 2 );
-    b.m_normal                  = Vec3( 0, 1, 0 );
-    b.m_color                   = Color( 1, 1, 1 );
-    b.m_uv[Vertex::Lightmap]    = Uv( 0.99f, 0 );
-    b.m_uv[Vertex::Diffuse]     = Uv( size, 0 );
-    vertexBuffer.push_back( b );
-
-    Vertex c;
-    c.m_position                = Vec3(  size / 2, 0,  size / 2 );
-    c.m_normal                  = Vec3( 0, 1, 0 );
-    c.m_color                   = Color( 1, 1, 1 );
-    c.m_uv[Vertex::Lightmap]    = Uv( 0.99f, 0.99f );
-    c.m_uv[Vertex::Diffuse]     = Uv( size, size );
-    vertexBuffer.push_back( c );
-
-    Vertex d;
-    d.m_position                = Vec3( -size / 2, 0,  size / 2 );
-    d.m_normal                  = Vec3( 0, 1, 0 );
-    d.m_color                   = Color( 1, 1, 1 );
-    d.m_uv[Vertex::Lightmap]    = Uv( 0, 0.99f );
-    d.m_uv[Vertex::Diffuse]     = Uv( 0, size );
-    vertexBuffer.push_back( d );
-
-    // ** Indices
-    indexBuffer.push_back( 2 );
-    indexBuffer.push_back( 1 );
-    indexBuffer.push_back( 0 );
-
-    indexBuffer.push_back( 3 );
-    indexBuffer.push_back( 2 );
-    indexBuffer.push_back( 0 );
-}
-
 // ** Lightmapping::createBuffersFromMesh
 void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
 {
@@ -276,7 +230,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
 //    m_hal->setTransform( renderer::TransformView, view.m );
     m_hal->setTransform( renderer::TransformProjection, proj.m );
 
-    glTranslatef( 0, -2, -5 );
+    glTranslatef( 0, -3, -6 );
     glRotatef( rotation, 0, 1, 0 );
     rotation += 0.1f;
 
@@ -287,7 +241,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
         glPushMatrix();
         glMultMatrixf( instance->m_transform.m );
 
-        m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
+    //    m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
         m_hal->setTexture( 1, instance->m_lightmap );
         m_hal->setVertexBuffer( instance->m_mesh->m_vertexBuffer );
         m_hal->renderIndexed( renderer::PrimTriangles, instance->m_mesh->m_indexBuffer, 0, instance->m_mesh->m_indexBuffer->size() );
@@ -297,11 +251,49 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
     m_hal->setVertexBuffer( NULL );
 
-    glBegin( GL_LINES );
-        glColor3f( 1, 0, 0 ); glVertex3f( 0, 0, 0 ); glVertex3f( 1, 0, 0 );
-        glColor3f( 0, 1, 0 ); glVertex3f( 0, 0, 0 ); glVertex3f( 0, 1, 0 );
-        glColor3f( 0, 0, 1 ); glVertex3f( 0, 0, 0 ); glVertex3f( 0, 0, 1 );
-    glEnd();
+     // ** Update lightmap textures
+     for( int i = 0; i < m_relightWorkers.size(); i++ ) {
+         relight::Worker* worker = m_relightWorkers[i];
+
+         if( !worker->progress()->hasChanges() ) {
+             continue;
+         }
+
+         const relight::Mesh* mesh   = worker->progress()->instance();
+         SceneMeshInstance* instance = reinterpret_cast<SceneMeshInstance*>( mesh->userData() );
+         relight::Lightmap* lm       = instance->m_lm;
+
+         float* pixels = lm->toRgb32F();
+         instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
+         instance->m_lightmap->setData( 0, pixels );
+         delete[]pixels;
+     }
 
     m_hal->present();
+}
+
+// ** ThreadWorker::worker
+void* ThreadWorker::worker( void* userData )
+{
+    relight::JobData* data = reinterpret_cast<relight::JobData*>( userData );
+    data->m_job->execute( data );
+    delete data;
+}
+
+// ** ThreadWorker::ThreadWorker
+ThreadWorker::ThreadWorker( relight::Progress* progress ) : Worker( progress )
+{
+}
+
+// ** ThreadWorker::push
+void ThreadWorker::push( relight::Job* job, relight::JobData* data )
+{
+    data->m_progress = m_progress;
+    pthread_create( &m_thread, NULL, worker, ( void* )data );
+}
+
+// ** ThreadWorker::wait
+void ThreadWorker::wait( void )
+{
+    pthread_join( m_thread, NULL );
 }
