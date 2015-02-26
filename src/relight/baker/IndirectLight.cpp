@@ -56,15 +56,16 @@ void IndirectLight::bakeLumel( Lumel& lumel )
     rt::ITracer* tracer = m_scene->tracer();
 
     for( int k = 0; k < m_samples; k++ ) {
-        Vec3 dir = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
+        Vec3  dir       = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
+        float influence = max2( lumel.m_normal * dir, 0.0f );
 
         if( !tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance, &hit ) ) {
-            gathered += m_skyColor;
+            gathered += m_skyColor * influence;
             continue;
         }
 
         if( const Photonmap* photons = hit.m_mesh->photonmap() ) {
-            gathered += photons->lumel( hit.m_uv ).m_gathered;
+            gathered += photons->lumel( hit.m_uv ).m_gathered * influence;
         }
     }
 
