@@ -180,6 +180,10 @@ RelightStatus Relight::bakeDirectLight( const Scene* scene, const Mesh* mesh, Pr
 // ** Relight::bakeIndirectLight
 RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator )
 {
+    if( !iterator ) {
+        iterator = new bake::LumelBakeIterator( 0, 1 );
+    }
+
     RelightStatus status;
 
     {
@@ -208,6 +212,10 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, 
 // ** Relight::bakeAmbientOcclusion
 RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator )
 {
+    if( !iterator ) {
+        iterator = new bake::LumelBakeIterator( 0, 1 );
+    }
+
     TimeMeasure measure( "Ambient Occlusion" );
     bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( scene, progress, iterator, settings.m_samples, settings.m_occludedFraction, settings.m_maxDistance, settings.m_exponent );
     RelightStatus status = ao->bakeMesh( mesh );
