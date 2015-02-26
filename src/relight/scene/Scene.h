@@ -36,16 +36,11 @@ namespace relight {
      and rendering settings.
      */
     class Scene {
+    friend class Relight;
     public:
 
         //! Returns a tracer.
         rt::ITracer*            tracer( void ) const;
-
-        //! Creates a new Lightmap instance.
-        Lightmap*               createLightmap( int width, int height ) const;
-
-        //! Creates a new PhotonMap instance.
-        Photonmap*              createPhotonmap( int width, int height ) const;
 
         //! Begins a scene creation.
         /*!
@@ -87,9 +82,6 @@ namespace relight {
 
         //! Returns a scene bounding box.
         const Bounds&           bounds( void ) const;
-
-        //! Creates a new scene.
-        static Scene*           create( void );
 
     private:
 

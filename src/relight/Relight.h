@@ -54,6 +54,8 @@ namespace relight {
     typedef Uv          Barycentric;
 
     class Scene;
+    class Worker;
+    class Job;
     class LightAttenuation;
     class LightCutoff;
     class LightInfluence;
@@ -83,6 +85,9 @@ namespace relight {
     //! Texture pixel buffer.
     typedef Array<Color>            PixelBuffer;
 
+    //! Workers array.
+    typedef Array<Worker*>          Workers;
+
     namespace rt {
         class ITracer;
     }
@@ -102,8 +107,26 @@ namespace relight {
     class Progress {
     public:
 
+                                //! Constructs a Progress instance.
+                                Progress( void )
+                                    : m_hasChanges( false ), m_instance( NULL ) {}
+
         //! Notifies about a task progress.
-        virtual void            notify( int step, int stepCount ) {}
+        virtual void            notify( const Mesh* instance, int step, int stepCount ) { m_hasChanges = true; m_instance = instance; }
+
+        //! Returns true if there were changes and then resets the flag.
+        bool                    hasChanges( void ) { bool wereChanges = m_hasChanges; m_hasChanges = false; return wereChanges; }
+
+        //! Returns a latest mesh instance.
+        const Mesh*             instance( void ) const  { return m_instance; }
+
+    private:
+
+        //! Flag indicating there are changes.
+        bool                    m_hasChanges;
+
+        //! Latest mesh instance.
+        const Mesh*             m_instance;
     };
 
     //! Indirect light settings.
@@ -156,14 +179,34 @@ namespace relight {
     class Relight {
     public:
 
+        //! Creates a new lightmap instance.
+        Lightmap*               createLightmap( int width, int height ) const;
+
+        //! Creates a new photonmap instance.
+        Photonmap*              createPhotonmap( int width, int height ) const;
+
+        //! Creates a new scene.
+        Scene*                  createScene( void ) const;
+
+        //! Performs a full scene bake.
+        void                    bake( const Scene* scene, Job* job, Worker* root, const Workers& workers );
+
         //! Bakes direct lighting.
-        static RelightStatus    bakeDirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, bake::BakeIterator* iterator = NULL );
+        RelightStatus           bakeDirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, bake::BakeIterator* iterator = NULL );
 
         //! Bakes indirect light to a lightmap.
-        static RelightStatus    bakeIndirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator = NULL );
+        RelightStatus           bakeIndirectLight( const Scene* scene, const Mesh* mesh, Progress* progress, const IndirectLightSettings& settings, bake::BakeIterator* iterator = NULL );
 
         //! Bakes ambient occlusion to a lightmap.
-        static RelightStatus    bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
+        RelightStatus           bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
+
+        //! Creates a new relight instance.
+        static Relight*         create( void );
+
+    private:
+
+                                //! Constructs relight instance
+                                Relight( void );
     };
 
     // ** TimeMeasure
@@ -187,6 +230,7 @@ namespace relight {
     #include "scene/Material.h"
     #include "baker/Baker.h" 
     #include "Lightmap.h"
+    #include "Worker.h"
 #endif
 
 #endif  /*  !defined( Relight ) */

@@ -26,6 +26,10 @@
 
 #include "BuildCheck.h"
 #include "Relight.h"
+#include "Lightmap.h"
+#include "Worker.h"
+
+#include "scene/Scene.h"
 
 #include "baker/AmbientOcclusion.h"
 #include "baker/Photons.h"
@@ -160,6 +164,47 @@ AmbientOcclusionSettings AmbientOcclusionSettings::production( float occludedFra
     settings.m_occludedFraction = occludedFraction;
 
     return settings;
+}
+
+// ** Relight::Relight
+Relight::Relight( void )
+{
+
+}
+
+// ** Relight::create
+Relight* Relight::create( void )
+{
+    return new Relight;
+}
+
+// ** Relight::createScene
+Scene* Relight::createScene( void ) const
+{
+    return new Scene;
+}
+
+// ** Relight::createLightmap
+Lightmap* Relight::createLightmap( int width, int height ) const
+{
+    return new Lightmap( width, height );
+}
+
+// ** Relight::createPhotonmap
+Photonmap* Relight::createPhotonmap( int width, int height ) const
+{
+    return new Photonmap( width, height );
+}
+
+// ** Relight::bake
+void Relight::bake( const Scene* scene, Job* job, Worker* root, const Workers& workers )
+{
+    JobData* data   = new JobData;
+    data->m_scene   = scene;
+    data->m_relight = this;
+    data->m_job     = new FullBakeJob( job, workers );
+
+    root->push( data->m_job, data );
 }
 
 // ** Relight::bakeDirectLight

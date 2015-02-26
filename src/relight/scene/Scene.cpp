@@ -39,29 +39,10 @@ Scene::Scene( void ) : m_state( StateInitial ), m_tracer( NULL )
 
 }
 
-// ** Scene::create
-Scene* Scene::create( void )
-{
-    Scene* scene = new Scene;
-    return scene;
-}
-
 // ** Scene::tracer
 rt::ITracer* Scene::tracer( void ) const
 {
     return m_tracer;
-}
-
-// ** Scene::createLightmap
-Lightmap* Scene::createLightmap( int width, int height ) const
-{
-    return new Lightmap( width, height );
-}
-
-// ** Scene::createPhotonmap
-Photonmap* Scene::createPhotonmap( int width, int height ) const
-{
-    return new Photonmap( width, height );
 }
 
 // ** Scene::bounds

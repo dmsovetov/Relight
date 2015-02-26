@@ -45,7 +45,7 @@ Baker::Baker( const Scene* scene, Progress* progress, BakeIterator* iterator ) :
 
 Baker::~Baker( void )
 {
-    delete m_iterator;
+
 }
 
 // ** Baker::bakeMesh
@@ -69,7 +69,7 @@ RelightStatus Baker::bakeMesh( const Mesh* mesh )
     m_iterator->begin( this, lightmap, mesh );
     
     while( m_iterator->next() ) {
-        if( m_progress ) m_progress->notify( ++progress, m_iterator->itemCount() );
+        if( m_progress ) m_progress->notify( mesh, ++progress, m_iterator->itemCount() );
     }
 
     return RelightSuccess;
@@ -129,17 +129,18 @@ void Baker::bakeLumel( Lumel& lumel )
 // ---------------------------------------------- BakeIterator ---------------------------------------------- //
 
 // ** BakeIterator::BakeIterator
-BakeIterator::BakeIterator( int first, int step ) : m_baker( NULL ), m_lightmap( NULL ), m_index( first ), m_step( step )
+BakeIterator::BakeIterator( int first, int step ) : m_baker( NULL ), m_lightmap( NULL ), m_index( 0 ), m_firstIndex( first ), m_step( step )
 {
 
 }
 
 // ** BakeIterator::begin
-void BakeIterator::begin(  Baker* baker, Lightmap* lightmap, const Mesh* mesh )
+void BakeIterator::begin( Baker* baker, Lightmap* lightmap, const Mesh* mesh )
 {
     m_baker     = baker;
     m_lightmap  = lightmap;
     m_mesh      = mesh;
+    m_index     = m_firstIndex;
 }
 
 // ** BakeIterator::next

@@ -56,10 +56,8 @@ namespace relight {
 
     //! Holds a rendered lightmap data.
     class Lightmap {
+    friend class Relight;
     public:
-
-                                //! Constructs a new Lightmap instance.
-                                Lightmap( int width, int height );
 
         //! Returns a lightmap width
         int                     width( void ) const;
@@ -108,6 +106,9 @@ namespace relight {
 
     protected:
 
+                                //! Constructs a new Lightmap instance.
+                                Lightmap( int width, int height );
+
         //! Initializes all lumels corresponding to a given mesh.
         void                    initializeLumels( const Mesh* mesh, bool copyVertexColor );
 
@@ -134,10 +135,8 @@ namespace relight {
 
     // ** class Photonmap
     class Photonmap : public Lightmap {
+    friend class Relight;
     public:
-
-                                //! Constructs a new Photonmap instance
-                                Photonmap( int width, int height );
 
         //! Does a gathering of photons for all lumels.
         void                    gather( int radius );
@@ -146,6 +145,9 @@ namespace relight {
         virtual RelightStatus   addMesh( const Mesh* mesh, bool copyVertexColor = false );
 
     private:
+
+                                //! Constructs a new Photonmap instance
+                                Photonmap( int width, int height );
 
         //! Gathers surrounding photons to lumel
         Color                   gather( int x, int y, int radius ) const;

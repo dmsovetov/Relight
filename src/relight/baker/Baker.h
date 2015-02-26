@@ -119,6 +119,9 @@ namespace bake {
         //! Current element index.
         int                     m_index;
 
+        //! First element index.
+        int                     m_firstIndex;
+
         //! Iteration elements step.
         int                     m_step;
     };
