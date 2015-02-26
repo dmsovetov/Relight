@@ -52,6 +52,22 @@ namespace relight {
         static Vertex   interpolate( const Vertex& a, const Vertex& b, float scalar );
     };
 
+    /*!
+     A vertex buffer helper struct
+     */
+    struct VertexBufferLayout {
+        const void*     m_position;     //!< XYZ float coordinates
+        const void*     m_normal;       //!< XYZ float normal
+        const void*     m_color;        //!< RGB float color.
+        const void*     m_uv0;          //!< UV float uv.
+        const void*     m_uv1;          //!< UV float uv.
+        int             m_vertexSize;   //!< Vertex size.
+
+                        //! Constructs a VertexBufferLayout instance.
+                        VertexBufferLayout( int vertexSize )
+                            : m_position( NULL ), m_normal( NULL ), m_color( NULL ), m_uv0( NULL ), m_uv1( NULL ), m_vertexSize( vertexSize ) {}
+    };
+
     //! A helper class to tesselate faces.
     class Triangle {
     public:
@@ -171,6 +187,9 @@ namespace relight {
 
         //! Adds a list of faces sharing a same material.
         void                addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, const Material* material = NULL );
+
+        //! Adds a mesh vertices and faces from vertex buffer layout.
+        void                addFaces( const VertexBufferLayout& vertexBuffer, int vertexCount, const Index* indexBuffer, int indexCount, const Material* material = NULL );
 
         //! Returns a target lightmap.
         Lightmap*           lightmap( void ) const;

@@ -152,6 +152,47 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, c
     buildFaces();
 }
 
+// ** Mesh::addFaces
+void Mesh::addFaces( const VertexBufferLayout& vertexBuffer, int vertexCount, const Index* indexBuffer, int indexCount, const Material* material )
+{
+    VertexBuffer vertices;
+    IndexBuffer  indices;
+
+    const char* position = reinterpret_cast<const char*>( vertexBuffer.m_position );
+    const char* normal   = reinterpret_cast<const char*>( vertexBuffer.m_normal );
+    const char* color    = reinterpret_cast<const char*>( vertexBuffer.m_color );
+    const char* uv0      = reinterpret_cast<const char*>( vertexBuffer.m_uv0 );
+    const char* uv1      = reinterpret_cast<const char*>( vertexBuffer.m_uv1 );
+
+    for( int i = 0; i < vertexCount; i++ ) {
+        Vertex v;
+
+        if( position ) {
+            v.m_position = Vec3( reinterpret_cast<const float*>( position + i * vertexBuffer.m_vertexSize ) );
+        }
+        if( normal ) {
+            v.m_normal = Vec3( reinterpret_cast<const float*>( normal + i * vertexBuffer.m_vertexSize ) );
+        }
+        if( color ) {
+            v.m_color = Color( reinterpret_cast<const float*>( color + i * vertexBuffer.m_vertexSize ) );
+        }
+        if( uv0 ) {
+            v.m_uv[0] = Vec2( reinterpret_cast<const float*>( uv0 + i * vertexBuffer.m_vertexSize ) );
+        }
+        if( uv1 ) {
+            v.m_uv[1] = Vec2( reinterpret_cast<const float*>( uv1 + i * vertexBuffer.m_vertexSize ) );
+        }
+
+        vertices.push_back( v );
+    }
+
+    for( int i = 0; i < indexCount; i++ ) {
+        indices.push_back( indexBuffer[i] );
+    }
+
+    addFaces( vertices, indices, material );
+}
+
 // ** Mesh::buildFaces
 void Mesh::buildFaces( void )
 {
