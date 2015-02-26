@@ -186,6 +186,7 @@ namespace relight {
     #include "scene/Light.h"
     #include "scene/Material.h"
     #include "baker/Baker.h" 
+    #include "Lightmap.h"
 #endif
 
 #endif  /*  !defined( Relight ) */
