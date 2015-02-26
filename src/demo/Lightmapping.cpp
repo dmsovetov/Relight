@@ -29,6 +29,15 @@
 
 #include <OpenGL/gl.h>
 
+// ** Lightmap size
+const int k_LightmapSize = 256;
+
+// ** Blue sky color
+const relight::Color k_BlueSky  = relight::Color( 0.52734375f, 0.8046875f, 0.91796875f );
+
+// ** Sun light color
+const relight::Color k_SunColor = relight::Color( 0.75f, 0.74609375f, 0.67578125f );
+
 // ** Lightmapping::Lightmapping
 Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 {
@@ -41,26 +50,52 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
     m_relightScene = relight::Scene::create();
     m_relightScene->begin();
+
+    // ** Add directional light
+    relight::Vec3 direction = relight::Vec3::normalize( relight::Vec3( 0, 2, 0 ) - relight::Vec3( 1.50f, 4.50f,  1.50f ) );
+    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, 3.0f, true ) );
+
+    // ** Add objects
     for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
-        SceneObject* sceneObject = m_scene->sceneObject( i );
-        Transform*   transform   = sceneObject->transform();
-        Mesh*        mesh        = sceneObject->mesh();
-        Renderer*    renderer    = sceneObject->renderer();
+        SceneObject*        sceneObject = m_scene->sceneObject( i );
+        Transform*          transform   = sceneObject->transform();
+        Mesh*               mesh        = sceneObject->mesh();
+        Renderer*           renderer    = sceneObject->renderer();
+        SceneMeshInstance*  instance    = new SceneMeshInstance;
 
-        const float* position   = transform->position();
-        const char*  fileName   = mesh->asset()->fileName().c_str();
-        SceneMesh*   sceneMesh  = findMesh( mesh->asset() );
+        instance->m_transform = affineTransform( transform );
+        instance->m_lightmap  = NULL;
+        instance->m_mesh      = findMesh( mesh->asset(), renderer );
+        instance->m_lm        = m_relightScene->createLightmap( k_LightmapSize, k_LightmapSize );
+        instance->m_pm        = m_relightScene->createPhotonmap( k_LightmapSize, k_LightmapSize );
 
-        if( renderer->materials().size() ) {
-            sceneMesh->m_diffuse = createTextureFromAsset( renderer->materials()[0]->texture( uscene::Material::Diffuse ) );
-        }
+        sceneObject->setUserData( instance );
+        relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform );
 
-        sceneObject->setUserData( sceneMesh );
-        m_relightScene->addMesh( sceneMesh->m_mesh, affineTransform( transform ) );
-
-        printf( "%s (%s) : %f %f %f\n", sceneObject->name().c_str(), fileName, position[0], position[1], position[2] );
+        instance->m_lm->addMesh( m );
+        instance->m_pm->addMesh( m );
     }
     m_relightScene->end();
+
+    // ** Bake meshes
+    for( int i = 0; i < m_relightScene->meshCount(); i++ ) {
+        relight::Relight::bakeDirectLight( m_relightScene, m_relightScene->mesh( i ), new relight::Progress );
+        relight::Relight::bakeIndirectLight( m_relightScene, m_relightScene->mesh( i ), new relight::Progress, relight::IndirectLightSettings::fast( k_BlueSky ) );
+    }
+
+    // ** Create lightmap textures
+    for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
+        SceneMeshInstance* instance = reinterpret_cast<SceneMeshInstance*>( m_scene->sceneObject( i )->userData() );
+        relight::Lightmap* lm       = instance->m_lm;
+
+        lm->expand();
+        lm->blur();
+
+        float* pixels = lm->toRgb32F();
+        instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
+        instance->m_lightmap->setData( 0, pixels );
+        delete[]pixels;
+    }
 }
 
 // ** Lightmapping::affineTransform
@@ -97,7 +132,7 @@ renderer::Texture* Lightmapping::createTextureFromAsset( const uscene::Asset* as
 }
 
 // ** Lightmapping::findMesh
-SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset )
+SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer )
 {
     if( m_meshes.count( asset ) ) {
         return &m_meshes[asset];
@@ -138,6 +173,11 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset )
     }
 
     SceneMesh sceneMesh;
+
+    // ** Create texture
+    if( renderer->materials().size() ) {
+        sceneMesh.m_diffuse = createTextureFromAsset( renderer->materials()[0]->texture( uscene::Material::Diffuse ) );
+    }
 
     // ** Create Relight mesh
     sceneMesh.m_mesh = relight::Mesh::create();
@@ -231,7 +271,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
     Matrix4 proj = Matrix4::perspective( 60.0f, window->width() / float( window->height() ), 0.01f, 1000.0f );
     Matrix4 view = Matrix4::lookAt( Vec3( 3, 3, 3 ), Vec3( 0, 0, 0 ), Vec3( 0, 1, 0 ) );
 
-    m_hal->clear( Rgba( 0.3f, 0.3f, 0.3f ) );
+    m_hal->clear( Rgba( k_BlueSky.r, k_BlueSky.g, k_BlueSky.b ) );
 
 //    m_hal->setTransform( renderer::TransformView, view.m );
     m_hal->setTransform( renderer::TransformProjection, proj.m );
@@ -241,18 +281,16 @@ void Lightmapping::handleUpdate( platform::Window* window )
     rotation += 0.1f;
 
     for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
-        uscene::SceneObject* object     = m_scene->sceneObject( i );
-        SceneMesh*           mesh       = reinterpret_cast<SceneMesh*>( object->userData() );
-   //     Matrix4              transform  = view * affineTransform( object->transform() );
-
-    //    m_hal->setTransform( renderer::TransformModel, transform.m );
+        uscene::SceneObject* object   = m_scene->sceneObject( i );
+        SceneMeshInstance*   instance = reinterpret_cast<SceneMeshInstance*>( object->userData() );
 
         glPushMatrix();
-        glMultMatrixf( affineTransform( object->transform() ).m );
+        glMultMatrixf( instance->m_transform.m );
 
-        m_hal->setTexture( 0, mesh->m_diffuse );
-        m_hal->setVertexBuffer( mesh->m_vertexBuffer );
-        m_hal->renderIndexed( renderer::PrimTriangles, mesh->m_indexBuffer, 0, mesh->m_indexBuffer->size() );
+        m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
+        m_hal->setTexture( 1, instance->m_lightmap );
+        m_hal->setVertexBuffer( instance->m_mesh->m_vertexBuffer );
+        m_hal->renderIndexed( renderer::PrimTriangles, instance->m_mesh->m_indexBuffer, 0, instance->m_mesh->m_indexBuffer->size() );
 
         glPopMatrix();
     }

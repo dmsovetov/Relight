@@ -47,6 +47,15 @@ struct SceneMesh {
     renderer::VertexBuffer* m_vertexBuffer;
 };
 
+// ** struct SceneMeshInstance
+struct SceneMeshInstance {
+    const SceneMesh*        m_mesh;
+    relight::Matrix4        m_transform;
+    renderer::Texture2D*    m_lightmap;
+    relight::Lightmap*      m_lm;
+    relight::Photonmap*     m_pm;
+};
+
 // ** class Lightmapping
 class Lightmapping : public platform::WindowDelegate {
 public:
@@ -57,7 +66,7 @@ public:
 
 private:
 
-    SceneMesh*          findMesh( const uscene::Asset* asset );
+    SceneMesh*          findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer );
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTextureFromAsset( const uscene::Asset* asset );
