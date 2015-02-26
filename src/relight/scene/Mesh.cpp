@@ -205,9 +205,7 @@ void Mesh::transform( const Matrix4& transform )
 {
     for( int i = 0, n = vertexCount(); i < n; i++ ) {
         m_vertices[i].m_position = transform * m_vertices[i].m_position;
-        m_vertices[i].m_normal   = transform * m_vertices[i].m_normal;
-
-        m_vertices[i].m_normal.normalize();
+        m_vertices[i].m_normal   = transform.rotate( m_vertices[i].m_normal );
     }
 }
 
