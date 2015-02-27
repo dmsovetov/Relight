@@ -71,6 +71,7 @@ RelightStatus Baker::bakeMesh( const Mesh* mesh )
     while( m_iterator->next() ) {
         if( m_progress ) m_progress->notify( mesh, ++progress, m_iterator->itemCount() );
     }
+    if( m_progress ) m_progress->notify( mesh, m_iterator->itemCount(), m_iterator->itemCount() );
 
     return RelightSuccess;
 }
