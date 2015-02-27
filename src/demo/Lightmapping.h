@@ -42,6 +42,8 @@ struct SceneVertex {
 // ** struct SceneMesh
 struct SceneMesh {
     relight::Mesh*          m_mesh;
+    relight::Material*      m_material;
+    
     renderer::Texture*      m_diffuse;
     renderer::IndexBuffer*  m_indexBuffer;
     renderer::VertexBuffer* m_vertexBuffer;
@@ -49,13 +51,13 @@ struct SceneMesh {
 
 // ** struct SceneMeshInstance
 struct SceneMeshInstance {
-    const SceneMesh*        m_mesh;
-    const uscene::Material* m_material;
-    relight::Matrix4        m_transform;
-    renderer::Texture2D*    m_lightmap;
-    relight::Lightmap*      m_lm;
-    relight::Photonmap*     m_pm;
-    bool                    m_dirty;
+    const SceneMesh*            m_mesh;
+
+    relight::Matrix4            m_transform;
+    renderer::Texture2D*        m_lightmap;
+    relight::Lightmap*          m_lm;
+    relight::Photonmap*         m_pm;
+    bool                        m_dirty;
 };
 
 //! Relight background worker.
@@ -100,16 +102,18 @@ public:
 
 private:
 
-    SceneMesh*          findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer );
+    SceneMesh*          findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer, bool solid );
+    relight::Texture*   findTexture( const uscene::Asset* asset, bool solid );
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
     void                createBuffersFromMesh( SceneMesh& mesh );
-    renderer::Texture*  createTextureFromAsset( const uscene::Asset* asset );
+    renderer::Texture*  createTexture( const relight::Texture* texture );
     void                renderObjects( const uscene::SceneObjectArray& objects );
 
 private:
 
-    typedef std::map<const uscene::Asset*, SceneMesh>           Meshes;
-    typedef std::map<const uscene::Asset*, renderer::Texture*>  Textures;
+    typedef std::map<const uscene::Asset*,      SceneMesh>           Meshes;
+    typedef std::map<const relight::Texture*,   renderer::Texture*>  Textures;
+    typedef std::map<const uscene::Asset*,      relight::Texture*>   RelightTextures;
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
@@ -125,6 +129,7 @@ private:
 
     Meshes                          m_meshes;
     Textures                        m_textures;
+    RelightTextures                 m_relightTextures;
 };
 
 #endif /* defined(__Relight_Demo_Lightmapping__) */

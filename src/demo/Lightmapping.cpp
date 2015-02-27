@@ -30,7 +30,7 @@
 #include <OpenGL/gl.h>
 
 // ** Lightmap size
-const int k_LightmapSize = 128;
+const int k_LightmapSize = 512;
 
 // ** Background workers
 const int k_Workers      = 8;
@@ -59,8 +59,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
     m_assets = Assets::parse( "Assets/assets" );
-//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/WithPrefabs.scene" );
-    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
+    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
+//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -87,9 +87,11 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         }
 
         bool addToRelight = sceneObject->isStatic();
+        bool isSolid      = false;
 
         if( renderer->materials()[0]->shader() == "diffuse" ) {
             m_solidRenderList.push_back( sceneObject );
+            isSolid = true;
         }
         else if( renderer->materials()[0]->shader() == "additive" ) {
             m_additiveRenderList.push_back( sceneObject );
@@ -105,8 +107,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
         instance->m_transform = affineTransform( transform );
         instance->m_lightmap  = NULL;
-        instance->m_material  = renderer->materials()[0];
-        instance->m_mesh      = findMesh( mesh->asset(), renderer );
+        instance->m_mesh      = findMesh( mesh->asset(), renderer, isSolid );
         instance->m_dirty     = false;
 
         if( !addToRelight ) {
@@ -116,7 +117,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         instance->m_lm = m_relight->createLightmap( k_LightmapSize, k_LightmapSize );
         instance->m_pm = m_relight->createPhotonmap( k_LightmapSize, k_LightmapSize );
 
-        relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform );
+        relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform, instance->m_mesh->m_material );
         m->setUserData( instance );
 
         instance->m_lm->addMesh( m );
@@ -131,7 +132,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
         virtual void execute( relight::JobData* data ) {
             data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_worker, data->m_iterator );
-        //    data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, k_IndirectLight, data->m_iterator );
+            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, k_IndirectLight, data->m_iterator );
         }
     };
 
@@ -157,31 +158,43 @@ relight::Matrix4 Lightmapping::affineTransform( const uscene::Transform *transfo
     return affineTransform( transform->parent() ) * relight::Matrix4::affineTransform( position, rotation, scale ) * relight::Matrix4::scale( -1, 1, 1 );
 }
 
-// ** Lightmapping::createTextureFromAsset
-renderer::Texture* Lightmapping::createTextureFromAsset( const uscene::Asset* asset )
+// ** Lightmapping::createTexture
+renderer::Texture* Lightmapping::createTexture( const relight::Texture* texture )
 {
-    if( m_textures.count( asset ) ) {
-        return m_textures[asset];
+    if( m_textures.count( texture ) ) {
+        return m_textures[texture];
     }
 
-    printf( "Loading %s...\n", asset->fileName().c_str() );
+    renderer::Texture2D* texture2d = m_hal->createTexture2D( texture->width(), texture->height(), texture->channels() == 3 ? renderer::PixelRgb8 : renderer::PixelRgba8 );
+    texture2d->setData( 0, texture->pixels() );
 
-    relight::Texture* image = relight::Texture::createFromFile( asset->fileName().c_str() );
-    if( !image ) {
-        return NULL;
+    m_textures[texture] = texture2d;
+
+    return texture2d;
+}
+
+// ** Lightmapping::findTexture
+relight::Texture* Lightmapping::findTexture( const uscene::Asset* asset, bool solid )
+{
+    if( m_relightTextures.count( asset ) ) {
+        return m_relightTextures[asset];
     }
 
-    renderer::Texture2D* texture = m_hal->createTexture2D( image->width(), image->height(), image->channels() == 3 ? renderer::PixelRgb8 : renderer::PixelRgba8 );
-    texture->setData( 0, image->pixels() );
-    delete image;
+    relight::Texture* texture = relight::Texture::createFromFile( asset->fileName().c_str() );
 
-    m_textures[asset] = texture;
+    if( solid && texture->channels() == 4 ) {
+        texture->convertToRgb();
+    }
+
+    if( texture ) {
+        m_relightTextures[asset] = texture;
+    }
 
     return texture;
 }
 
 // ** Lightmapping::findMesh
-SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer )
+SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer, bool solid )
 {
     if( m_meshes.count( asset ) ) {
         return &m_meshes[asset];
@@ -224,7 +237,11 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
 
     // ** Create texture
     if( renderer->materials().size() ) {
-        sceneMesh.m_diffuse = createTextureFromAsset( renderer->materials()[0]->texture( uscene::Material::Diffuse ) );
+        uscene::Material* material  = renderer->materials()[0];
+        const float*      diffuse   = material->color( uscene::Material::Diffuse );
+        relight::Texture* texture   = findTexture( material->texture( uscene::Material::Diffuse ), solid );
+        sceneMesh.m_material        = texture ? new relight::TexturedMaterial( texture, diffuse ) : new relight::Material( diffuse );
+        sceneMesh.m_diffuse         = createTexture( texture );
     }
 
     // ** Create Relight mesh
@@ -331,13 +348,13 @@ void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
         glPushMatrix();
         glMultMatrixf( instance->m_transform.m );
 
-        const float* diffuse = instance->m_material->color( uscene::Material::Diffuse );
+        const relight::Rgb& diffuse = instance->m_mesh->m_material->color();
 
         if( object->isStatic() ) {
-            m_hal->setColorModulation( diffuse[0], diffuse[1], diffuse[2], 1.0f );
+            m_hal->setColorModulation( diffuse.r, diffuse.g, diffuse.b, 1.0f );
         } else {
             const float* ambient = m_scene->settings()->ambient();
-            m_hal->setColorModulation( diffuse[0] * ambient[0], diffuse[1] * ambient[1], diffuse[2] * ambient[2], 1.0f );
+            m_hal->setColorModulation( diffuse.r * ambient[0], diffuse.g * ambient[1], diffuse.b * ambient[2], 1.0f );
         }
 
         if( k_DebugShowStatic ) {
