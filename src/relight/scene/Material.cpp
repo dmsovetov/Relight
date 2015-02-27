@@ -121,6 +121,29 @@ const unsigned char* Texture::pixels( void ) const
     return m_pixels;
 }
 
+// ** Texture::convertToRgb
+void Texture::convertToRgb( void )
+{
+    if( m_channels == 3 ) {
+        return;
+    }
+
+    unsigned char* pixels = new unsigned char[m_width * m_height * 3];
+
+    for( int i = 0; i < m_width * m_height; i++ ) {
+        unsigned char* src = &m_pixels[i * m_channels];
+        unsigned char* dst = &pixels[i * 3];
+
+        for( int j = 0; j < 3; j++ ) {
+            dst[j] = src[j];
+        }
+    }
+
+    delete[]m_pixels;
+    m_channels = 3;
+    m_pixels = pixels;
+}
+
 // ** Texture::create
 Texture* Texture::create( int width, int height, int channels, const unsigned char* pixels )
 {

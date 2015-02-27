@@ -83,6 +83,9 @@ namespace relight {
         //! Returns a texture color at a given UV coordinates.
         Rgba                    colorAt( const Uv& uv ) const;
 
+        //! Converts this texture to rgb.
+        void                    convertToRgb( void );
+
         //! Creates a new Texture instance.
         /*!
          \param width Texture width.
