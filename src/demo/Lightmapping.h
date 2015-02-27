@@ -35,7 +35,6 @@
 struct SceneVertex {
     float           x, y, z;
     float           nx, ny, nz;
-    unsigned char   r, g, b, a;
     float           u0, v0;
     float           u1, v1;
 };
@@ -51,10 +50,12 @@ struct SceneMesh {
 // ** struct SceneMeshInstance
 struct SceneMeshInstance {
     const SceneMesh*        m_mesh;
+    const uscene::Material* m_material;
     relight::Matrix4        m_transform;
     renderer::Texture2D*    m_lightmap;
     relight::Lightmap*      m_lm;
     relight::Photonmap*     m_pm;
+    bool                    m_dirty;
 };
 
 //! Relight background worker.
@@ -62,7 +63,7 @@ class ThreadWorker : public relight::Worker {
 public:
 
                     //! Constructs a ThreadWorker instance.
-                    ThreadWorker( relight::Progress* progress = NULL );
+                    ThreadWorker( void );
 
     //! Pushes a new job to this worker.
     virtual void    push( relight::Job* job, relight::JobData* data );
@@ -70,12 +71,20 @@ public:
     //! Waits for completion of this worker.
     virtual void    wait( void );
 
+    virtual void    notify( const relight::Mesh* instance, int step, int stepCount );
+
 private:
 
     //! Thread worker callback.
     static void*    worker( void* userData );
 
 private:
+
+    //! Thread worker data
+    struct ThreadData {
+        relight::JobData*   m_data;
+        relight::Progress*  m_progress;
+    };
 
     //! Thread handle.
     pthread_t       m_thread;
@@ -95,6 +104,7 @@ private:
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTextureFromAsset( const uscene::Asset* asset );
+    void                renderObjects( const uscene::SceneObjectArray& objects );
 
 private:
 
@@ -106,9 +116,11 @@ private:
 
     uscene::Assets*                 m_assets;
     uscene::Scene*                  m_scene;
+    uscene::SceneObjectArray        m_solidRenderList, m_transparentRenderList, m_additiveRenderList;
 
     relight::Relight*               m_relight;
     relight::Scene*                 m_relightScene;
+    relight::Worker*                m_rootWorker;
     relight::Workers                m_relightWorkers;
 
     Meshes                          m_meshes;

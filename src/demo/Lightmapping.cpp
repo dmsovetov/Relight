@@ -30,26 +30,42 @@
 #include <OpenGL/gl.h>
 
 // ** Lightmap size
-const int k_LightmapSize = 1024;
+const int k_LightmapSize = 128;
 
 // ** Background workers
 const int k_Workers      = 8;
 
+// ** Debug flags
+const bool k_DebugShowStatic = false;
+
 // ** Blue sky color
-const relight::Color k_BlueSky  = relight::Color( 0.52734375f, 0.8046875f, 0.91796875f );
+const relight::Rgb k_BlueSky        = relight::Rgb( 0.52734375f, 0.8046875f, 0.91796875f );
 
 // ** Sun light color
-const relight::Color k_SunColor = relight::Color( 0.75f, 0.74609375f, 0.67578125f );
+const relight::Rgb k_SunColor       = relight::Rgb( 0.75f, 0.74609375f, 0.67578125f );
+
+// ** Dark blue light
+const relight::Rgb  k_DarkLightColor        = relight::Rgb( 0.0737915039f, 0.166036054f, 0.395522416f );
+const float         k_DarkLightIntensity    = 1.5f;
+
+// ** Indirect light settings
+const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( k_BlueSky );
 
 // ** Lightmapping::Lightmapping
 Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 {
     using namespace uscene;
 
-    m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:C4:T0:T1", sizeof( SceneVertex ) );
+    m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
     m_assets = Assets::parse( "Assets/assets" );
-    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Test.scene" );
+//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/WithPrefabs.scene" );
+    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
+
+    if( !m_scene ) {
+        printf( "Failed to create scene\n" );
+        return;
+    }
 
     m_relight      = relight::Relight::create();
     m_relightScene = m_relight->createScene();
@@ -57,7 +73,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
     // ** Add directional light
     relight::Vec3 direction = relight::Vec3::normalize( relight::Vec3( 0, 2, 0 ) - relight::Vec3( 1.50f, 4.50f,  1.50f ) );
-    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, 1.0f, true ) );
+    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, k_DarkLightIntensity, true ) );
 
     // ** Add objects
     for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
@@ -65,15 +81,41 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         Transform*          transform   = sceneObject->transform();
         Mesh*               mesh        = sceneObject->mesh();
         Renderer*           renderer    = sceneObject->renderer();
-        SceneMeshInstance*  instance    = new SceneMeshInstance;
+
+        if( !mesh ) {
+            continue;
+        }
+
+        bool addToRelight = sceneObject->isStatic();
+
+        if( renderer->materials()[0]->shader() == "diffuse" ) {
+            m_solidRenderList.push_back( sceneObject );
+        }
+        else if( renderer->materials()[0]->shader() == "additive" ) {
+            m_additiveRenderList.push_back( sceneObject );
+            addToRelight = false;
+        }
+        else {
+            m_transparentRenderList.push_back( sceneObject );
+        }
+
+        SceneMeshInstance* instance = new SceneMeshInstance;
+
+        sceneObject->setUserData( instance );
 
         instance->m_transform = affineTransform( transform );
         instance->m_lightmap  = NULL;
+        instance->m_material  = renderer->materials()[0];
         instance->m_mesh      = findMesh( mesh->asset(), renderer );
-        instance->m_lm        = m_relight->createLightmap( k_LightmapSize, k_LightmapSize );
-        instance->m_pm        = m_relight->createPhotonmap( k_LightmapSize, k_LightmapSize );
+        instance->m_dirty     = false;
 
-        sceneObject->setUserData( instance );
+        if( !addToRelight ) {
+            continue;
+        }
+
+        instance->m_lm = m_relight->createLightmap( k_LightmapSize, k_LightmapSize );
+        instance->m_pm = m_relight->createPhotonmap( k_LightmapSize, k_LightmapSize );
+
         relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform );
         m->setUserData( instance );
 
@@ -82,32 +124,37 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     }
     m_relightScene->end();
 
+    printf( "%d instances added to relight scene\n", m_relightScene->meshCount() );
 
     struct Bake : public relight::Job {
     public:
 
         virtual void execute( relight::JobData* data ) {
-            data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_progress, data->m_iterator );
-            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_progress, relight::IndirectLightSettings::production( k_BlueSky ), data->m_iterator );
+            data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_worker, data->m_iterator );
+        //    data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, k_IndirectLight, data->m_iterator );
         }
     };
 
     // ** Bake scene
-    ThreadWorker root;
+    m_rootWorker = new ThreadWorker;
     for( int i = 0; i < k_Workers; i++ ) {
-        m_relightWorkers.push_back( new ThreadWorker( new relight::Progress ) );
+        m_relightWorkers.push_back( new ThreadWorker );
     }
-    m_relight->bake( m_relightScene, new Bake, &root, m_relightWorkers );
+    m_relight->bake( m_relightScene, new Bake, m_rootWorker, m_relightWorkers );
 }
 
 // ** Lightmapping::affineTransform
 relight::Matrix4 Lightmapping::affineTransform( const uscene::Transform *transform )
 {
+    if( !transform ) {
+        return relight::Matrix4();
+    }
+
     relight::Vec3 position = relight::Vec3( transform->position()[0], transform->position()[1], transform->position()[2] );
     relight::Vec3 scale    = relight::Vec3( transform->scale()[0], transform->scale()[1], transform->scale()[2] );
     relight::Quat rotation = relight::Quat( transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], transform->rotation()[3] );
 
-    return relight::Matrix4::affineTransform( position, rotation, scale );
+    return affineTransform( transform->parent() ) * relight::Matrix4::affineTransform( position, rotation, scale ) * relight::Matrix4::scale( -1, 1, 1 );
 }
 
 // ** Lightmapping::createTextureFromAsset
@@ -124,8 +171,8 @@ renderer::Texture* Lightmapping::createTextureFromAsset( const uscene::Asset* as
         return NULL;
     }
 
-    renderer::Texture2D* texture = m_hal->createTexture2D( image->width(), image->height(), renderer::PixelRgb32F );
-    texture->setData( 0, ( void* )&image->pixels()[0].r );
+    renderer::Texture2D* texture = m_hal->createTexture2D( image->width(), image->height(), image->channels() == 3 ? renderer::PixelRgb8 : renderer::PixelRgba8 );
+    texture->setData( 0, image->pixels() );
     delete image;
 
     m_textures[asset] = texture;
@@ -157,7 +204,6 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
 
         v.m_position = relight::Vec3( fbxVertex.position[0], fbxVertex.position[1], fbxVertex.position[2] );
         v.m_normal   = relight::Vec3( fbxVertex.normal[0], fbxVertex.normal[1], fbxVertex.normal[2] );
-        v.m_color    = relight::Color( 1, 1, 1 );
 
         for( int j = 0; j < relight::Vertex::TotalUvLayers; j++ ) {
             v.m_uv[j] = relight::Uv( fbxVertex.uv[j][0], fbxVertex.uv[j][1] );
@@ -206,7 +252,6 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
         sv.nx = rv.m_normal.x;   sv.ny = rv.m_normal.y;   sv.nz = rv.m_normal.z;
         sv.u0 = rv.m_uv[0].x;    sv.v0 = rv.m_uv[0].y;
         sv.u1 = rv.m_uv[1].x;    sv.v1 = rv.m_uv[1].y;
-        sv.r  = sv.g = sv.b = sv.a = 255;
     }
     mesh.m_vertexBuffer->unlock();
 
@@ -218,6 +263,10 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
 // ** Lightmapping::handleUpdate
 void Lightmapping::handleUpdate( platform::Window* window )
 {
+    if( !m_scene ) {
+        return;
+    }
+    
     using namespace relight;
 
     static float rotation = 0.0;
@@ -225,7 +274,16 @@ void Lightmapping::handleUpdate( platform::Window* window )
     Matrix4 proj = Matrix4::perspective( 60.0f, window->width() / float( window->height() ), 0.01f, 1000.0f );
     Matrix4 view = Matrix4::lookAt( Vec3( 3, 3, 3 ), Vec3( 0, 0, 0 ), Vec3( 0, 1, 0 ) );
 
-    m_hal->clear( Rgba( k_BlueSky.r, k_BlueSky.g, k_BlueSky.b ) );
+    uscene::SceneSettings* settings = m_scene->settings();
+    const float*           ambient  = settings->ambient();
+    const float*           fog      = settings->fogColor();
+    dreemchest::Rgba       ambientColor( ambient[0], ambient[1], ambient[2], 1.0f );
+    dreemchest::Rgba       fogColor( fog[0], fog[1], fog[2], 1.0f );
+//    dreemchest::Rgba       clearColor( k_BlueSky.r, k_BlueSky.g, k_BlueSky.b );
+
+    if( !m_hal->clear( fogColor ) ) {
+        return;
+    }
 
 //    m_hal->setTransform( renderer::TransformView, view.m );
     m_hal->setTransform( renderer::TransformProjection, proj.m );
@@ -234,42 +292,85 @@ void Lightmapping::handleUpdate( platform::Window* window )
     glRotatef( rotation, 0, 1, 0 );
     rotation += 0.1f;
 
-    for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
-        uscene::SceneObject* object   = m_scene->sceneObject( i );
+    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
+
+    {
+        renderObjects( m_solidRenderList );
+    }
+
+    {
+        m_hal->setAlphaTest( renderer::Greater, 0.5f );
+        renderObjects( m_transparentRenderList );
+        m_hal->setAlphaTest( renderer::CompareDisabled );
+    }
+
+    {
+        m_hal->setDepthTest( false, renderer::Less );
+        m_hal->setBlendFactors( renderer::BlendOne, renderer::BlendOne );
+
+        renderObjects( m_additiveRenderList );
+
+        m_hal->setDepthTest( true, renderer::Less );
+        m_hal->setBlendFactors( renderer::BlendDisabled, renderer::BlendDisabled );
+    }
+
+    m_hal->present();
+}
+
+// ** Lightmapping::renderObjects
+void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
+{
+    for( int i = 0; i < objects.size(); i++ ) {
+        uscene::SceneObject* object   = objects[i];
         SceneMeshInstance*   instance = reinterpret_cast<SceneMeshInstance*>( object->userData() );
+
+        if( !instance ) {
+            continue;
+        }
 
         glPushMatrix();
         glMultMatrixf( instance->m_transform.m );
 
-    //    m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
-        m_hal->setTexture( 1, instance->m_lightmap );
+        const float* diffuse = instance->m_material->color( uscene::Material::Diffuse );
+
+        if( object->isStatic() ) {
+            m_hal->setColorModulation( diffuse[0], diffuse[1], diffuse[2], 1.0f );
+        } else {
+            const float* ambient = m_scene->settings()->ambient();
+            m_hal->setColorModulation( diffuse[0] * ambient[0], diffuse[1] * ambient[1], diffuse[2] * ambient[2], 1.0f );
+        }
+
+        if( k_DebugShowStatic ) {
+            if( object->isStatic() ) {
+                m_hal->setColorModulation( 1, 0, 1, 1 );
+            } else {
+                m_hal->setColorModulation( 1, 1, 0, 1 );
+            }
+            m_hal->setTexture( 0, NULL );
+            m_hal->setTexture( 1, NULL );
+        } else {
+            m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
+            m_hal->setTexture( 1, instance->m_lightmap );
+        }
+
         m_hal->setVertexBuffer( instance->m_mesh->m_vertexBuffer );
         m_hal->renderIndexed( renderer::PrimTriangles, instance->m_mesh->m_indexBuffer, 0, instance->m_mesh->m_indexBuffer->size() );
 
         glPopMatrix();
+
+        if( instance->m_dirty ) {
+            relight::Lightmap* lm = instance->m_lm;
+
+            float* pixels = lm->toRgb32F();
+            instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
+            instance->m_lightmap->setData( 0, pixels );
+            delete[]pixels;
+
+            instance->m_dirty = false;
+        }
     }
 
     m_hal->setVertexBuffer( NULL );
-
-     // ** Update lightmap textures
-     for( int i = 0; i < m_relightWorkers.size(); i++ ) {
-         relight::Worker* worker = m_relightWorkers[i];
-
-         if( !worker->progress()->hasChanges() ) {
-             continue;
-         }
-
-         const relight::Mesh* mesh   = worker->progress()->instance();
-         SceneMeshInstance* instance = reinterpret_cast<SceneMeshInstance*>( mesh->userData() );
-         relight::Lightmap* lm       = instance->m_lm;
-
-         float* pixels = lm->toRgb32F();
-         instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
-         instance->m_lightmap->setData( 0, pixels );
-         delete[]pixels;
-     }
-
-    m_hal->present();
 }
 
 // ** ThreadWorker::worker
@@ -281,14 +382,14 @@ void* ThreadWorker::worker( void* userData )
 }
 
 // ** ThreadWorker::ThreadWorker
-ThreadWorker::ThreadWorker( relight::Progress* progress ) : Worker( progress )
+ThreadWorker::ThreadWorker( void )
 {
 }
 
 // ** ThreadWorker::push
 void ThreadWorker::push( relight::Job* job, relight::JobData* data )
 {
-    data->m_progress = m_progress;
+    data->m_worker = this;
     pthread_create( &m_thread, NULL, worker, ( void* )data );
 }
 
@@ -296,4 +397,10 @@ void ThreadWorker::push( relight::Job* job, relight::JobData* data )
 void ThreadWorker::wait( void )
 {
     pthread_join( m_thread, NULL );
+}
+
+// ** ThreadWorker::notify
+void ThreadWorker::notify( const relight::Mesh* instance, int step, int stepCount )
+{
+    reinterpret_cast<SceneMeshInstance*>( instance->userData() )->m_dirty = true;
 }

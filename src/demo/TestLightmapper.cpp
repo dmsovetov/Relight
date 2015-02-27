@@ -59,7 +59,7 @@ void cTestLightmapper::Create( void )
 {
     createScene();
 
-    startLightmapsThread( IndirectLightSettings::production( Color( 0.52734375f, 0.8046875f, 0.91796875f ) ), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
+    startLightmapsThread( IndirectLightSettings::production( Rgb( 0.52734375f, 0.8046875f, 0.91796875f ) ), AmbientOcclusionSettings::fast( 0.8f, 2.8f ) );
 
     m_rotationX = m_rotationY = 0.0f;
     m_useLightmaps = true;
@@ -503,7 +503,7 @@ void cTestLightmapper::Render( void )
 // ** cTestLightmapper::createTextureFromFile
 unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) const
 {
-    Texture* texture = Texture::createFromFile( fileName );
+/*    Texture* texture = Texture::createFromFile( fileName );
     if( !texture ) {
         assert( false );
         return 0;
@@ -516,16 +516,16 @@ unsigned int cTestLightmapper::createTextureFromFile( const char* fileName ) con
     glTexParameteri( GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, texture->width(), texture->height(), 0, GL_RGB, GL_FLOAT, &texture->pixels()[0].r );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, texture->width(), texture->height(), 0, GL_RGB, GL_FLOAT, texture->pixels() );
 
     delete texture;
-    return id;
+    return id;*/
 }
 
 // ** cTestLightmapper::createTexture
 unsigned int cTestLightmapper::createTexture( const Texture* texture ) const
 {
-    unsigned int id;
+/*    unsigned int id;
 
     glGenTextures( 1, &id );
     glBindTexture( GL_TEXTURE_2D, id );
@@ -534,7 +534,7 @@ unsigned int cTestLightmapper::createTexture( const Texture* texture ) const
     glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR );
     glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB, texture->width(), texture->height(), 0, GL_BGR, GL_FLOAT, &texture->pixels()[0].r );
 
-    return id;
+    return id;*/
 }
 
 void cTestLightmapper::renderInstance( const Instance* instance ) const

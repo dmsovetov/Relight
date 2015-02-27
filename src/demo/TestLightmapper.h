@@ -61,7 +61,7 @@ struct Instance {
 
 struct SceneSettings {
     float                   m_fogIntensity;
-    relight::Color          m_fogColor;
+    relight::Rgb            m_fogColor;
 };
 
 typedef std::vector<Instance*> InstanceArray;
