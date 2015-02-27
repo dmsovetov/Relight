@@ -33,11 +33,11 @@ namespace relight {
 
     //! Job data.
     struct JobData {
+        Worker*             m_worker;   //!< Parent worker.
         Job*                m_job;      //!< Parent job.
         Relight*            m_relight;  //!< Relight instance.
         const Scene*        m_scene;    //!< Scene instance to be processed.
         const Mesh*         m_mesh;     //!< Mesh instance from a scene.
-        Progress*           m_progress; //!< Baking progress.
         bake::BakeIterator* m_iterator; //!< Bake iterator.
     };
 
@@ -46,7 +46,7 @@ namespace relight {
     public:
 
         //! Executes a job.
-        virtual void    execute( JobData* data ) {}
+        virtual void    execute( JobData* data ) = 0;
     };
 
     //! A job that bakes all scene objects.
@@ -69,26 +69,18 @@ namespace relight {
     };
 
     //! Relight basic worker.
-    class Worker {
+    class Worker : public Progress {
     public:
 
                         //! Constructs a Worker instance
-                        Worker( Progress* progress = NULL );
+                        Worker( void );
         virtual         ~Worker( void );
-
-        //! Returns a progress pointer.
-        Progress*       progress( void ) const;
 
         //! Pushes a new job to this worker.
         virtual void    push( Job* job, JobData* data );
 
         //! Waits for completion of this worker.
         virtual void    wait( void );
-
-    protected:
-
-        //! Worker progress.
-        Progress*       m_progress;
     };
 
 } // namespace relight

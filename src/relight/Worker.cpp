@@ -26,7 +26,8 @@
 
 #include "BuildCheck.h"
 #include "Worker.h"
-#include "Scene.h"
+#include "scene/Scene.h"
+#include "scene/Mesh.h"
 #include "baker/Baker.h"
 
 namespace relight {
@@ -49,19 +50,26 @@ void FullBakeJob::execute( JobData* data )
             instanceData->m_scene       = data->m_scene;
             instanceData->m_relight     = data->m_relight;
             instanceData->m_mesh        = data->m_scene->mesh( i );
-            instanceData->m_iterator    = new bake::FaceBakeIterator( j, numWorkers );
 
-            m_workers[i]->push( m_job, instanceData );
+            if( instanceData->m_mesh->faceCount() >= numWorkers ) {
+                instanceData->m_iterator = new bake::FaceBakeIterator( j, numWorkers );
+            } else {
+                instanceData->m_iterator = new bake::LumelBakeIterator( j, numWorkers );
+            }
+
+            m_workers[j]->push( m_job, instanceData );
+        }
+
+        for( int i = 0; i < numWorkers; i++ ) {
+            m_workers[i]->wait();
         }
     }
 
-    for( int i = 0; i < numWorkers; i++ ) {
-        m_workers[i]->wait();
-    }
+    printf( "All done\n" );
 }
 
 // ** Worker::Worker
-Worker::Worker( Progress* progress ) : m_progress( progress )
+Worker::Worker( void )
 {
 }
 
@@ -70,16 +78,10 @@ Worker::~Worker( void )
 
 }
 
-// ** Worker::progress
-Progress* Worker::progress( void ) const
-{
-    return m_progress;
-}
-
 // ** Worker::push
 void Worker::push( Job* job, JobData* data )
 {
-    data->m_progress = m_progress;
+    data->m_worker = this;
     job->execute( data );
 }
 
