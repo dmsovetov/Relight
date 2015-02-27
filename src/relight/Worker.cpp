@@ -29,6 +29,7 @@
 #include "scene/Scene.h"
 #include "scene/Mesh.h"
 #include "baker/Baker.h"
+#include "Lightmap.h"
 
 namespace relight {
 
@@ -41,15 +42,28 @@ FullBakeJob::FullBakeJob( Job* job, const Workers& workers ) : m_workers( worker
 // ** FullBakeJob::execute
 void FullBakeJob::execute( JobData* data )
 {
-    int numWorkers = ( int )m_workers.size();
+    int                 numWorkers = ( int )m_workers.size();
+    Array<const Mesh*>  meshes;
 
     for( int i = 0; i < data->m_scene->meshCount(); i++ ) {
+        meshes.push_back( data->m_scene->mesh( i ) );
+    }
+
+    struct SortMesh {
+        static bool predicate( const Mesh* a, const Mesh* b ) { return a->bounds().volume() > b->bounds().volume(); }
+    };
+
+    std::sort( meshes.begin(), meshes.end(), SortMesh::predicate );
+
+    for( int i = 0; i < meshes.size(); i++ ) {
+        printf( "volume %f\n", meshes[i]->bounds().volume() );
+
         for( int j = 0, n = numWorkers; j < n; j++ ) {
             JobData* instanceData       = new JobData;
             instanceData->m_job         = m_job;
             instanceData->m_scene       = data->m_scene;
             instanceData->m_relight     = data->m_relight;
-            instanceData->m_mesh        = data->m_scene->mesh( i );
+            instanceData->m_mesh        = meshes[i];
 
             if( instanceData->m_mesh->faceCount() >= numWorkers ) {
                 instanceData->m_iterator = new bake::FaceBakeIterator( j, numWorkers );
@@ -63,6 +77,8 @@ void FullBakeJob::execute( JobData* data )
         for( int i = 0; i < numWorkers; i++ ) {
             m_workers[i]->wait();
         }
+
+        printf( "%d/%d\n", i, data->m_scene->meshCount() );
     }
 
     printf( "All done\n" );
