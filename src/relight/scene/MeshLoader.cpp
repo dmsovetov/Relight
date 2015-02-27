@@ -108,7 +108,6 @@ void MeshLoader::commit( void )
 
         vertices[i->second].m_position = Vec3( v.position[0], v.position[1], v.position[2] );
         vertices[i->second].m_normal   = Vec3( v.normal[0], v.normal[1], v.normal[2] );
-        vertices[i->second].m_color    = Color( v.color[0], v.color[1], v.color[2] );
         vertices[i->second].m_uv[::relight::Vertex::Lightmap] = Uv( v.uv[0], v.uv[1] );
     }
 

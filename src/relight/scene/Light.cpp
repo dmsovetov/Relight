@@ -127,13 +127,13 @@ void Light::setPosition( const Vec3& value )
 }
 
 // ** Light::color
-const Color& Light::color( void ) const
+const Rgb& Light::color( void ) const
 {
     return m_color;
 }
 
 // ** Light::setColor
-void Light::setColor( const Color& value )
+void Light::setColor( const Rgb& value )
 {
     m_color = value;
 }
@@ -163,7 +163,7 @@ void Light::setCastsShadow( bool value )
 }
 
 // ** Light::createPointLight
-Light* Light::createPointLight( const Vec3& position, float radius, const Color& color, float intensity, bool castsShadow )
+Light* Light::createPointLight( const Vec3& position, float radius, const Rgb& color, float intensity, bool castsShadow )
 {
     Light* light = new Light;
 
@@ -180,7 +180,7 @@ Light* Light::createPointLight( const Vec3& position, float radius, const Color&
 }
 
 // ** Light::createSpotLight
-Light* Light::createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Color& color, float intensity, bool castsShadow )
+Light* Light::createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Rgb& color, float intensity, bool castsShadow )
 {
     Light* light = new Light;
 
@@ -197,7 +197,7 @@ Light* Light::createSpotLight( const Vec3& position, const Vec3& direction, floa
 }
 
 // ** Light::createDirectionalLight
-Light* Light::createDirectionalLight( const Vec3& direction, const Color& color, float intensity, bool castsShadow )
+Light* Light::createDirectionalLight( const Vec3& direction, const Rgb& color, float intensity, bool castsShadow )
 {
     Light* light = new Light;
 
@@ -211,7 +211,7 @@ Light* Light::createDirectionalLight( const Vec3& direction, const Color& color,
 }
 
 // ** Light::create
-Light* Light::createAreaLight( const Mesh* mesh, const Vec3& position, const Color& color, float intensity, bool castsShadow )
+Light* Light::createAreaLight( const Mesh* mesh, const Vec3& position, const Rgb& color, float intensity, bool castsShadow )
 {
     Light* light = new Light;
 

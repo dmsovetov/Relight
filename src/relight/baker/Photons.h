@@ -67,10 +67,10 @@ namespace bake {
          \param energy Photon's energy.
          \param depth Current trace depth.
          */
-        void                    trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, int depth );
+        void                    trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Rgb& color, int depth );
 
         //! Stores a photon bounce.
-        void                    store( Photonmap* photonmap, const Color& color, const Uv& uv );
+        void                    store( Photonmap* photonmap, const Rgb& color, const Uv& uv );
 
     private:
 

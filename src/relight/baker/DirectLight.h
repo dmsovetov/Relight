@@ -48,10 +48,10 @@ namespace bake {
     private:
 
         //! Calculates a direct light from a point light source.
-        Color                   lightFromPoint( const Lumel& lumel, const Light* light ) const;
+        Rgb                     lightFromPoint( const Lumel& lumel, const Light* light ) const;
 
         //! Calculates a direct light from an area light source.
-        Color                   lightFromPointSet( const Lumel& lumel, const Light* light ) const;
+        Rgb                     lightFromPointSet( const Lumel& lumel, const Light* light ) const;
 
         //! Calculates a direct light from a given point.
         float                   influenceFromPoint( const Lumel& lumel, const Vec3& point, const Light* light ) const;

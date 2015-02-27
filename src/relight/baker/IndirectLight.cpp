@@ -37,10 +37,10 @@ namespace relight {
 namespace bake {
 
 // ** IndirectLight::IndirectLight
-IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Color& skyColor )
+IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor )
     : Baker( scene, progress, iterator ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius ), m_skyColor( skyColor )
 {
-    TimeMeasure measure( "Photon gathering" );
+//    TimeMeasure measure( "Photon gathering" );
     for( int i = 0; i < m_scene->meshCount(); i++ ) {
         if( Photonmap* photons = m_scene->mesh( i )->photonmap() ) {
             photons->gather( m_radius );
@@ -51,7 +51,7 @@ IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterat
 // ** IndirectLight::bakeLumel
 void IndirectLight::bakeLumel( Lumel& lumel )
 {
-    Color        gathered( 0, 0, 0 );
+    Rgb          gathered( 0, 0, 0 );
     rt::Hit      hit;
     rt::ITracer* tracer = m_scene->tracer();
 

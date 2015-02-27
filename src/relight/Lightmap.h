@@ -42,10 +42,10 @@ namespace relight {
 
         Vec3    m_position;     //!< Lumel world space position.
         Vec3    m_normal;       //!< Lumel world space normal.
-        Color   m_color;        //!< Baked color.
+        Rgb     m_color;        //!< Baked color.
 
         int     m_photons;      //!< Amount of photons stored (valid only for photon maps).
-        Color   m_gathered;     //!< Gathered photons color.
+        Rgb     m_gathered;     //!< Gathered photons color.
 
         int     m_flags;
 
@@ -81,7 +81,7 @@ namespace relight {
          This function initializes all lumels corresponding to a given instance.
          \param mesh Mesh to be added.
          */
-        virtual RelightStatus   addMesh( const Mesh* mesh, bool copyVertexColor = false );
+        virtual RelightStatus   addMesh( const Mesh* mesh );
 
         //! Fills all illegal pixels with a nearest valid color.
         void                    expand( void );
@@ -110,16 +110,16 @@ namespace relight {
                                 Lightmap( int width, int height );
 
         //! Initializes all lumels corresponding to a given mesh.
-        void                    initializeLumels( const Mesh* mesh, bool copyVertexColor );
+        void                    initializeLumels( const Mesh* mesh );
 
         //! Initializes all lumels corresponsing to a given face.
-        void                    initializeLumels( const Face& face, bool copyVertexColor );
+        void                    initializeLumels( const Face& face );
 
         //! Initializes a given face lumel.
-        void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor );
+        void                    initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric );
 
         //! Fills invalid lumel.
-        void                    fillInvalidAt( int x, int y, const Color& color );
+        void                    fillInvalidAt( int x, int y, const Rgb& color );
 
     protected:
 
@@ -150,7 +150,7 @@ namespace relight {
                                 Photonmap( int width, int height );
 
         //! Gathers surrounding photons to lumel
-        Color                   gather( int x, int y, int radius ) const;
+        Rgb                     gather( int x, int y, int radius ) const;
     };
 
 } // namespace relight

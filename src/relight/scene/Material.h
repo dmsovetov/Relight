@@ -42,22 +42,22 @@ namespace relight {
                         /*!
                          \param color Surface diffuse color.
                          */
-                        Material( const Color& color );
+                        Material( const Rgb& color );
         virtual         ~Material( void ) {}
 
         //! Returns a material diffuse color.
-        const Color&    color( void ) const;
+        const Rgb&      color( void ) const;
 
         //! Sets a diffuse color.
-        void            setColor( const Color& value );
+        void            setColor( const Rgb& value );
 
         //! Returns a surface color at a given UV coordinates.
-        virtual Color   colorAt( const Uv& uv ) const;
+        virtual Rgba    colorAt( const Uv& uv ) const;
 
     private:
 
         //! Diffuse color.
-        Color           m_color;
+        Rgb             m_color;
     };
 
     /*!
@@ -66,17 +66,22 @@ namespace relight {
     class Texture {
     public:
 
+        virtual                 ~Texture( void );
+
         //! Returns texture width.
-        int                 width( void ) const;
+        int                     width( void ) const;
 
         //! Returns texture height.
-        int                 height( void ) const;
+        int                     height( void ) const;
+
+        //! Returns texture channels.
+        int                     channels( void ) const;
 
         //! Returns a texture pixel buffer.
-        const PixelBuffer&  pixels( void ) const;
+        const unsigned char*    pixels( void ) const;
 
         //! Returns a texture color at a given UV coordinates.
-        const Color&        colorAt( const Uv& uv ) const;
+        Rgba                    colorAt( const Uv& uv ) const;
 
         //! Creates a new Texture instance.
         /*!
@@ -84,29 +89,32 @@ namespace relight {
          \param height Texture height.
          \param pixels Texture RGB image data.
          */
-        static Texture*     create( int width, int height, const PixelBuffer& pixels );
+        static Texture*         create( int width, int height, int channels, const unsigned char* pixels );
 
         //! Creates a new Texture instance from a TGA file.
         /*!
          \param fileName Texture file name.
          */
-        static Texture*     createFromFile( const char* fileName );
+        static Texture*         createFromFile( const char* fileName );
 
     private:
 
-                            //! Constructs a Texture instance.
-                            Texture( int width, int height, const PixelBuffer& pixels );
+                                //! Constructs a Texture instance.
+                                Texture( int width, int height, int channels, const unsigned char* pixels );
 
     private:
 
         //! Texture width.
-        int                 m_width;
+        int                     m_width;
 
         //! Texture height.
-        int                 m_height;
+        int                     m_height;
 
         //! Texture pixels.
-        PixelBuffer         m_pixels;
+        unsigned char*          m_pixels;
+
+        //! Texture channels.
+        int                     m_channels;
     };
 
     /*!
@@ -116,10 +124,10 @@ namespace relight {
     public:
 
                         //! Constructs a TexturedMaterial instance.
-                        TexturedMaterial( const Texture* texture, const Color& color );
+                        TexturedMaterial( const Texture* texture, const Rgb& color );
 
         //! Returns a material diffuse color multiplied by a texture color.
-        virtual Color   colorAt( const Uv& uv ) const;
+        virtual Rgba    colorAt( const Uv& uv ) const;
 
     private:
 

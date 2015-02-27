@@ -84,7 +84,7 @@ const Lumel& Lightmap::lumel( int x, int y ) const
 }
 
 // ** Lightmap::addMesh
-RelightStatus Lightmap::addMesh( const Mesh* mesh, bool copyVertexColor )
+RelightStatus Lightmap::addMesh( const Mesh* mesh )
 {
     if( mesh->lightmap() ) {
         return RelightInvalidCall;
@@ -94,22 +94,22 @@ RelightStatus Lightmap::addMesh( const Mesh* mesh, bool copyVertexColor )
     const_cast<Mesh*>( mesh )->setLightmap( this );
 
     // ** Initialize lumels
-    initializeLumels( mesh, copyVertexColor );
+    initializeLumels( mesh );
 
     return RelightSuccess;
 }
 
 // ** Lightmap::initializeLumels
-void Lightmap::initializeLumels( const Mesh* mesh, bool copyVertexColor )
+void Lightmap::initializeLumels( const Mesh* mesh )
 {
     // ** For each face in a sub mesh
     for( int i = 0, n = mesh->faceCount(); i < n; i++ ) {
-        initializeLumels( mesh->face( i ), copyVertexColor );
+        initializeLumels( mesh->face( i ) );
     }
 }
 
 // ** Lightmap::initializeLumels
-void Lightmap::initializeLumels( const Face& face, bool copyVertexColor )
+void Lightmap::initializeLumels( const Face& face )
 {
     Uv   min, max;
 
@@ -133,18 +133,18 @@ void Lightmap::initializeLumels( const Face& face, bool copyVertexColor )
                 continue;
             }
 
-            initializeLumel( lumel, face, barycentric, copyVertexColor );
+            initializeLumel( lumel, face, barycentric );
         }
     }
 }
 
 // ** Lightmap::initializeLumel
-void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric, bool copyVertexColor )
+void Lightmap::initializeLumel( Lumel& lumel, const Face& face, const Uv& barycentric )
 {
     lumel.m_faceIdx     = face.faceIdx();
     lumel.m_position    = face.positionAt( barycentric );
     lumel.m_normal      = face.normalAt( barycentric );
-    lumel.m_color       = copyVertexColor ? face.vertex( 0 )->m_color : Color( 0, 0, 0 );
+    lumel.m_color       = Rgb( 0, 0, 0 );
     lumel.m_flags       = lumel.m_flags | Lumel::Valid;
 }
 
@@ -167,7 +167,7 @@ void Lightmap::expand( void )
 }
 
 // ** Lightmap::fillInvalidAt
-void Lightmap::fillInvalidAt( int x, int y, const Color& color )
+void Lightmap::fillInvalidAt( int x, int y, const Rgb& color )
 {
     Lumel& l = lumel( x, y );
 
@@ -183,7 +183,7 @@ void Lightmap::blur( void )
 {
     for( int y = 1; y < m_height - 1; y++ ) {
         for( int x = 1; x < m_width - 1; x++ ) {
-            Color color( 0, 0, 0 );
+            Rgb color( 0, 0, 0 );
             int count = 0;
 
             for( int j = y - 1; j <= y + 1; j++ ) {
@@ -239,9 +239,9 @@ bool Lightmap::save( const String& fileName ) const
             const Lumel& lumel   = m_lumels[j*m_width + i];
             int          photons = lumel.m_photons ? lumel.m_photons : 1;
 
-            unsigned char r = std::min( lumel.m_color.b / photons * 255.0, 255.0 );
-            unsigned char g = std::min( lumel.m_color.g / photons * 255.0, 255.0 );
-            unsigned char b = std::min( lumel.m_color.r / photons * 255.0, 255.0 );
+            unsigned char r = min2( lumel.m_color.b / photons * 255.0, 255.0 );
+            unsigned char g = min2( lumel.m_color.g / photons * 255.0, 255.0 );
+            unsigned char b = min2( lumel.m_color.r / photons * 255.0, 255.0 );
 
             unsigned char pixel[] = { r, g, b };
             fwrite( pixel, sizeof( pixel ), 1, file );
@@ -264,9 +264,9 @@ unsigned char* Lightmap::toRgb8( void ) const
             const Lumel&    lumel   = m_lumels[y * m_width + x];
             unsigned char*  pixel   = &pixels[y * stride + x * 3];
 
-            pixel[2] = std::min( lumel.m_color.r * 255.0, 255.0 );
-            pixel[1] = std::min( lumel.m_color.g * 255.0, 255.0 );
-            pixel[0] = std::min( lumel.m_color.b * 255.0, 255.0 );
+            pixel[0] = min2( lumel.m_color.r * 255.0, 255.0 );
+            pixel[1] = min2( lumel.m_color.g * 255.0, 255.0 );
+            pixel[2] = min2( lumel.m_color.b * 255.0, 255.0 );
         }
     }
 
@@ -312,7 +312,7 @@ RelightStatus Photonmap::addMesh( const Mesh* mesh, bool copyVertexColor )
     const_cast<Mesh*>( mesh )->setPhotonmap( this );
 
     // ** Initialize lumels
-    initializeLumels( mesh, copyVertexColor );
+    initializeLumels( mesh );
 
     return RelightSuccess;
 }
@@ -328,10 +328,10 @@ void Photonmap::gather( int radius )
 }
 
 // ** Photonmap::gather
-Color Photonmap::gather( int x, int y, int radius ) const
+Rgb Photonmap::gather( int x, int y, int radius ) const
 {
-    Color color;
-    int   photons = 0;
+    Rgb color;
+    int photons = 0;
 
     for( int j = y - radius; j <= y + radius; j++ ) {
         for( int i = x - radius; i <= x + radius; i++ ) {
@@ -351,7 +351,7 @@ Color Photonmap::gather( int x, int y, int radius ) const
     }
 
     if( photons == 0 ) {
-        return Color( 0.0f, 0.0f, 0.0f );
+        return Rgb( 0.0f, 0.0f, 0.0f );
     }
 
     return color / photons;

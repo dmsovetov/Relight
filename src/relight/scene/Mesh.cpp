@@ -160,7 +160,6 @@ void Mesh::addFaces( const VertexBufferLayout& vertexBuffer, int vertexCount, co
 
     const char* position = reinterpret_cast<const char*>( vertexBuffer.m_position );
     const char* normal   = reinterpret_cast<const char*>( vertexBuffer.m_normal );
-    const char* color    = reinterpret_cast<const char*>( vertexBuffer.m_color );
     const char* uv0      = reinterpret_cast<const char*>( vertexBuffer.m_uv0 );
     const char* uv1      = reinterpret_cast<const char*>( vertexBuffer.m_uv1 );
 
@@ -172,9 +171,6 @@ void Mesh::addFaces( const VertexBufferLayout& vertexBuffer, int vertexCount, co
         }
         if( normal ) {
             v.m_normal = Vec3( reinterpret_cast<const float*>( normal + i * vertexBuffer.m_vertexSize ) );
-        }
-        if( color ) {
-            v.m_color = Color( reinterpret_cast<const float*>( color + i * vertexBuffer.m_vertexSize ) );
         }
         if( uv0 ) {
             v.m_uv[0] = Vec2( reinterpret_cast<const float*>( uv0 + i * vertexBuffer.m_vertexSize ) );
@@ -271,7 +267,6 @@ Vertex Vertex::interpolate( const Vertex& a, const Vertex& b, float scalar )
     Vertex result;
 
     result.m_position = a.m_position * scalar + b.m_position * (1.0f - scalar);
-    result.m_color    = a.m_color    * scalar + b.m_color    * (1.0f - scalar);
 
     for( int i = 0; i < TotalUvLayers; i++ ) {
         result.m_uv[i] = a.m_uv[i] * scalar + b.m_uv[i] * (1.0f - scalar);
@@ -289,7 +284,6 @@ Vertex Vertex::interpolate( const Vertex& a, const Vertex& b, float scalar )
 Triangle::Triangle( const Face& face ) : m_a( *face.vertex( 0 ) ), m_b( *face.vertex( 1 ) ), m_c( *face.vertex( 2 ) )
 {
     m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
-    m_centroid.m_color    = (m_a.m_color    + m_b.m_color    + m_c.m_color)     / 3.0f;
     m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
     m_centroid.m_normal.normalize();
 }
@@ -298,7 +292,6 @@ Triangle::Triangle( const Face& face ) : m_a( *face.vertex( 0 ) ), m_b( *face.ve
 Triangle::Triangle( const Vertex& a, const Vertex& b, const Vertex& c ) : m_a( a ), m_b( b ), m_c( c )
 {
     m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
-    m_centroid.m_color    = (m_a.m_color    + m_b.m_color    + m_c.m_color)     / 3.0f;
     m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
     m_centroid.m_normal.normalize();
 }
@@ -434,18 +427,13 @@ Vec3 Face::positionAt( const Barycentric& uv ) const
 }
 
 // ** Face::colorAt
-Color Face::colorAt( const Barycentric& uv ) const
+Rgba Face::colorAt( const Barycentric& uv ) const
 {
-    const Color& a = m_a->m_color;
-    const Color& b = m_b->m_color;
-    const Color& c = m_c->m_color;
-
-    Color vertexColor = Color( a.r + (b.r - a.r) * uv.y + (c.r - a.r) * uv.x, a.g + (b.g - a.g) * uv.y + (c.g - a.g) * uv.x, a.b + (b.b - a.b) * uv.y + (c.b - a.b) * uv.x );
     if( m_a->m_material ) {
-        vertexColor *= m_a->m_material->colorAt( uvAt( uv, Vertex::Diffuse ) );
+        return m_a->m_material->colorAt( uvAt( uv, Vertex::Diffuse ) );
     }
 
-    return vertexColor;
+    return Rgba( 1.0f, 1.0f, 1.0f, 1.0f );
 }
 
 // ** Face::uvAt

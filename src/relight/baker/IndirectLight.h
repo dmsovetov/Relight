@@ -47,7 +47,7 @@ namespace bake {
                                  \param radius Final gather radius.
                                  \param skyColor A sky color.
                                  */
-                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Color& skyColor );
+                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor );
 
     protected:
 
@@ -55,7 +55,7 @@ namespace bake {
         virtual void            bakeLumel( Lumel& lumel );
 
         //! Geathers photons at a given point with radius.
-        Color                   geather( const Lightmap* lightmap, int x, int y ) const;
+        Rgb                     geather( const Lightmap* lightmap, int x, int y ) const;
 
     private:
 
@@ -69,7 +69,7 @@ namespace bake {
         int                     m_radius;
 
         //! Sky color.
-        Color                   m_skyColor;
+        Rgb                     m_skyColor;
     };
 
 } // namespace bake

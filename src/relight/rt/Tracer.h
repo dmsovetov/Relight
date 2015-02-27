@@ -43,7 +43,7 @@ namespace rt {
 
         Vec3            m_point;    //!< Intersection point.
         Vec3            m_normal;   //!< Intersection normal.
-        Color           m_color;    //!< Intersection color.
+        Rgba            m_color;    //!< Intersection color.
         Uv              m_uv;       //!< Intersection texture coordinates.
         const Mesh*     m_mesh;     //!< Intersected mesh instance.
     };

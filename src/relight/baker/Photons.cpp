@@ -61,8 +61,6 @@ RelightStatus Photons::emit( void )
         }
     }
 
-    printf( "%d photons stored\n", m_photonCount );
-
     return RelightSuccess;
 }
 
@@ -94,7 +92,7 @@ void Photons::emitPhotons( const Light* light )
 }
 
 // ** Photons::trace
-void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Color& color, int depth )
+void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, const Vec3& direction, const Rgb& color, int depth )
 {
     // ** Maximum depth or energy threshold exceeded
     if( depth > m_maxDepth || color.luminance() < m_energyThreshold ) {
@@ -118,7 +116,7 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
     float influence = LightInfluence::lambert( -direction, hit.m_normal ) * att;
 
     // ** Final photon color
-    Color hitColor = color * hit.m_color * influence;
+    Rgb hitColor = color * Rgb( hit.m_color ) * influence;
 
     // ** Store photon energy
     store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
@@ -128,7 +126,7 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
 }
 
 // ** Photons::store
-void Photons::store( Photonmap* photonmap, const Color& color, const Uv& uv )
+void Photons::store( Photonmap* photonmap, const Rgb& color, const Uv& uv )
 {
     if( !photonmap ) {
         return;

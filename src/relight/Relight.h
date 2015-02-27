@@ -83,7 +83,7 @@ namespace relight {
     typedef Array<Index>            IndexBuffer;
 
     //! Texture pixel buffer.
-    typedef Array<Color>            PixelBuffer;
+    typedef Array<Rgb>              RgbPixelBuffer;
 
     //! Workers array.
     typedef Array<Worker*>          Workers;
@@ -108,25 +108,11 @@ namespace relight {
     public:
 
                                 //! Constructs a Progress instance.
-                                Progress( void )
-                                    : m_hasChanges( false ), m_instance( NULL ) {}
+                                Progress( void ) {}
+        virtual                 ~Progress( void ) { assert( false ); }
 
         //! Notifies about a task progress.
-        virtual void            notify( const Mesh* instance, int step, int stepCount ) { m_hasChanges = true; m_instance = instance; }
-
-        //! Returns true if there were changes and then resets the flag.
-        bool                    hasChanges( void ) { bool wereChanges = m_hasChanges; m_hasChanges = false; return wereChanges; }
-
-        //! Returns a latest mesh instance.
-        const Mesh*             instance( void ) const  { return m_instance; }
-
-    private:
-
-        //! Flag indicating there are changes.
-        bool                    m_hasChanges;
-
-        //! Latest mesh instance.
-        const Mesh*             m_instance;
+        virtual void            notify( const Mesh* instance, int step, int stepCount ) = 0;
     };
 
     //! Indirect light settings.
@@ -140,19 +126,19 @@ namespace relight {
         float                           m_finalGatherDistance;      //!< Maximum distance to gather photons at.
         int                             m_finalGatherRadius;        //!< A radius of circle in which samples are gathered from photon map.
 
-        Color                           m_skyColor;                 //!< A sky color is used when the ray didn't hit anything.
+        Rgb                             m_skyColor;                 //!< A sky color is used when the ray didn't hit anything.
 
         //! Returns a fast quality settings.
-        static IndirectLightSettings    fast( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    fast( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a draft quality settings.
-        static IndirectLightSettings    draft( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    draft( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a best quality settings.
-        static IndirectLightSettings    best( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    best( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a production quality settings.
-        static IndirectLightSettings    production( const Color& skyColor = Color( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    production( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
     };
 
     //! Ambient occlusion settings.

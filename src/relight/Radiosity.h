@@ -45,9 +45,9 @@ typedef std::vector< sFormFactor >		tFormFactorVector;
 struct sRadiositySample {
     relight::Vec3       position;
 	relight::Vec3       normal;
-    relight::Color		injected;
-	relight::Color      diffuse;
-	relight::Color      indirect;
+    relight::Rgb		injected;
+	relight::Rgb        diffuse;
+	relight::Rgb        indirect;
 	tFormFactorVector	formFactors;
 	bool				isValid;
 

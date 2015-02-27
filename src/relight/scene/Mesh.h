@@ -44,7 +44,6 @@ namespace relight {
 
         Vec3            m_position;
         Vec3            m_normal;
-        Color           m_color;
         Uv              m_uv[TotalUvLayers];
         const Material* m_material;
 
@@ -58,14 +57,13 @@ namespace relight {
     struct VertexBufferLayout {
         const void*     m_position;     //!< XYZ float coordinates
         const void*     m_normal;       //!< XYZ float normal
-        const void*     m_color;        //!< RGB float color.
         const void*     m_uv0;          //!< UV float uv.
         const void*     m_uv1;          //!< UV float uv.
         int             m_vertexSize;   //!< Vertex size.
 
                         //! Constructs a VertexBufferLayout instance.
                         VertexBufferLayout( int vertexSize )
-                            : m_position( NULL ), m_normal( NULL ), m_color( NULL ), m_uv0( NULL ), m_uv1( NULL ), m_vertexSize( vertexSize ) {}
+                            : m_position( NULL ), m_normal( NULL ), m_uv0( NULL ), m_uv1( NULL ), m_vertexSize( vertexSize ) {}
     };
 
     //! A helper class to tesselate faces.
@@ -134,7 +132,7 @@ namespace relight {
         Vec3            positionAt( const Barycentric& uv ) const;
 
         //! Returns an interpolated face color.
-        Color           colorAt( const Barycentric& uv ) const;
+        Rgba            colorAt( const Barycentric& uv ) const;
 
         //! Returns an interpolated face UV.
         Uv              uvAt( const Barycentric& uv, Vertex::UvLayer layer ) const;

@@ -47,7 +47,7 @@ void DirectLight::bakeLumel( Lumel& lumel )
 {
     for( int l = 0, n = m_scene->lightCount(); l < n; l++ ) {
         const Light* light = m_scene->light( l );
-        Color        influence;
+        Rgb          influence;
 
         if( light->vertexGenerator() ) {
             influence = lightFromPointSet( lumel, light );
@@ -60,7 +60,7 @@ void DirectLight::bakeLumel( Lumel& lumel )
 }
 
 // ** DirectLight::lightFromPoint
-Color DirectLight::lightFromPoint( const Lumel& lumel, const Light* light ) const
+Rgb DirectLight::lightFromPoint( const Lumel& lumel, const Light* light ) const
 {
     float influence = influenceFromPoint( lumel, light->position(), light );
 
@@ -68,21 +68,21 @@ Color DirectLight::lightFromPoint( const Lumel& lumel, const Light* light ) cons
         return light->color() * light->intensity() * influence;
     }
 
-    return Color( 0, 0, 0 );
+    return Rgb( 0, 0, 0 );
 }
 
 // ** DirectLight::lightFromPointSet
-Color DirectLight::lightFromPointSet( const Lumel& lumel, const Light* light ) const
+Rgb DirectLight::lightFromPointSet( const Lumel& lumel, const Light* light ) const
 {
     LightVertexGenerator* vertexGenerator = light->vertexGenerator();
 
     // ** No light vertices generated - just exit
     if( vertexGenerator->vertexCount() == 0 ) {
-        return Color( 0, 0, 0 );
+        return Rgb( 0, 0, 0 );
     }
 
     const LightVertexBuffer& vertices = vertexGenerator->vertices();
-    Color                    color = Color( 0, 0, 0 );
+    Rgb                      color    = Rgb( 0, 0, 0 );
 
     for( int i = 0, n = vertexGenerator->vertexCount(); i < n; i++ ) {
         const LightVertex&  vertex    = vertices[i];

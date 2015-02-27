@@ -32,25 +32,25 @@ namespace relight {
 // --------------------------------------- Material ---------------------------------------- //
 
 // ** Material::Material
-Material::Material( const Color& color ) : m_color( color )
+Material::Material( const Rgb& color ) : m_color( color )
 {
 
 }
 
 // ** Material::colorAt
-Color Material::colorAt( const Uv& uv ) const
+Rgba Material::colorAt( const Uv& uv ) const
 {
     return m_color;
 }
 
 // ** Material::color
-const Color& Material::color( void ) const
+const Rgb& Material::color( void ) const
 {
     return m_color;
 }
 
 // ** Material::setColor
-void Material::setColor( const Color& value )
+void Material::setColor( const Rgb& value )
 {
     m_color = value;
 }
@@ -58,13 +58,13 @@ void Material::setColor( const Color& value )
 // ----------------------------------- TexturedMaterial ------------------------------------ //
 
 // ** TexturedMaterial::TexturedMaterial
-TexturedMaterial::TexturedMaterial( const Texture* texture, const Color& color ) : Material( color ), m_texture( texture )
+TexturedMaterial::TexturedMaterial( const Texture* texture, const Rgb& color ) : Material( color ), m_texture( texture )
 {
     assert( m_texture != NULL );
 }
 
 // **  TexturedMaterial::colorAt
-Color TexturedMaterial::colorAt( const Uv& uv ) const
+Rgba TexturedMaterial::colorAt( const Uv& uv ) const
 {
     return Material::colorAt( uv ) * m_texture->colorAt( uv );
 }
@@ -72,24 +72,29 @@ Color TexturedMaterial::colorAt( const Uv& uv ) const
 // ---------------------------------------- Texture ---------------------------------------- //
 
 // ** Texture::Texture
-Texture::Texture( int width, int height, const Array<Color>& pixels ) : m_width( width ), m_height( height ), m_pixels( pixels )
+Texture::Texture( int width, int height, int channels, const unsigned char* pixels ) : m_width( width ), m_height( height ), m_pixels( NULL ), m_channels( channels )
 {
+    m_pixels = new unsigned char[width * height * channels];
+    memcpy( m_pixels, pixels, width * height * channels );
+}
 
+Texture::~Texture( void )
+{
+    delete[]m_pixels;
 }
 
 // ** Texture::colorAt
-const Color& Texture::colorAt( const Uv& uv ) const
+Rgba Texture::colorAt( const Uv& uv ) const
 {
-    static Color invalid( 1, 0, 1 );
-
     int x = int( uv.x * m_width  ) % m_width;
     int y = int( uv.y * m_height ) % m_height;
 
     if( x >= 0 && x < m_width && y >= 0 && y < m_height ) {
-        return m_pixels[y * m_width + y];
+        const unsigned char* pixel = &m_pixels[y * m_width * m_channels + x * m_channels];
+        return Rgba( pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f, m_channels == 4 ? pixel[3] / 255.0f : 1.0f );
     }
 
-    return invalid;
+    return Rgba( 1, 0, 1, 1 );
 }
 
 // ** Texture::width
@@ -104,16 +109,22 @@ int Texture::height( void ) const
     return m_height;
 }
 
+// ** Texture::channels
+int Texture::channels( void ) const
+{
+    return m_channels;
+}
+
 // ** Texture::pixels
-const PixelBuffer& Texture::pixels( void ) const
+const unsigned char* Texture::pixels( void ) const
 {
     return m_pixels;
 }
 
 // ** Texture::create
-Texture* Texture::create( int width, int height, const Array<Color>& pixels )
+Texture* Texture::create( int width, int height, int channels, const unsigned char* pixels )
 {
-    return new Texture( width, height, pixels );
+    return new Texture( width, height, channels, pixels );
 }
 
 // ** Texture::createFromFile
@@ -158,16 +169,16 @@ Texture* Texture::createFromFile( const char* fileName )
     fread( imageData, 1, imageSize, file );
     fclose( file );
 
-    Array<Color> pixels;
-
-    for( int i = 0; i < width * height; i++ ) {
-        unsigned char* pixel = &imageData[i * bytesPerPixel];
-        pixels.push_back( Color( pixel[0] / 255.0f, pixel[1] / 255.0f, pixel[2] / 255.0f ) );
+    for( int i = 0; i < width * height * bytesPerPixel; i += bytesPerPixel ) {
+        unsigned char tmp = imageData[i + 0];
+        imageData[i + 0] = imageData[i + 2];
+        imageData[i + 2] = tmp;
     }
 
+    Texture* texture = Texture::create( width, height, bytesPerPixel, imageData );
     delete[]imageData;
 
-    return Texture::create( width, height, pixels );
+    return texture;
 }
 
 } // namespace relight

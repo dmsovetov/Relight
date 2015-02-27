@@ -39,7 +39,7 @@
 namespace relight {
 
 // ** IndirectLightSettings::draft
-IndirectLightSettings IndirectLightSettings::draft( const Color& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::draft( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
@@ -58,7 +58,7 @@ IndirectLightSettings IndirectLightSettings::draft( const Color& skyColor, float
 }
 
 // ** IndirectLightSettings::fast
-IndirectLightSettings IndirectLightSettings::fast( const Color& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::fast( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
@@ -77,7 +77,7 @@ IndirectLightSettings IndirectLightSettings::fast( const Color& skyColor, float 
 }
 
 // ** IndirectLightSettings::best
-IndirectLightSettings IndirectLightSettings::best( const Color& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::best( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
@@ -96,7 +96,7 @@ IndirectLightSettings IndirectLightSettings::best( const Color& skyColor, float 
 }
 
 // ** IndirectLightSettings::production
-IndirectLightSettings IndirectLightSettings::production( const Color& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::production( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
@@ -214,7 +214,7 @@ RelightStatus Relight::bakeDirectLight( const Scene* scene, const Mesh* mesh, Pr
         iterator = new bake::LumelBakeIterator( 0, 1 );
     }
 
-    TimeMeasure measure( "Direct Lighting" );
+//    TimeMeasure measure( "Direct Lighting" );
     bake::DirectLight* direct = new bake::DirectLight( scene, progress, iterator );
     RelightStatus status = direct->bakeMesh( mesh );
     delete direct;
@@ -232,7 +232,7 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, 
     RelightStatus status;
 
     {
-        TimeMeasure measure( "Photon tracing" );
+    //    TimeMeasure measure( "Photon tracing" );
 
         bake::Photons* photons = new bake::Photons( scene, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
         status = photons->emit();
@@ -244,7 +244,7 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, 
     }
 
     {
-        TimeMeasure measure( "Indirect Lighting" );
+    //    TimeMeasure measure( "Indirect Lighting" );
 
         bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, settings.m_finalGatherSamples, settings.m_finalGatherDistance, settings.m_finalGatherRadius, settings.m_skyColor );
         status = indirect->bakeMesh( mesh );

@@ -269,10 +269,10 @@ namespace relight {
         void                setPosition( const Vec3& value );
 
         //! Returns a light color.
-        const Color&        color( void ) const;
+        const Rgb&          color( void ) const;
 
         //! Sets a light color.
-        void                setColor( const Color& value );
+        void                setColor( const Rgb& value );
 
         //! Returns a light intensity.
         float               intensity( void ) const;
@@ -287,16 +287,16 @@ namespace relight {
         void                setCastsShadow( bool value );
 
         //! Creates a point light instance.
-        static Light*       createPointLight( const Vec3& position, float radius, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+        static Light*       createPointLight( const Vec3& position, float radius, const Rgb& color = Rgb( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
 
         //! Creates a spot light instance.
-        static Light*       createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+        static Light*       createSpotLight( const Vec3& position, const Vec3& direction, float cutoff, float radius, const Rgb& color = Rgb( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
 
         //! Creates a directional light instance.
-        static Light*       createDirectionalLight( const Vec3& direction, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+        static Light*       createDirectionalLight( const Vec3& direction, const Rgb& color = Rgb( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
 
         //! Creates an area light instance.
-        static Light*       createAreaLight( const Mesh* mesh, const Vec3& position, const Color& color = Color( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
+        static Light*       createAreaLight( const Mesh* mesh, const Vec3& position, const Rgb& color = Rgb( 1.0f, 1.0f, 1.0f ), float intensity = 1.0f, bool castsShadow = true );
 
     protected:
 
@@ -309,7 +309,7 @@ namespace relight {
         Vec3                m_position;
 
         //! Light color.
-        Color               m_color;
+        Rgb                 m_color;
 
         //! Light intensity.
         float               m_intensity;
