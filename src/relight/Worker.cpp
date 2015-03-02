@@ -56,8 +56,6 @@ void FullBakeJob::execute( JobData* data )
     std::sort( meshes.begin(), meshes.end(), SortMesh::predicate );
 
     for( int i = 0; i < meshes.size(); i++ ) {
-        printf( "volume %f\n", meshes[i]->bounds().volume() );
-
         for( int j = 0, n = numWorkers; j < n; j++ ) {
             JobData* instanceData       = new JobData;
             instanceData->m_job         = m_job;
