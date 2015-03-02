@@ -30,7 +30,8 @@
 #include <OpenGL/gl.h>
 
 // ** Lightmap size
-const int k_LightmapSize = 512;
+const int k_LightmapMaxSize = 128;
+const int k_LightmapMinSize = 16;
 
 // ** Background workers
 const int k_Workers      = 8;
@@ -41,15 +42,39 @@ const bool k_DebugShowStatic = false;
 // ** Blue sky color
 const relight::Rgb k_BlueSky        = relight::Rgb( 0.52734375f, 0.8046875f, 0.91796875f );
 
+// ** Black sky
+const relight::Rgb k_BlackSky       = relight::Rgb( 0, 0, 0 );
+
 // ** Sun light color
-const relight::Rgb k_SunColor       = relight::Rgb( 0.75f, 0.74609375f, 0.67578125f );
+const relight::Rgb k_SunColor           = relight::Rgb( 0.75f, 0.74609375f, 0.67578125f );
+const float        k_SunColorIntensity  = 1.5f;
 
 // ** Dark blue light
 const relight::Rgb  k_DarkLightColor        = relight::Rgb( 0.0737915039f, 0.166036054f, 0.395522416f );
 const float         k_DarkLightIntensity    = 1.5f;
 
+// ** Scene ambient color
+const relight::Rgb k_AmbientColor = relight::Rgb( 0.34f, 0.34f, 0.34f );
+
 // ** Indirect light settings
-const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( k_BlueSky );
+const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( /*k_BlueSky*/k_BlackSky, k_AmbientColor );
+
+unsigned int nextPowerOf2(unsigned int n)
+{
+    unsigned count = 0;
+
+    /* First n in the below condition is for the case where n is 0*/
+    if (n && !(n&(n-1)))
+        return n;
+
+    while( n != 0)
+    {
+        n  >>= 1;
+        count += 1;
+    }
+    
+    return 1<<count;
+}
 
 // ** Lightmapping::Lightmapping
 Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
@@ -59,8 +84,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
     m_assets = Assets::parse( "Assets/assets" );
-    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
-//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
+//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
+    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -73,7 +98,12 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
     // ** Add directional light
     relight::Vec3 direction = relight::Vec3::normalize( relight::Vec3( 0, 2, 0 ) - relight::Vec3( 1.50f, 4.50f,  1.50f ) );
-    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, k_DarkLightIntensity, true ) );
+    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_DarkLightColor, k_DarkLightIntensity, true ) );
+
+    int totalLightmapPixels = 0;
+
+    float maxArea = -FLT_MAX;
+    float scale = 170.0f;
 
     // ** Add objects
     for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
@@ -114,8 +144,14 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
             continue;
         }
 
-        instance->m_lm = m_relight->createLightmap( k_LightmapSize, k_LightmapSize );
-        instance->m_pm = m_relight->createPhotonmap( k_LightmapSize, k_LightmapSize );
+        maxArea = std::max( maxArea, instance->m_mesh->m_mesh->area() );
+        float area = instance->m_mesh->m_mesh->area();
+        int   size = nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
+
+        totalLightmapPixels += size * size;
+
+        instance->m_lm = m_relight->createLightmap( size, size );
+        instance->m_pm = m_relight->createPhotonmap( size, size );
 
         relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform, instance->m_mesh->m_material );
         m->setUserData( instance );
@@ -125,7 +161,11 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     }
     m_relightScene->end();
 
-    printf( "%d instances added to relight scene\n", m_relightScene->meshCount() );
+    printf( "%d instances added to relight scene, maximum mesh area %2.4f (%d lightmap pixels used)\n", m_relightScene->meshCount(), maxArea, totalLightmapPixels );
+
+    printf( "Emitting photons...\n" );
+    m_relight->emitPhotons( m_relightScene, k_IndirectLight );
+    printf( "Done!\n" );
 
     struct Bake : public relight::Job {
     public:
@@ -136,10 +176,13 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         }
     };
 
+//    typedef relight::Worker LmWorker;
+    typedef ThreadWorker LmWorker;
+
     // ** Bake scene
-    m_rootWorker = new ThreadWorker;
+    m_rootWorker = new LmWorker;
     for( int i = 0; i < k_Workers; i++ ) {
-        m_relightWorkers.push_back( new ThreadWorker );
+        m_relightWorkers.push_back( new LmWorker );
     }
     m_relight->bake( m_relightScene, new Bake, m_rootWorker, m_relightWorkers );
 }
