@@ -382,7 +382,7 @@ float LightInfluence::calculate( rt::ITracer* tracer, const Vec3& light, const V
 
     // ** Cast shadow to point
     if( m_light->castsShadow() ) {
-        intensity *= tracer->test( point, light ) ? 0.0f : 1.0f;
+        intensity *= tracer->traceSegment( point, light, rt::HitUseAlpha ) ? 0.0f : 1.0f;
     }
 
     return intensity;
@@ -414,7 +414,7 @@ float DirectionalLightInfluence::calculate( rt::ITracer* tracer, const Vec3& lig
 
     // ** Cast shadow to point
     if( m_light->castsShadow() ) {
-        intensity *= tracer->test( point, point - m_direction * 1000 ) ? 0.0f : 1.0f;
+        intensity *= tracer->traceSegment( point, point - m_direction * 1000, rt::HitUseAlpha ) ? 0.0f : 1.0f;
     }
 
     return intensity;

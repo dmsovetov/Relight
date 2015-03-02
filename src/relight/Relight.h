@@ -112,7 +112,7 @@ namespace relight {
         virtual                 ~Progress( void ) { assert( false ); }
 
         //! Notifies about a task progress.
-        virtual void            notify( const Mesh* instance, int step, int stepCount ) = 0;
+        virtual void            notify( const Mesh* instance, int step, int stepCount ) {}
     };
 
     //! Indirect light settings.
@@ -127,18 +127,19 @@ namespace relight {
         int                             m_finalGatherRadius;        //!< A radius of circle in which samples are gathered from photon map.
 
         Rgb                             m_skyColor;                 //!< A sky color is used when the ray didn't hit anything.
+        Rgb                             m_ambientColor;             //!< Ambient color for any point in scene.
 
         //! Returns a fast quality settings.
-        static IndirectLightSettings    fast( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    fast( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), const Rgb& ambientColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a draft quality settings.
-        static IndirectLightSettings    draft( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    draft( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), const Rgb& ambientColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a best quality settings.
-        static IndirectLightSettings    best( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    best( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), const Rgb& ambientColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
 
         //! Returns a production quality settings.
-        static IndirectLightSettings    production( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
+        static IndirectLightSettings    production( const Rgb& skyColor = Rgb( 0.0f, 0.0f, 0.0f ), const Rgb& ambientColor = Rgb( 0.0f, 0.0f, 0.0f ), float photonMaxDistance = 10.0f, float finalGatherDistance = 50.0f );
     };
 
     //! Ambient occlusion settings.
@@ -185,6 +186,9 @@ namespace relight {
 
         //! Bakes ambient occlusion to a lightmap.
         RelightStatus           bakeAmbientOcclusion( const Scene* scene, const Mesh* mesh, Progress* progress, const AmbientOcclusionSettings& settings, bake::BakeIterator* iterator = NULL );
+
+        //! Emits photons from all lights to scene.
+        RelightStatus           emitPhotons( const Scene* scene, const IndirectLightSettings& settings );
 
         //! Creates a new relight instance.
         static Relight*         create( void );

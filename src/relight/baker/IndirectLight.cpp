@@ -37,35 +37,30 @@ namespace relight {
 namespace bake {
 
 // ** IndirectLight::IndirectLight
-IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor )
-    : Baker( scene, progress, iterator ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius ), m_skyColor( skyColor )
+IndirectLight::IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor, const Rgb& ambientColor )
+    : Baker( scene, progress, iterator ), m_samples( samples ), m_maxDistance( maxDistance ), m_radius( radius ), m_skyColor( skyColor ), m_ambientColor( ambientColor )
 {
-//    TimeMeasure measure( "Photon gathering" );
-    for( int i = 0; i < m_scene->meshCount(); i++ ) {
-        if( Photonmap* photons = m_scene->mesh( i )->photonmap() ) {
-            photons->gather( m_radius );
-        }
-    }
+
 }
 
 // ** IndirectLight::bakeLumel
 void IndirectLight::bakeLumel( Lumel& lumel )
 {
     Rgb          gathered( 0, 0, 0 );
-    rt::Hit      hit;
     rt::ITracer* tracer = m_scene->tracer();
 
     for( int k = 0; k < m_samples; k++ ) {
-        Vec3  dir       = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
-        float influence = max2( lumel.m_normal * dir, 0.0f );
+        Vec3    dir       = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
+        float   influence = max2( lumel.m_normal * dir, 0.0f );
+        rt::Hit hit       = tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance, rt::HitUv );
 
-        if( !tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance, &hit ) ) {
-            gathered += m_skyColor * influence;
+        if( !hit ) {
+            gathered += m_skyColor * influence + m_ambientColor;
             continue;
         }
 
         if( const Photonmap* photons = hit.m_mesh->photonmap() ) {
-            gathered += photons->lumel( hit.m_uv ).m_gathered * influence;
+            gathered += photons->lumel( hit.m_uv ).m_gathered * influence + m_ambientColor;
         }
     }
 

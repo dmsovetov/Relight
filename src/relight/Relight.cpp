@@ -30,6 +30,7 @@
 #include "Worker.h"
 
 #include "scene/Scene.h"
+#include "scene/Mesh.h"
 
 #include "baker/AmbientOcclusion.h"
 #include "baker/Photons.h"
@@ -39,11 +40,12 @@
 namespace relight {
 
 // ** IndirectLightSettings::draft
-IndirectLightSettings IndirectLightSettings::draft( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::draft( const Rgb& skyColor, const Rgb& ambientColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
     settings.m_skyColor                 = skyColor;
+    settings.m_ambientColor             = ambientColor;
 
     settings.m_photonPassCount          = 8;
     settings.m_photonBounceCount        = 1;
@@ -58,11 +60,12 @@ IndirectLightSettings IndirectLightSettings::draft( const Rgb& skyColor, float p
 }
 
 // ** IndirectLightSettings::fast
-IndirectLightSettings IndirectLightSettings::fast( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::fast( const Rgb& skyColor, const Rgb& ambientColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
     settings.m_skyColor                 = skyColor;
+    settings.m_ambientColor             = ambientColor;
 
     settings.m_photonPassCount          = 16;
     settings.m_photonBounceCount        = 3;
@@ -77,11 +80,12 @@ IndirectLightSettings IndirectLightSettings::fast( const Rgb& skyColor, float ph
 }
 
 // ** IndirectLightSettings::best
-IndirectLightSettings IndirectLightSettings::best( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::best( const Rgb& skyColor, const Rgb& ambientColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
     settings.m_skyColor                 = skyColor;
+    settings.m_ambientColor             = ambientColor;
 
     settings.m_photonPassCount          = 32;
     settings.m_photonBounceCount        = 3;
@@ -96,11 +100,12 @@ IndirectLightSettings IndirectLightSettings::best( const Rgb& skyColor, float ph
 }
 
 // ** IndirectLightSettings::production
-IndirectLightSettings IndirectLightSettings::production( const Rgb& skyColor, float photonMaxDistance, float finalGatherDistance )
+IndirectLightSettings IndirectLightSettings::production( const Rgb& skyColor, const Rgb& ambientColor, float photonMaxDistance, float finalGatherDistance )
 {
     IndirectLightSettings settings;
 
     settings.m_skyColor                 = skyColor;
+    settings.m_ambientColor             = ambientColor;
 
     settings.m_photonPassCount          = 64;
     settings.m_photonBounceCount        = 4;
@@ -214,7 +219,6 @@ RelightStatus Relight::bakeDirectLight( const Scene* scene, const Mesh* mesh, Pr
         iterator = new bake::LumelBakeIterator( 0, 1 );
     }
 
-//    TimeMeasure measure( "Direct Lighting" );
     bake::DirectLight* direct = new bake::DirectLight( scene, progress, iterator );
     RelightStatus status = direct->bakeMesh( mesh );
     delete direct;
@@ -229,26 +233,24 @@ RelightStatus Relight::bakeIndirectLight( const Scene* scene, const Mesh* mesh, 
         iterator = new bake::LumelBakeIterator( 0, 1 );
     }
 
-    RelightStatus status;
+    bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, settings.m_finalGatherSamples, settings.m_finalGatherDistance, settings.m_finalGatherRadius, settings.m_skyColor, settings.m_ambientColor );
+    RelightStatus status = indirect->bakeMesh( mesh );
+    delete indirect;
 
-    {
-    //    TimeMeasure measure( "Photon tracing" );
+    return status;
+}
 
-        bake::Photons* photons = new bake::Photons( scene, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
-        status = photons->emit();
-        delete photons;
+// ** Relight::emitPhotons
+RelightStatus Relight::emitPhotons( const Scene* scene, const IndirectLightSettings& settings )
+{
+    bake::Photons* photons = new bake::Photons( scene, settings.m_photonPassCount, settings.m_photonBounceCount, settings.m_photonEnergyThreshold, settings.m_photonMaxDistance );
+    RelightStatus status = photons->emit();
+    delete photons;
 
-        if( status != RelightSuccess ) {
-            return status;
+    for( int i = 0; i < scene->meshCount(); i++ ) {
+        if( Photonmap* photons = scene->mesh( i )->photonmap() ) {
+            photons->gather( settings.m_finalGatherRadius );
         }
-    }
-
-    {
-    //    TimeMeasure measure( "Indirect Lighting" );
-
-        bake::IndirectLight* indirect = new bake::IndirectLight( scene, progress, iterator, settings.m_finalGatherSamples, settings.m_finalGatherDistance, settings.m_finalGatherRadius, settings.m_skyColor );
-        status = indirect->bakeMesh( mesh );
-        delete indirect;
     }
 
     return status;

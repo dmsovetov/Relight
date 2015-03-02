@@ -51,7 +51,7 @@ void AmbientOcclusion::bakeLumel( Lumel& lumel )
     for( int i = 0; i < m_samples; i++ ) {
         Vec3 dir = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
 
-        if( tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance ) ) {
+        if( tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance, 0 ) ) {
             occluded++;
         }
     }

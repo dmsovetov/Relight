@@ -99,10 +99,10 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
         return;
     }
 
-    rt::Hit hit;
+    rt::Hit hit = m_scene->tracer()->traceSegment( position, position + direction * m_maxDistance );
 
     // ** The photon didn't hit anything
-    if( !m_scene->tracer()->traceSegment( position, position + direction * m_maxDistance, &hit ) ) {
+    if( !hit ) {
         return;
     }
 

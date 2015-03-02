@@ -47,7 +47,7 @@ namespace bake {
                                  \param radius Final gather radius.
                                  \param skyColor A sky color.
                                  */
-                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor );
+                                IndirectLight( const Scene* scene, Progress* progress, BakeIterator* iterator, int samples, float maxDistance, int radius, const Rgb& skyColor, const Rgb& ambientColor );
 
     protected:
 
@@ -70,6 +70,9 @@ namespace bake {
 
         //! Sky color.
         Rgb                     m_skyColor;
+
+        //! Ambient scene color.
+        Rgb                     m_ambientColor;
     };
 
 } // namespace bake

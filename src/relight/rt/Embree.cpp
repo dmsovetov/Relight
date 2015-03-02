@@ -142,7 +142,7 @@ bool Embree::test( const Vec3& start, const Vec3& end )
 }
 
 // ** Embree::traceSegment
-bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
+Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags )
 {
     Vec3   direction;
     RTCRay ray;
@@ -150,28 +150,29 @@ bool Embree::traceSegment( const Vec3& start, const Vec3& end, Hit* result )
 
     rtcIntersect( m_scene, ray );
 
-    if( result ) {
-        result->m_point = start + direction * ray.time;
-    }
-
     if( ray.primID == -1 ) {
-        return false;
+        return Hit();
     }
 
-    if( !result ) {
-        return true;
-    }
-
+    Vec3        point   = start + direction * ray.time;
     const Mesh* mesh    = m_meshes[ray.geomID];
     Face        face    = mesh->face( ray.primID );
     Barycentric coord   = Barycentric( ray.u, ray.v );
+    Rgba        color   = face.colorAt( coord );
 
-    result->m_normal    = face.normalAt( coord );
-    result->m_color     = face.colorAt( coord );
-    result->m_uv        = face.uvAt( coord, Vertex::Lightmap );
-    result->m_mesh      = mesh;
+    if( flags & HitUseAlpha && color.a <= 0.1f ) {
+        return traceSegment( point + direction * 0.02f, end, flags );
+    }
 
-    return true;
+    Hit result;
+
+    if( flags & HitNormal ) result.m_normal = face.normalAt( coord );
+    if( flags & HitColor )  result.m_color  = face.colorAt( coord );
+    if( flags & HitUv )     result.m_uv     = face.uvAt( coord, Vertex::Lightmap );
+
+    result.m_mesh = mesh;
+
+    return result;
 }
 
 // ** Embree::addMesh

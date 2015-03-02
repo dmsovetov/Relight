@@ -61,6 +61,16 @@ namespace rt {
         Hit             m_hit;
     };
 
+    //! Enumeration of flags for trace results.
+    enum HitFlags {
+        HitPoint    = 1 << 0,
+        HitUv       = 1 << 1,
+        HitColor    = 1 << 2,
+        HitNormal   = 1 << 3,
+        HitUseAlpha = 1 << 4,
+        HitAll      = HitPoint | HitUv | HitColor | HitNormal
+    };
+
     //! A base class for all scene ray tracers.
     class ITracer {
     public:
@@ -74,7 +84,7 @@ namespace rt {
          \param result Ray tracing result.
          \return True if a ray intersects a scene, otherwise false.
          */
-        virtual bool            traceSegment( const Vec3& start, const Vec3& end, Hit* hit = NULL ) = 0;
+        virtual Hit            traceSegment( const Vec3& start, const Vec3& end, int flags = HitAll ) = 0;
 
         //! Test a given segment for intersection with scene.
         /*!
