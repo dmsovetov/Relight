@@ -349,7 +349,6 @@ Mesh* cTestLightmapper::loadMesh( const char* fileName, const char* diffuse, con
 */
 void* cTestLightmapper::lightmapWorker( void* userData )
 {
-    TimeMeasure measure( "All baked" );
     WorkerData* data = reinterpret_cast<WorkerData*>( userData );
 
     std::vector<pthread_t> threads(8);

@@ -30,7 +30,6 @@
 #include <vector>
 #include <string>
 #include <map>
-#include <chrono>
 #include <assert.h>
 #include <float.h>
 
@@ -197,18 +196,6 @@ namespace relight {
 
                                 //! Constructs relight instance
                                 Relight( void );
-    };
-
-    // ** TimeMeasure
-    struct TimeMeasure {
-        TimeMeasure( const char* label ) : m_label( label ), m_time( std::chrono::steady_clock::now() ) {}
-        ~TimeMeasure( void ) {
-            std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-            printf( "%s %2.2f seconds\n", m_label, std::chrono::duration_cast<std::chrono::milliseconds>( end - m_time ).count() * 0.001f );
-        }
-
-        const char* m_label;
-        std::chrono::steady_clock::time_point m_time;
     };
 
 } // namespace relight

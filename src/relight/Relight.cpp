@@ -263,7 +263,6 @@ RelightStatus Relight::bakeAmbientOcclusion( const Scene* scene, const Mesh* mes
         iterator = new bake::LumelBakeIterator( 0, 1 );
     }
 
-    TimeMeasure measure( "Ambient Occlusion" );
     bake::AmbientOcclusion* ao = new bake::AmbientOcclusion( scene, progress, iterator, settings.m_samples, settings.m_occludedFraction, settings.m_maxDistance, settings.m_exponent );
     RelightStatus status = ao->bakeMesh( mesh );
     delete ao;
