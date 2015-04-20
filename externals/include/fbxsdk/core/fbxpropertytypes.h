@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -165,7 +165,7 @@ public:
 	//@}
 
 	/** Assign operator
-	  * \param pValue       The half-float to be assigned to this distance.
+	  * \param pValue       The half-float to be assigned to this instance.
 	  * \return             This half-float.
 	  */
     FbxHalfFloat& operator=(const FbxHalfFloat& pValue);
@@ -339,13 +339,14 @@ public:
 		FbxDateTime();
 
 		/** Constructor.
-		  *\param pDay           Day
-		  *\param pMonth         Month
-		  *\param pYear          Year
-		  *\param pHour          Hour
-		  *\param pMin           Minute
-		  *\param pSec           Second
-		  *\param pMillisecond   Millisecond
+		  * \param pDay           Day
+		  * \param pMonth         Month
+		  * \param pYear          Year
+		  * \param pHour          Hour
+		  * \param pMin           Minute
+		  * \param pSec           Second
+		  * \param pMillisecond   Millisecond
+		  * \remark If one or more argument is invalid, the object is reset to 0.
 		  */
 		FbxDateTime(int pDay, int pMonth, int pYear, int pHour, int pMin, int pSec, int pMillisecond=0);
 	//@}
@@ -383,6 +384,7 @@ public:
 		  * \param pDay          Day to be set.
 		  * \param pMonth        Month to be set.
 		  * \param pYear         Year to be set.
+		  * \remark If one or more argument is invalid, the object is reset to 0.
 		  */
 		void setDate(int pDay, int pMonth, int pYear);
 
@@ -391,6 +393,7 @@ public:
 		  * \param pMin          Minute to be set.
 		  * \param pSec          Second to be set.
 		  * \param pMillisecond  Millisecond to be set.
+		  * \remark If one or more argument is invalid, the object is reset to 0.
 		  */
 		void setTime(int pHour, int pMin, int pSec, int pMillisecond = 0);
 	//@}
@@ -493,8 +496,8 @@ public:
 		  */
 		const FbxSystemUnit unit() const;
 
-		/** Retrieve the value of distance using the measurement unit.
-		  * \return             The value of distance using the measurement unit.   
+		/** Retrieve the distance value 
+		  * \return             The value of the distance in the defined measurement unit.   
 		  */
 		const float value() const;
 	//@}

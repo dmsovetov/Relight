@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -315,12 +315,6 @@ public:
         * \param pCW True if the normals are calculated clockwise, false otherwise (counter-clockwise).
 		* \return \c true if successfully generated normals data, or if already available and pOverwrite is false. */
 		bool GenerateNormals(bool pOverwrite=false, bool pByCtrlPoint = false, bool pCW=false);
-
-		/** Compute the vertex normals on the mesh.
-		* The normals are per vertex and are the average of all the polygon normals associated with each vertex.
-		* \param pCW True if the normals are calculated clockwise, false otherwise (counter-clockwise).
-        * \remark This function is deprecated. Please use GenerateNormals(true, true, pCW) */
-		FBX_DEPRECATED void ComputeVertexNormals(bool pCW=false);
 
 		/** Compares the normals calculated by doing cross-products between the polygon vertex and by the ones
 		* stored in the normal array.
@@ -717,6 +711,7 @@ public:
 *****************************************************************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     virtual FbxObject& Copy(const FbxObject& pObject);
+	virtual void Compact();
 
 	//Please use GetPolygonVertexIndex and GetPolygonVertices to access these arrays.
 	//DO NOT MODIFY them directly, otherwise unexpected behavior will occur.
@@ -726,6 +721,11 @@ public:
     FbxArray<PolygonDef>	mPolygons;
     FbxArray<int>			mPolygonVertices;
     FbxArray<int>			mEdgeArray;
+
+	//These are only used in context of triangulation to backup original polygon layout necessary for handling mesh cache after triangulation
+	FbxArray<PolygonDef>*	mOriginalPolygons;
+	FbxArray<int>*			mOriginalPolygonVertices;
+	int						mOriginalControlPointsCount;
 
 	//Internal structure used to keep the mapping information between edges and polygons.
     struct ComponentMap
@@ -742,6 +742,7 @@ public:
 protected:
 	virtual void Construct(const FbxObject* pFrom);
 	virtual void Destruct(bool pRecursive);
+	virtual void ContentClear();
 
 	void InitTextureIndices(FbxLayerElementTexture* pLayerElementTexture, FbxLayerElement::EMappingMode pMappingMode);
 	void RemoveTextureIndex(FbxLayerElementTexture* pLayerElementTextures, int pPolygonIndex, int pOffset);
@@ -768,7 +769,7 @@ protected:
 		PolygonIndexDef* mV2PV;
 		int* mV2PVOffset;
 		int* mV2PVCount;
-		FbxArray<FbxSet2<int>* > mPVEdge;
+		FbxArray<FbxSet<int>* > mPVEdge;
 		bool mValid;
 
 		//Used for fast search in GetMeshEdgeIndexForPolygon this array does not follow the same allocation as the above ones because

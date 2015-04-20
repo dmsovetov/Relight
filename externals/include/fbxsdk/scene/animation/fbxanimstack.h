@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -17,7 +17,6 @@
 
 #include <fbxsdk/core/base/fbxtime.h>
 #include <fbxsdk/scene/fbxcollection.h>
-#include <fbxsdk/scene/animation/fbxanimevalstate.h>
 
 #include <fbxsdk/fbxsdk_nsbegin.h>
 
@@ -119,20 +118,6 @@ public:
           */
         void SetReferenceTimeSpan(FbxTimeSpan& pTimeSpan);
 
-        /** Get the thumbnail image associated to this animation stack.
-          * This method exists for legacy reasons. In the newer FBX files, there can only be one 
-          * thumbnail image and it belongs to the FbxDocument.
-          * \return Pointer to the document thumbnail.
-          */
-        FBX_DEPRECATED FbxThumbnail* GetTakeThumbnail();
-
-        /** Does nothing.
-          * This method exists for legacy reasons. In the newer FBX files, there can only be one 
-          * thumbnail image and it belongs to the FbxDocument.
-          * \param pTakeThumbnail The referenced thumbnail object.
-          */
-        FBX_DEPRECATED void SetTakeThumbnail(FbxThumbnail* pTakeThumbnail);
-
         /** Bake all the animation layers on the base layer.
           * This function will process all the properties on every animation layer and generate a re-sampled set of
           * animation keys (representing the layers' evaluated result) on the base layer. Once this operation is completed
@@ -154,15 +139,9 @@ public:
 ** WARNING! Anything beyond these lines is for internal use, may not be documented and is subject to change without notice! **
 *****************************************************************************************************************************/
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
-	FbxAnimEvalState* GetEvaluationState() const;
-
 protected:
-	virtual void Construct(const FbxObject* pFrom);
     virtual void ConstructProperties(bool pForceSet);
 	virtual void Destruct(bool pRecursive);
-
-private:
-	FbxAnimEvalState* mEvalState;
 #endif /* !DOXYGEN_SHOULD_SKIP_THIS *****************************************************************************************/
 };
 

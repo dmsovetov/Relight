@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -26,9 +26,9 @@ class FbxNodeEvalState;
 class FbxPropertyEvalState;
 
 typedef FbxMap<FbxNode*, FbxNodeEvalState*> FbxNodeEvalStateMap;
-typedef FbxMap<FbxProperty*, FbxPropertyEvalState*> FbxPropertyEvalStateMap;
+typedef FbxMap<FbxProperty, FbxPropertyEvalState*> FbxPropertyEvalStateMap;
 typedef FbxMap<FbxAnimLayer*, FbxAnimCurveNode*> FbxAnimLayerCurveNodeMap;
-typedef FbxMap<FbxProperty*, FbxAnimLayerCurveNodeMap*> FbxPropertyCurveNodeMap;
+typedef FbxMap<FbxProperty, FbxAnimLayerCurveNodeMap*> FbxPropertyCurveNodeMap;
 
 /** This class hold results from animation evaluations. To clear an evaluation state for re-use, it is possible to invalidate
   * or to reset it. For the same scene with the same objects, invalidating an evaluation state is the quickest way to clear

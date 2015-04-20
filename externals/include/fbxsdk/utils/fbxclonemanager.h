@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -105,27 +105,12 @@ public:
         FbxObject* mObjectClone;
     };
 
-    /** \brief Functor to compare object pointers. This class is used internally in FbxCloneManager.
-      */
-    class FBXSDK_DLL ObjectCompare
-    {
-    public:
-        /** Operator converting instance to int type.
-          * \param pKeyA Left key to be compared.
-          * \param pKeyB Right key to be compared.
-          */
-        inline int operator()(FbxObject* const& pKeyA, FbxObject* const& pKeyB) const
-        {
-            return (pKeyA < pKeyB) ? -1 : ((pKeyB < pKeyA) ? 1 : 0);
-        }
-    };
-
     /** The CloneSet is a collection of pointers to objects that will be cloned in Clone()
       * Attached to each object is a CloneSetElement. Its member variables dictate how
       * the corresponding object will be cloned, and how it will inherit connections
       * on the original object.
       */
-    typedef FbxMap<FbxObject*,CloneSetElement,ObjectCompare> CloneSet;
+    typedef FbxMap<FbxObject*,CloneSetElement> CloneSet;
 
     /** Constructor
       */
@@ -274,6 +259,7 @@ public:
 private:
     friend class FbxScene;
 
+	bool ReAssignLayerElements( FbxCloneManager::CloneSet::RecordType* pIterator, const FbxCloneManager::CloneSet& pSet) const;
 	bool CloneConnections( CloneSet::RecordType* pIterator, const CloneSet& pSet) const;
     bool CheckIfCloneOnSameScene(const FbxObject* pObject, FbxObject* pContainer) const;
 

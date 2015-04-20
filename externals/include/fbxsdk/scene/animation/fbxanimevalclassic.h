@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -158,8 +158,8 @@ protected:
 	virtual void Construct(const FbxObject* pFrom);
 	virtual void Destruct(bool pRecursive);
 
-	virtual void EvaluateNodeTransform(FbxNodeEvalState* pResult, FbxNode* pNode, const FbxTime& pTime, FbxAnimStack* pStack, FbxNode::EPivotSet pPivotSet, bool pApplyTarget);
-	virtual void EvaluatePropertyValue(FbxPropertyEvalState* pResult, FbxProperty& pProperty, const FbxTime& pTime, FbxAnimStack* pStack);
+	virtual void EvaluateNodeTransform(FbxNodeEvalState* pResult, FbxNode* pNode, const FbxTime& pTime, FbxNode::EPivotSet pPivotSet, bool pApplyTarget);
+	virtual void EvaluatePropertyValue(FbxPropertyEvalState* pResult, FbxProperty& pProperty, const FbxTime& pTime);
 
 private:
 	double* mPropertyValues;

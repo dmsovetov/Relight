@@ -1,6 +1,6 @@
 /****************************************************************************************
  
-   Copyright (C) 2013 Autodesk, Inc.
+   Copyright (C) 2014 Autodesk, Inc.
    All rights reserved.
  
    Use of this software is subject to the terms of the Autodesk license agreement
@@ -70,27 +70,21 @@
 class FBXSDK_DLL FbxEuler
 {
 public:
-	enum ERepeat {eRepeatNo=0, eRepeatYes=1};
-	enum EParity {eParityEven=0, eParityOdd=2};
 	enum EAxis {eAxisX=0, eAxisY=1, eAxisZ=2};
-
-	#define EulerOrder(EAxis, EParity, ERepeat) (((EAxis) << 2) | (EParity) | (ERepeat))
 
 	enum EOrder
 	{
-		eOrderXYZ = EulerOrder(eAxisX, eParityEven, eRepeatNo),
-		eOrderXYX = EulerOrder(eAxisX, eParityEven, eRepeatYes),	//deprecated
-		eOrderXZY = EulerOrder(eAxisX, eParityOdd, eRepeatNo),
-		eOrderXZX = EulerOrder(eAxisX, eParityOdd, eRepeatYes),		//deprecated
-		eOrderYZX = EulerOrder(eAxisY, eParityEven, eRepeatNo),
-		eOrderYZY = EulerOrder(eAxisY, eParityEven, eRepeatYes),	//deprecated
-		eOrderYXZ = EulerOrder(eAxisY, eParityOdd, eRepeatNo),
-		eOrderYXY = EulerOrder(eAxisY, eParityOdd, eRepeatYes),		//deprecated
-		eOrderZXY = EulerOrder(eAxisZ, eParityEven, eRepeatNo),
-		eOrderZXZ = EulerOrder(eAxisZ, eParityEven, eRepeatYes),	//deprecated
-		eOrderZYX = EulerOrder(eAxisZ, eParityOdd, eRepeatNo),
-		eOrderZYZ = EulerOrder(eAxisZ, eParityOdd, eRepeatYes)		//deprecated
+		eOrderXYZ,
+		eOrderXZY,
+		eOrderYZX,
+		eOrderYXZ,
+		eOrderZXY,
+		eOrderZYX,
+		eOrderSphericXYZ
 	};
+
+	static bool IsParityOdd(EOrder pOrder);
+	static bool IsRepeat(EOrder pOrder);
 
 	static const int AxisTableSize;
 	static const int AxisTable[][3];
@@ -100,16 +94,17 @@ public:
   * Each rotate order produces a different end orientation. For example, if the rotation order for an object is set to XYZ,
   * the object first rotates about its X-axis, then its Y-axis, and finally its Z-axis.
   */
-enum EFbxRotationOrder
-{ 
-	eEulerXYZ,
-	eEulerXZY,
-	eEulerYZX,
-	eEulerYXZ,
-	eEulerZXY,
-	eEulerZYX,
-	eSphericXYZ
-};
+
+#define EFbxRotationOrder	FbxEuler::EOrder
+#define eEulerXYZ			FbxEuler::eOrderXYZ
+#define eEulerXZY			FbxEuler::eOrderXZY
+#define eEulerYZX			FbxEuler::eOrderYZX
+#define eEulerYXZ			FbxEuler::eOrderYXZ
+#define eEulerZXY			FbxEuler::eOrderZXY
+#define eEulerZYX			FbxEuler::eOrderZYX
+#define eSphericXYZ			FbxEuler::eOrderSphericXYZ
+
+
 
 /** Quaternion interpolation modes.  */
 enum EFbxQuatInterpMode
@@ -198,32 +193,12 @@ template<class T> inline T FbxAbs(const T x)
 	return (x >= 0) ? x : ((x > FbxMin(x)) ? -x : FbxMax(x));
 }
 
-template<class T> inline T FbxAbs(const T x, const T y)
-{
-	T ax, ay;
-	if( x )
-	{
-		if( ax = FbxAbs(x), y )
-		{
-			return ( ax > (ay = FbxAbs(y)) ) ? ay * FbxSqrt(T(1) + kSq(x / y)) : ax * FbxSqrt(T(1) + kSq(y / x));
-		}
-		else
-		{
-			return ax;
-		}
-	}
-	else
-	{
-		return FbxAbs(y);
-	}
-}
-
 template<class T> inline T FbxClamp(const T value, const T min, const T max)
 {
 	return (value < min) ? min : ((value > max) ? max : value);
 }
 
-template<class T> inline bool FbxEqual(const T x, const T y, const T e=FBXSDK_TOLERANCE)
+template<class T> inline bool FbxEqual(const T x, const T y, const T e=(T)FBXSDK_TOLERANCE)
 {
 	return FbxAbs(x - y) <= e;
 }
@@ -347,12 +322,12 @@ inline double FbxLog(const double x)
 
 template<class T> inline T FbxPow(const T x, const T y)
 {
-	return FbxExp(y * FbxLog(x));
+	return (T)FbxExp(y * FbxLog((double)x));
 }
 
 template<class T> inline T FbxLog2(const T x)
 {
-	return FbxLog(x) * T(FBXSDK_1_DIV_LN2);
+	return (T)(FbxLog(x) * FBXSDK_1_DIV_LN2);
 }
 
 inline float FbxSin(const float x)
@@ -385,8 +360,6 @@ inline double FbxTan(const double x)
 	return tan(x);
 }
 
-template<class T> inline T FbxCos(const T x);
-
 // *y = cos(x), sin(x)
 template<class T> inline T FbxSinCos(const T x, T* y)
 {
@@ -399,6 +372,11 @@ template<class T> inline T FbxSinCosd(const T x, T* y)
 	return FbxSinCos(T(x * FBXSDK_PI_DIV_180), y);
 }
 
+inline float FbxASin(const float x)
+{
+	return asinf(x);
+}
+
 inline double FbxASin(const double x)
 {
 	return asin(x);
@@ -406,12 +384,22 @@ inline double FbxASin(const double x)
 
 template<class T> inline T FbxASind(const T x)
 {
-	return FbxASin(x) * FBXSDK_180_DIV_PI;
+	return (T)(FbxASin((double)x) * FBXSDK_180_DIV_PI);
+}
+
+inline float FbxACos(const float x)
+{
+	return acosf(x);
+}
+
+inline double FbxACos(const double x)
+{
+	return acos(x);
 }
 
 template<class T> inline T FbxACosd(const T x)
 {
-	return FbxACos(x) * FBXSDK_180_DIV_PI;
+	return (T)(FbxACos(x) * FBXSDK_180_DIV_PI);
 }
 
 inline float FbxATan(const float x)
@@ -426,7 +414,7 @@ inline double FbxATan(const double x)
 
 template<class T> inline T FbxATand(const T x)
 {
-	return FbxATan(x) * FBXSDK_180_DIV_PI;
+	return (T)(FbxATan(x) * FBXSDK_180_DIV_PI);
 }
 
 inline float FbxATan(const float y, const float x)
@@ -441,7 +429,7 @@ inline double FbxATan(const double y, const double x)
 
 template<class T> inline T FbxATand(const T y, const T x)
 {
-	return FbxATan(y, x) * FBXSDK_180_DIV_PI;
+	return (T)(FbxATan(y, x) * FBXSDK_180_DIV_PI);
 }
 
 template<class T> inline T FbxNorm(const T x, const T y)
@@ -479,21 +467,6 @@ inline FbxVector4 FbxRejection(const FbxVector4& a, const FbxVector4& b)
     return a - b * (a.DotProduct(b) / b.DotProduct(b));
 }
 
-inline float FbxASin(const float x)
-{
-	return asinf(x);
-}
-
-inline float FbxACos(const float x)
-{
-	return acosf(x);
-}
-
-inline double FbxACos(const double x)
-{
-	return acos(x);
-}
-
 template<class T> inline int FbxBitCount(const T x)
 {
 	int n = 0;
@@ -517,6 +490,7 @@ template<class T> inline void FbxFixInfinite(T& x)
 template<class T> inline T FbxExp(const T x);
 template<class T> inline T FbxLog(const T x);
 template<class T> inline T FbxSin(const T x);
+template<class T> inline T FbxCos(const T x);
 template<class T> inline T FbxASin(const T x);
 template<class T> inline T FbxACos(const T x);
 template<class T> inline T FbxATan(const T x);
