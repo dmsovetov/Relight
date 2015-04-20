@@ -60,7 +60,7 @@ const float         k_DarkLightIntensity    = 1.5f;
 const relight::Rgb k_AmbientColor = relight::Rgb( 0.34f, 0.34f, 0.34f );
 
 // ** Indirect light settings
-const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( /*k_BlueSky*/k_BlackSky, k_AmbientColor );
+const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( k_BlueSky/*k_BlackSky*/, k_AmbientColor );
 
 unsigned int nextPowerOf2(unsigned int n)
 {
@@ -89,7 +89,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo6.scene" );
+//	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo6.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/Simple.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -102,7 +103,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
     // ** Add directional light
     relight::Vec3 direction = relight::Vec3::normalize( relight::Vec3( 0, 2, 0 ) - relight::Vec3( 1.50f, 4.50f,  1.50f ) );
-    m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_DarkLightColor, k_DarkLightIntensity, true ) );
+	m_relightScene->addLight( relight::Light::createDirectionalLight( direction, k_SunColor, k_SunColorIntensity, true ) );
 
     int totalLightmapPixels = 0;
 
@@ -148,9 +149,11 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
             continue;
         }
 
-		maxArea = math::min2( maxArea, instance->m_mesh->m_mesh->area() );
         float area = instance->m_mesh->m_mesh->area();
+		maxArea	   = math::max2( maxArea, instance->m_mesh->m_mesh->area() );
         int   size = nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
+
+		size = 256;
 
         totalLightmapPixels += size * size;
 
@@ -428,6 +431,10 @@ void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
             instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
             instance->m_lightmap->setData( 0, pixels );
             delete[]pixels;
+
+			char x[256];
+			sprintf( x, "output/%x.tga", lm );
+			lm->save( x );
 
             instance->m_dirty = false;
         }

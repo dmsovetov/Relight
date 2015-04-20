@@ -27,8 +27,9 @@
 #ifndef __Relight_RelightDemo__
 #define __Relight_RelightDemo__
 
-#include <Dreemchest.h>
+
 #include <Relight.h>
+#include <Dreemchest.h>
 
 DC_USE_DREEMCHEST
 
