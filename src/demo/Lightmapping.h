@@ -29,7 +29,6 @@
 
 #include "RelightDemo.h"
 #include <uscene/src/uScene.h>
-#include <pthread.h>
 
 // ** struct SceneVertex
 struct SceneVertex {
@@ -78,7 +77,7 @@ public:
 private:
 
     //! Thread worker callback.
-    static void*    worker( void* userData );
+    static void     worker( void* userData );
 
 private:
 
@@ -89,7 +88,7 @@ private:
     };
 
     //! Thread handle.
-    pthread_t       m_thread;
+	thread::Thread*	m_thread;
 };
 
 // ** class Lightmapping

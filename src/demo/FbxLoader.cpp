@@ -39,7 +39,7 @@ bool  FbxLoader::load( const char * filePath )
     FbxAxisSystem as = m_scene->GetGlobalSettings().GetAxisSystem();
 
     //    FbxAxisSystem::DirectX.ConvertScene(m_pScene);
-    FbxAxisSystem::OpenGL.ConvertScene(m_scene);
+    //FbxAxisSystem::OpenGL.ConvertScene(m_scene);
     FbxNode* pRootNode = m_scene->GetRootNode();
 
     extractObject(pRootNode);

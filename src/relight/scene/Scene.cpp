@@ -91,6 +91,7 @@ void Scene::updateBounds( void )
 RelightStatus Scene::addLight( const Light* light )
 {
     m_lights.push_back( light );
+	return RelightSuccess;
 }
 
 // ** Scene::addMesh

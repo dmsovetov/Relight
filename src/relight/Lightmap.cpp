@@ -60,13 +60,19 @@ Lumel* Lightmap::lumels( void )
 // ** Lightmap::lumel
 Lumel& Lightmap::lumel( const Uv& uv )
 {
-    return lumel( uv.x * m_width, uv.y * m_height );
+	int x = static_cast<int>( uv.x * m_width );
+	int y = static_cast<int>( uv.y * m_height );
+
+    return lumel( x, y );
 }
 
 // ** Lightmap::lumel
 const Lumel& Lightmap::lumel( const Uv& uv ) const
 {
-    return lumel( uv.x * m_width, uv.y * m_height );
+	int x = static_cast<int>( uv.x * m_width );
+	int y = static_cast<int>( uv.y * m_height );
+
+    return lumel( x, y );
 }
 
 // ** Lightmap::lumel
@@ -116,10 +122,10 @@ void Lightmap::initializeLumels( const Face& face )
     // ** Calculate UV bounds
     face.uvRect( min, max );
 
-    int uStart = min.x * m_width;
-    int uEnd   = max.x * m_width;
-    int vStart = min.y * m_height;
-    int vEnd   = max.y * m_height;
+    int uStart = static_cast<int>( min.x * m_width );
+    int uEnd   = static_cast<int>( max.x * m_width );
+    int vStart = static_cast<int>( min.y * m_height );
+    int vEnd   = static_cast<int>( max.y * m_height );
 
     // ** Initialize lumels
     for( int v = vStart; v <= vEnd; v++ ) {
@@ -198,7 +204,7 @@ void Lightmap::blur( void )
             }
             
             if( count ) {
-                m_lumels[y * m_width + x].m_color = color * (1.0 / count);
+                m_lumels[y * m_width + x].m_color = color * (1.0f / count);
             }
         }
     }
@@ -207,8 +213,6 @@ void Lightmap::blur( void )
 // ** Lightmap::save
 bool Lightmap::save( const String& fileName ) const
 {
-    char buffer[256];
-
     FILE	*file;
     int		image_size = 0;
 
@@ -239,9 +243,9 @@ bool Lightmap::save( const String& fileName ) const
             const Lumel& lumel   = m_lumels[j*m_width + i];
             int          photons = lumel.m_photons ? lumel.m_photons : 1;
 
-            unsigned char r = min2( lumel.m_color.b / photons * 255.0, 255.0 );
-            unsigned char g = min2( lumel.m_color.g / photons * 255.0, 255.0 );
-            unsigned char b = min2( lumel.m_color.r / photons * 255.0, 255.0 );
+            unsigned char r = static_cast<unsigned char>( math::min2( lumel.m_color.b / photons * 255.0f, 255.0f ) );
+            unsigned char g = static_cast<unsigned char>( math::min2( lumel.m_color.g / photons * 255.0f, 255.0f ) );
+            unsigned char b = static_cast<unsigned char>( math::min2( lumel.m_color.r / photons * 255.0f, 255.0f ) );
 
             unsigned char pixel[] = { r, g, b };
             fwrite( pixel, sizeof( pixel ), 1, file );
@@ -264,9 +268,9 @@ unsigned char* Lightmap::toRgb8( void ) const
             const Lumel&    lumel   = m_lumels[y * m_width + x];
             unsigned char*  pixel   = &pixels[y * stride + x * 3];
 
-            pixel[0] = min2( lumel.m_color.r * 255.0, 255.0 );
-            pixel[1] = min2( lumel.m_color.g * 255.0, 255.0 );
-            pixel[2] = min2( lumel.m_color.b * 255.0, 255.0 );
+            pixel[0] = static_cast<unsigned char>( math::min2( lumel.m_color.r * 255.0f, 255.0f ) );
+            pixel[1] = static_cast<unsigned char>( math::min2( lumel.m_color.g * 255.0f, 255.0f ) );
+            pixel[2] = static_cast<unsigned char>( math::min2( lumel.m_color.b * 255.0f, 255.0f ) );
         }
     }
 
@@ -340,7 +344,7 @@ Rgb Photonmap::gather( int x, int y, int radius ) const
             }
 
             const Lumel& lumel = m_lumels[j * m_width + i];
-            float distance = sqrtf( (x - i) * (x - i) + (y - j) * (y - j) );
+            float distance = sqrtf( static_cast<float>( (x - i) * (x - i) + (y - j) * (y - j) ) );
             if( distance > radius ) {
                 continue;
             }

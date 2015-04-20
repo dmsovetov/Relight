@@ -90,6 +90,18 @@ int Mesh::faceCount( void ) const
     return ( int )m_faces.size();
 }
 
+// ** Mesh::area
+float Mesh::area( void ) const
+{
+	float result = 0.0f;
+
+	for( int i = 0, n = faceCount(); i < n; i++ ) {
+		result += face( i ).area();
+	}
+
+	return result;
+}
+
 // ** Mesh::create
 Mesh* Mesh::create( void )
 {
@@ -360,11 +372,11 @@ void Face::uvRect( Uv& min, Uv& max ) const
     const Uv& b = m_b->m_uv[Vertex::Lightmap];
     const Uv& c = m_c->m_uv[Vertex::Lightmap];
 
-    min.x = min3( a.x, b.x, c.x );
-    max.x = max3( a.x, b.x, c.x );
+    min.x = math::min3( a.x, b.x, c.x );
+    max.x = math::max3( a.x, b.x, c.x );
 
-    min.y = min3( a.y, b.y, c.y );
-    max.y = max3( a.y, b.y, c.y );
+    min.y = math::min3( a.y, b.y, c.y );
+    max.y = math::max3( a.y, b.y, c.y );
 }
 
 // ** Face::isUvInside

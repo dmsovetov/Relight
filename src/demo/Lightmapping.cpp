@@ -27,7 +27,10 @@
 #include "Lightmapping.h"
 #include "FbxLoader.h"
 
-#include <OpenGL/gl.h>
+#ifdef WIN32
+	#include <Windows.h>
+	#include <gl/GL.h>
+#endif
 
 // ** Lightmap size
 const int k_LightmapMaxSize = 128;
@@ -85,7 +88,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
-    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
+//    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo6.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -144,7 +148,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
             continue;
         }
 
-        maxArea = std::max( maxArea, instance->m_mesh->m_mesh->area() );
+		maxArea = math::min2( maxArea, instance->m_mesh->m_mesh->area() );
         float area = instance->m_mesh->m_mesh->area();
         int   size = nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
 
@@ -176,7 +180,6 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         }
     };
 
-//    typedef relight::Worker LmWorker;
     typedef ThreadWorker LmWorker;
 
     // ** Bake scene
@@ -337,9 +340,9 @@ void Lightmapping::handleUpdate( platform::Window* window )
     uscene::SceneSettings* settings = m_scene->settings();
     const float*           ambient  = settings->ambient();
     const float*           fog      = settings->fogColor();
-    dreemchest::Rgba       ambientColor( ambient[0], ambient[1], ambient[2], 1.0f );
-    dreemchest::Rgba       fogColor( fog[0], fog[1], fog[2], 1.0f );
-//    dreemchest::Rgba       clearColor( k_BlueSky.r, k_BlueSky.g, k_BlueSky.b );
+    renderer::Rgba			ambientColor( ambient[0], ambient[1], ambient[2], 1.0f );
+    renderer::Rgba			fogColor( fog[0], fog[1], fog[2], 1.0f );
+//    renderer::Rgba       clearColor( k_BlueSky.r, k_BlueSky.g, k_BlueSky.b );
 
     if( !m_hal->clear( fogColor ) ) {
         return;
@@ -434,7 +437,7 @@ void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
 }
 
 // ** ThreadWorker::worker
-void* ThreadWorker::worker( void* userData )
+void ThreadWorker::worker( void* userData )
 {
     relight::JobData* data = reinterpret_cast<relight::JobData*>( userData );
     data->m_job->execute( data );
@@ -450,13 +453,14 @@ ThreadWorker::ThreadWorker( void )
 void ThreadWorker::push( relight::Job* job, relight::JobData* data )
 {
     data->m_worker = this;
-    pthread_create( &m_thread, NULL, worker, ( void* )data );
+	m_thread = thread::Thread::create();
+	m_thread->start( dcThisMethod( ThreadWorker::worker ), data );
 }
 
 // ** ThreadWorker::wait
 void ThreadWorker::wait( void )
 {
-    pthread_join( m_thread, NULL );
+	m_thread->wait();
 }
 
 // ** ThreadWorker::notify

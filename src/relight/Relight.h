@@ -30,10 +30,9 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <algorithm>
 #include <assert.h>
 #include <float.h>
-
-#define MATH_NAMESPACE relight
 
 #include <math/Vec2.h>
 #include <math/Vec3.h>
@@ -48,9 +47,17 @@ namespace relight {
     template<typename T>
     class Array : public std::vector<T> {};
 
-    typedef std::string String;
-    typedef Vec2        Uv;
-    typedef Uv          Barycentric;
+    typedef std::string		String;
+    typedef math::Vec2		Uv;
+	typedef math::Vec2		Vec2;
+	typedef math::Vec3		Vec3;
+	typedef math::Plane		Plane;
+	typedef math::Rgb		Rgb;
+	typedef math::Rgba		Rgba;
+	typedef math::Matrix4	Matrix4;
+	typedef math::Quat		Quat;
+	typedef math::Bounds	Bounds;
+    typedef Uv				Barycentric;
 
     class Scene;
     class Worker;

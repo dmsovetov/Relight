@@ -10,6 +10,8 @@
 =========================================================================================
 */
 
+#if 0
+
 #include    <Relight.h>
 
 #include	"TestLightmapper.h"
@@ -847,3 +849,5 @@ void cTestLightmapper::LoadLightmaps( void )
 	}
 */
 }
+
+#endif

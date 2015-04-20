@@ -10,6 +10,8 @@
 =========================================================================================
 */
 
+#if 0
+
 #include	"TestRadiosity.h"
 //#include	"Lightmapper.h"
 #include	"Lightmap.h"
@@ -27,10 +29,6 @@
 */
 
 extern bool LoadTGA( TextureImage *texture, char *filename );
-
-#ifdef WIN32
-extern PFNGLCLIENTACTIVETEXTUREARBPROC glActiveTextureARB;
-#endif
 
 // ** cTestRadiosity::Create
 void cTestRadiosity::Create( IRayTracer *model, const Model_OBJ& mesh )
@@ -275,3 +273,5 @@ void cTestRadiosity::BlurLightmap( void )
 		}
 	}
 }
+
+#endif

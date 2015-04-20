@@ -183,6 +183,9 @@ namespace relight {
         //! Returns a face by index.
         const Face&         face( int index ) const;
 
+		//! Returns the total mesh surface area.
+		float				area( void ) const;
+
         //! Adds a list of faces sharing a same material.
         void                addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, const Material* material = NULL );
 
