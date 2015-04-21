@@ -116,6 +116,10 @@ private:
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
+	renderer::Shader*				m_shaderAmbient;
+
+	relight::Matrix4				m_matrixView;
+	relight::Matrix4				m_matrixProj;
 
     uscene::Assets*                 m_assets;
     uscene::Scene*                  m_scene;
