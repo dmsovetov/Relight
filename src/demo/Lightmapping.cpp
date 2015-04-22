@@ -138,14 +138,14 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 			void main()
 			{
 				// Setting Each Pixel To Red
-				gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 )/* * u_diffuseColor*/;
+				gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 ) * u_diffuseColor;
 			} ) );
 
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
-//	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
+//	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -223,7 +223,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     }
     m_relightScene->end();
 
-    printf( "%d instances added to relight scene, maximum mesh area %2.4f (%d lightmap pixels used)\n", m_relightScene->meshCount(), maxArea, totalLightmapPixels );
+	printf( "%d instances added to relight scene, maximum mesh area %2.4f (%d lightmap pixels used, %d mb used)\n", m_relightScene->meshCount(), maxArea, totalLightmapPixels, totalLightmapPixels * sizeof( relight::Lumel ) / 1024 / 1024 );
 
     printf( "Emitting photons...\n" );
     m_relight->emitPhotons( m_relightScene, k_IndirectLight );
@@ -255,9 +255,9 @@ relight::Matrix4 Lightmapping::affineTransform( const uscene::Transform *transfo
         return relight::Matrix4();
     }
 
-    relight::Vec3 position = relight::Vec3( transform->position()[0], transform->position()[1], -transform->position()[2] );
+    relight::Vec3 position = relight::Vec3( -transform->position()[0], transform->position()[1], transform->position()[2] );
     relight::Vec3 scale    = relight::Vec3( transform->scale()[0], transform->scale()[1], transform->scale()[2] );
-    relight::Quat rotation = relight::Quat( transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], transform->rotation()[3] );
+    relight::Quat rotation = relight::Quat( -transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], -transform->rotation()[3] );
 	relight::Matrix4 R     = rotation;
 
 	return affineTransform( transform->parent() ) * relight::Matrix4::translation( position ) * relight::Matrix4::scale( scale ) * R;
