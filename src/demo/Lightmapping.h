@@ -106,7 +106,8 @@ private:
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTexture( const relight::Texture* texture );
-    void                renderObjects( const uscene::SceneObjectArray& objects );
+	void                renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects );
+	void				renderBasis( const math::Vec3& origin = math::Vec3( 0, 0, 0 ), const math::Vec3& front = math::Vec3( 0, 0, 1 ), const math::Vec3& up = math::Vec3( 0, 1, 0 ), const math::Vec3& right = math::Vec3( 1, 0, 0 ) );
 
 private:
 
@@ -116,7 +117,9 @@ private:
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
-	renderer::Shader*				m_shaderAmbient;
+	renderer::Shader*				m_shaderLightmaped;
+	renderer::Shader*				m_shaderColored;
+	renderer::Shader*				m_shaderNormals;
 
 	relight::Matrix4				m_matrixView;
 	relight::Matrix4				m_matrixProj;

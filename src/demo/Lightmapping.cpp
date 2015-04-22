@@ -36,7 +36,7 @@
 
 // ** Lightmap size
 const int k_LightmapMaxSize = 128;
-const int k_LightmapMinSize = 16;
+const int k_LightmapMinSize = 32;
 
 // ** Background workers
 const int k_Workers      = 8;
@@ -59,10 +59,10 @@ const relight::Rgb  k_DarkLightColor        = relight::Rgb( 0.0737915039f, 0.166
 const float         k_DarkLightIntensity    = 1.5f;
 
 // ** Scene ambient color
-const relight::Rgb k_AmbientColor = relight::Rgb( 0.34f, 0.34f, 0.34f );
+const relight::Rgb k_AmbientColor = relight::Rgb( /*0.34f, 0.34f, 0.34f*/0, 0, 0 );
 
 // ** Indirect light settings
-const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( /*k_BlueSky*/k_BlackSky, k_AmbientColor );
+const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( /*k_BlueSky*/k_BlackSky, k_AmbientColor, 100, 500 );
 
 // ** Lightmapping::Lightmapping
 Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
@@ -72,8 +72,50 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 	// ** Create the vertex layout
     m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
-	// ** Create the ambient shader
-	m_shaderAmbient = m_hal->createShader(
+	// ** Create the colored unlit shader
+	m_shaderColored = m_hal->createShader(
+		GLSL(
+			uniform mat4 u_mvp;
+			varying vec4 v_color;
+
+			void main()
+			{
+				v_color		= gl_Color;
+				gl_Position = u_mvp * gl_Vertex;
+			}
+		),
+		GLSL(
+			varying vec4 v_color;
+
+			void main()
+			{
+				gl_FragColor = v_color;
+			}
+		) );
+
+	// ** Create a normals shader
+	m_shaderNormals = m_hal->createShader(
+		GLSL(
+			uniform mat4 u_mvp;
+			varying vec4 v_color;
+
+			void main()
+			{
+				v_color		= vec4( gl_Normal * 0.5 + 0.5, 1.0 );
+				gl_Position = u_mvp * gl_Vertex;
+			}
+		),
+		GLSL(
+			varying vec4 v_color;
+
+			void main()
+			{
+				gl_FragColor = v_color;
+			}
+		) );
+
+	// ** Create the lightmap shader
+	m_shaderLightmaped = m_hal->createShader(
 		GLSL(
 			uniform mat4 u_mvp;
 			varying vec2 v_tex0;
@@ -96,14 +138,14 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 			void main()
 			{
 				// Setting Each Pixel To Red
-				gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 ) * u_diffuseColor;
+				gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 )/* * u_diffuseColor*/;
 			} ) );
 
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
-//	m_scene = Scene::parse( m_assets, "Assets/Simple.scene" );
+//	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -128,7 +170,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 		Light*				light		= sceneObject->light();
 
 		if( light ) {
-			m_relightScene->addLight( relight::Light::createPointLight( transform->position(), light->range(), light->color(), light->intensity() ) );
+			m_relightScene->addLight( relight::Light::createPointLight( affineTransform( transform ) * math::Vec3(), light->range(), light->color(), light->intensity() ) );
 			continue;
 		}
 
@@ -213,11 +255,14 @@ relight::Matrix4 Lightmapping::affineTransform( const uscene::Transform *transfo
         return relight::Matrix4();
     }
 
-    relight::Vec3 position = relight::Vec3( transform->position()[0], transform->position()[1], transform->position()[2] );
+    relight::Vec3 position = relight::Vec3( transform->position()[0], transform->position()[1], -transform->position()[2] );
     relight::Vec3 scale    = relight::Vec3( transform->scale()[0], transform->scale()[1], transform->scale()[2] );
     relight::Quat rotation = relight::Quat( transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], transform->rotation()[3] );
+	relight::Matrix4 R     = rotation;
 
-    return affineTransform( transform->parent() ) * relight::Matrix4::affineTransform( position, rotation, scale ) * relight::Matrix4::scale( -1, 1, 1 );
+	return affineTransform( transform->parent() ) * relight::Matrix4::translation( position ) * relight::Matrix4::scale( scale ) * R;
+
+//	return affineTransform( transform->parent() ) * relight::Matrix4::translation( position ) * R * relight::Matrix4::scale( scale );
 }
 
 // ** Lightmapping::createTexture
@@ -339,6 +384,93 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
     mesh.m_indexBuffer->unlock();
 }
 
+struct Camera {
+	relight::Vec3	pos;
+	relight::Vec3	view;
+	relight::Vec3	right;
+	relight::Vec3	up;
+
+	float			yRotation;
+
+	Camera( void ) : yRotation( 90 )
+	{
+		pos	  = relight::Vec3( 0, 1, 2 );
+		right = relight::Vec3( 1, 0, 0 );
+		up	  = relight::Vec3( 0, 1, 0 );
+		view  = relight::Vec3( 0, -0.447213590, -0.894427180 );
+	}
+
+	void update( void )
+	{
+		platform::Input* input = platform::Input::sharedInstance();
+
+		float speed = 0.001f;
+
+		if( input->keyDown( platform::Key::Shift ) ) speed *= 5.0f;
+		if( input->keyDown( platform::Key::Space ) ) speed *= 50.0f;
+
+		if( input->keyDown( platform::Key::W ) ) pos = pos + view  * speed;
+		if( input->keyDown( platform::Key::S ) ) pos = pos - view  * speed;
+
+		if( input->keyDown( platform::Key::A ) ) pos = pos - right * speed;
+		if( input->keyDown( platform::Key::D ) ) pos = pos + right * speed;
+		
+		static relight::Vec2 mouse( -1, -1 );
+
+		s32 x = input->mouseX();
+		s32 y = input->mouseY();
+
+		if( mouse.x >= 0 && mouse.y >= 0 ) {
+			f32 dx = (x - mouse.x) * 0.1f;
+			f32 dy = (y - mouse.y) * 0.1f;
+
+			yRotation -= dy;
+
+			if( yRotation >= 180.0f ) {
+				yRotation = 180.0f;
+			}
+			else if( yRotation <= 0.0f ) {
+				yRotation = 0.0f;
+			}
+			else {
+				rotate( -dy, right );
+			}
+
+			rotate( -dx, up );
+
+			right = view % up;
+			right.normalize();
+
+			input->setMouse( mouse.x, mouse.y );
+		} else {
+			mouse = relight::Vec2( x, y );
+		}
+	}
+
+	void rotate( float angle, const relight::Vec3& axis )
+	{
+		view = relight::Quat::rotateAroundAxis( angle, axis ).rotate( view );
+	}
+};
+
+Camera gCamera;
+
+// ** Lightmapping::renderBasis
+void Lightmapping::renderBasis( const math::Vec3& origin, const math::Vec3& front, const math::Vec3& up, const math::Vec3& right )
+{
+	m_hal->setDepthTest( true, renderer::Always );
+	m_hal->setShader( m_shaderColored );
+	m_shaderColored->setMatrix( m_shaderColored->findUniformLocation( "u_mvp" ), m_matrixProj * m_matrixView * math::Matrix4::translation( origin ) );
+
+	glBegin( GL_LINES );
+		glColor3f( 1, 0, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &right.x );
+		glColor3f( 0, 1, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &front.x );
+		glColor3f( 0, 0, 1 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &up.x );
+	glEnd();
+
+	m_hal->setDepthTest( true, renderer::Less );
+}
+
 // ** Lightmapping::handleUpdate
 void Lightmapping::handleUpdate( platform::Window* window )
 {
@@ -348,12 +480,26 @@ void Lightmapping::handleUpdate( platform::Window* window )
     
     using namespace relight;
 
-//	uscene::Transform* camera1		= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera1" ) )->transform();
+	if( platform::Input::sharedInstance()->keyDown( platform::Key::Escape ) ) platform::Application::sharedInstance()->quit();
+
+	gCamera.update();
+
+#if 1
+	Matrix4 camera = affineTransform( const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform() );
+	Vec4    pos    = camera * Vec4( 0, 0, 0, 1 );
+	Vec4	right  = camera * Vec4( -1, 0, 0, 0 );
+	Vec4	up     = camera * Vec4( 0, 1, 0, 0 );
+	Vec4	view   = camera * Vec4( 0, 0, 1, 0 );
+#endif
+
+//	uscene::Transform* camera1		= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform();
 //	uscene::Transform* camera2		= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera2" ) )->transform();
 //	uscene::Transform* mainCamera	= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Main Camera" ) )->transform();
 
-//	m_matrixView = Matrix4::lookAt( mainCamera->position(), Vec3( 0, 0, 0 ), Vec3( 0, 1, 0 ) );
-	m_matrixView = Matrix4::lookAt( Vec3( 15, 15, 15 ), Vec3( 0, 0, 0 ), Vec3( 0, 1, 0 ) );
+//	m_matrixView = Matrix4::view( pos, view, up, right );
+//	m_matrixView = Matrix4::view( pos, Vec3( 0, 0, 1 ), Vec3( 0, 1, 0 ), Vec3( 1, 0, 0 ) );
+//	m_matrixView = Matrix4::view( gCamera.pos, gCamera.view, gCamera.up, gCamera.right );
+	m_matrixView = Matrix4::lookAt( gCamera.pos, gCamera.pos + gCamera.view, gCamera.up );
 	m_matrixProj = Matrix4::perspective( 60.0f, window->width() / float( window->height() ), 0.01f, 1000.0f );
 
     uscene::SceneSettings*	settings = m_scene->settings();
@@ -366,15 +512,16 @@ void Lightmapping::handleUpdate( platform::Window* window )
         return;
     }
 
-    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
+//    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
+	m_hal->setShader( m_shaderLightmaped );
 
     {
-        renderObjects( m_solidRenderList );
+        renderObjects( m_shaderLightmaped, m_solidRenderList );
     }
 
     {
         m_hal->setAlphaTest( renderer::Greater, 0.5f );
-        renderObjects( m_transparentRenderList );
+        renderObjects( m_shaderLightmaped, m_transparentRenderList );
         m_hal->setAlphaTest( renderer::CompareDisabled );
     }
 
@@ -382,21 +529,28 @@ void Lightmapping::handleUpdate( platform::Window* window )
         m_hal->setDepthTest( false, renderer::Less );
         m_hal->setBlendFactors( renderer::BlendOne, renderer::BlendOne );
 
-        renderObjects( m_additiveRenderList );
+        renderObjects( m_shaderLightmaped, m_additiveRenderList );
 
         m_hal->setDepthTest( true, renderer::Less );
         m_hal->setBlendFactors( renderer::BlendDisabled, renderer::BlendDisabled );
     }
 
+	for( int i = 0; i < m_relightScene->lightCount(); i++ ) {
+		renderBasis( m_relightScene->light( i )->position() );
+	}
+
+	renderBasis();
+
+	m_hal->setShader( NULL );
+
     m_hal->present();
 }
 
 // ** Lightmapping::renderObjects
-void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
+void Lightmapping::renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects )
 {
 	using namespace relight;
 
-	m_hal->setShader( m_shaderAmbient );
     for( int i = 0; i < objects.size(); i++ ) {
         uscene::SceneObject* object   = objects[i];
         SceneMeshInstance*   instance = reinterpret_cast<SceneMeshInstance*>( object->userData() );
@@ -405,13 +559,13 @@ void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
             continue;
         }
 
-		Matrix4    mvp   = m_matrixProj * Matrix4::scale( -1, 1, 1 ) * m_matrixView * instance->m_transform;
+		Matrix4    mvp   = m_matrixProj * m_matrixView * instance->m_transform;
 		const Rgb& color = instance->m_mesh->m_material->color();
 
-		m_shaderAmbient->setVec3( m_shaderAmbient->findUniformLocation( "u_diffuseColor" ), Vec3( color.r, color.g, color.b ) );
-		m_shaderAmbient->setMatrix( m_shaderAmbient->findUniformLocation( "u_mvp" ), mvp );
-		m_shaderAmbient->setInt( m_shaderAmbient->findUniformLocation( "u_diffuse" ), 0 );
-		m_shaderAmbient->setInt( m_shaderAmbient->findUniformLocation( "u_lightmap" ), 1 );
+		shader->setVec3( shader->findUniformLocation( "u_diffuseColor" ), Vec3( color.r, color.g, color.b ) );
+		shader->setMatrix( shader->findUniformLocation( "u_mvp" ), mvp );
+		shader->setInt( shader->findUniformLocation( "u_diffuse" ), 0 );
+		shader->setInt( shader->findUniformLocation( "u_lightmap" ), 1 );
 
         const relight::Rgb& diffuse = instance->m_mesh->m_material->color();
 
@@ -427,6 +581,8 @@ void Lightmapping::renderObjects( const uscene::SceneObjectArray& objects )
 			if( instance->m_lightmap == NULL ) {
 				instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
 			}
+
+			lm->save( "1.tga" );
 
             float* pixels = lm->toRgb32F();
             instance->m_lightmap->setData( 0, pixels );
