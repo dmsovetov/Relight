@@ -152,6 +152,12 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         return;
     }
 
+	// *******************************************
+
+	m_simpleScene = scene::Scene::create();
+
+	// *******************************************
+
     m_relight      = relight::Relight::create();
     m_relightScene = m_relight->createScene();
     m_relightScene->begin();
@@ -201,6 +207,18 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         instance->m_lightmap  = NULL;
         instance->m_mesh      = findMesh( mesh->asset(), renderer, isSolid );
         instance->m_dirty     = false;
+
+		// **************************************************************************************
+
+		scene::MeshPtr sceneMesh = scene::Mesh::create();
+		sceneMesh->addChunk( instance->m_mesh->m_vertexBuffer, instance->m_mesh->m_indexBuffer );
+
+		scene::SceneObjectPtr object = scene::SceneObject::create();
+		object->attach<scene::Transform>( transform->position(), transform->rotation(), transform->scale() );
+		object->attach<scene::MeshRenderer>( sceneMesh );
+		m_simpleScene->add( object );
+
+		// **************************************************************************************
 
         if( !addToRelight ) {
             continue;
@@ -490,7 +508,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
 	gCamera.update();
 
-#if 1
+#if 0
 	Matrix4 camera = affineTransform( const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform() );
 	Vec4    pos    = camera * Vec4( 0, 0, 0, 1 );
 	Vec4	right  = camera * Vec4( -1, 0, 0, 0 );
@@ -511,6 +529,10 @@ void Lightmapping::handleUpdate( platform::Window* window )
         return;
     }
 
+	scene::Renderer r( m_hal );
+	r.render( m_matrixView, m_matrixProj, m_simpleScene );
+
+	/*
 //    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
 	m_hal->setShader( m_shaderLightmaped );
 
@@ -536,7 +558,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
 	for( int i = 0; i < m_relightScene->lightCount(); i++ ) {
 		renderBasis( m_relightScene->light( i )->position() );
-	}
+	}*/
 
 	renderBasis();
 

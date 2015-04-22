@@ -34,7 +34,7 @@ void RelightDemo::handleLaunched( platform::Application* application )
     platform::log::setStandardHandler();
     renderer::log::setStandardHandler();
 
-    m_window = platform::Window::create( 400, 300 );
+    m_window = platform::Window::create( 1024, 768 );
     m_view   = renderer::Hal::createOpenGLView( m_window->handle() );
     m_hal    = renderer::Hal::create( renderer::OpenGL, m_view );
 

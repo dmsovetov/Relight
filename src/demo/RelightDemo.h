@@ -42,9 +42,9 @@ private:
 
 private:
 
-    platform::Window*     m_window;
-    renderer::Hal*        m_hal;
-    renderer::RenderView* m_view;
+    platform::Window*		m_window;
+    renderer::Hal*			m_hal;
+    renderer::RenderView*	m_view;
 };
 
 #endif /* defined(__Relight_RelightDemo__) */

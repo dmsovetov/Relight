@@ -121,6 +121,8 @@ private:
 	renderer::Shader*				m_shaderColored;
 	renderer::Shader*				m_shaderNormals;
 
+	scene::ScenePtr					m_simpleScene;
+
 	relight::Matrix4				m_matrixView;
 	relight::Matrix4				m_matrixProj;
 
