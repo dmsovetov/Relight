@@ -232,10 +232,17 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     struct Bake : public relight::Job {
     public:
 
+		Bake( const relight::IndirectLightSettings& indirect )
+			: m_indirect( indirect ) {}
+
         virtual void execute( relight::JobData* data ) {
             data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_worker, data->m_iterator );
-            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, k_IndirectLight, data->m_iterator );
+            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, m_indirect, data->m_iterator );
         }
+
+	private:
+
+		relight::IndirectLightSettings m_indirect;
     };
 
     typedef ThreadWorker LmWorker;
@@ -245,7 +252,6 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     for( int i = 0; i < k_Workers; i++ ) {
         m_relightWorkers.push_back( new LmWorker );
     }
-    m_relight->bake( m_relightScene, new Bake, m_rootWorker, m_relightWorkers );
 }
 
 // ** Lightmapping::affineTransform
@@ -492,13 +498,6 @@ void Lightmapping::handleUpdate( platform::Window* window )
 	Vec4	view   = camera * Vec4( 0, 0, 1, 0 );
 #endif
 
-//	uscene::Transform* camera1		= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform();
-//	uscene::Transform* camera2		= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera2" ) )->transform();
-//	uscene::Transform* mainCamera	= const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Main Camera" ) )->transform();
-
-//	m_matrixView = Matrix4::view( pos, view, up, right );
-//	m_matrixView = Matrix4::view( pos, Vec3( 0, 0, 1 ), Vec3( 0, 1, 0 ), Vec3( 1, 0, 0 ) );
-//	m_matrixView = Matrix4::view( gCamera.pos, gCamera.view, gCamera.up, gCamera.right );
 	m_matrixView = Matrix4::lookAt( gCamera.pos, gCamera.pos + gCamera.view, gCamera.up );
 	m_matrixProj = Matrix4::perspective( 60.0f, window->width() / float( window->height() ), 0.01f, 1000.0f );
 
@@ -582,7 +581,7 @@ void Lightmapping::renderObjects( renderer::Shader* shader, const uscene::SceneO
 				instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
 			}
 
-			lm->save( "1.tga" );
+			lm->expand();
 
             float* pixels = lm->toRgb32F();
             instance->m_lightmap->setData( 0, pixels );
