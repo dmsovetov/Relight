@@ -36,6 +36,7 @@
 
 #include <math/Vec2.h>
 #include <math/Vec3.h>
+#include <math/Vec4.h>
 #include <math/Color.h>
 #include <math/Quat.h>
 #include <math/Matrix4.h>
@@ -51,6 +52,7 @@ namespace relight {
     typedef math::Vec2		Uv;
 	typedef math::Vec2		Vec2;
 	typedef math::Vec3		Vec3;
+	typedef math::Vec4		Vec4;
 	typedef math::Plane		Plane;
 	typedef math::Rgb		Rgb;
 	typedef math::Rgba		Rgba;
