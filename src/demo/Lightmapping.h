@@ -42,6 +42,7 @@ struct SceneVertex {
 struct SceneMesh {
     relight::Mesh*          m_mesh;
     relight::Material*      m_material;
+	relight::Rgba			m_diffuseColor;
     
     renderer::Texture*      m_diffuse;
     renderer::IndexBuffer*  m_indexBuffer;
@@ -104,6 +105,7 @@ private:
     SceneMesh*          findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer, bool solid );
     relight::Texture*   findTexture( const uscene::Asset* asset, bool solid );
     relight::Matrix4    affineTransform( const uscene::Transform* transform );
+	void				extractTransform( const uscene::Transform* transform, math::Vec3& position, math::Quat& rotation, math::Vec3& scale ) const;
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTexture( const relight::Texture* texture );
 	void                renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects );
