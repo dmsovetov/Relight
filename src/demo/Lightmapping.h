@@ -43,6 +43,7 @@ struct SceneMesh {
     relight::Mesh*          m_mesh;
     relight::Material*      m_material;
 	relight::Rgba			m_diffuseColor;
+	relight::Rgba			m_tintColor;
     
     renderer::Texture*      m_diffuse;
     renderer::IndexBuffer*  m_indexBuffer;
@@ -108,8 +109,8 @@ private:
 	void				extractTransform( const uscene::Transform* transform, math::Vec3& position, math::Quat& rotation, math::Vec3& scale ) const;
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTexture( const relight::Texture* texture );
-	void                renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects );
-	void				renderBasis( const math::Vec3& origin = math::Vec3( 0, 0, 0 ), const math::Vec3& front = math::Vec3( 0, 0, 1 ), const math::Vec3& up = math::Vec3( 0, 1, 0 ), const math::Vec3& right = math::Vec3( 1, 0, 0 ) );
+//	void                renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects );
+//	void				renderBasis( const math::Vec3& origin = math::Vec3( 0, 0, 0 ), const math::Vec3& front = math::Vec3( 0, 0, 1 ), const math::Vec3& up = math::Vec3( 0, 1, 0 ), const math::Vec3& right = math::Vec3( 1, 0, 0 ) );
 
 private:
 
@@ -119,18 +120,20 @@ private:
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
-	renderer::Shader*				m_shaderLightmaped;
-	renderer::Shader*				m_shaderColored;
-	renderer::Shader*				m_shaderNormals;
+
+	//renderer::Shader*				m_shaderLightmaped;
+	//renderer::Shader*				m_shaderColored;
+	//renderer::Shader*				m_shaderNormals;
 
 	scene::ScenePtr					m_simpleScene;
+	scene::Renderer*				m_renderer;
 
 	relight::Matrix4				m_matrixView;
 	relight::Matrix4				m_matrixProj;
 
     uscene::Assets*                 m_assets;
     uscene::Scene*                  m_scene;
-    uscene::SceneObjectArray        m_solidRenderList, m_transparentRenderList, m_additiveRenderList;
+    //uscene::SceneObjectArray        m_solidRenderList, m_transparentRenderList, m_additiveRenderList;
 
     relight::Relight*               m_relight;
     relight::Scene*                 m_relightScene;

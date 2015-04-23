@@ -72,74 +72,74 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 	// ** Create the vertex layout
     m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
-	// ** Create the colored unlit shader
-	m_shaderColored = m_hal->createShader(
-		GLSL(
-			uniform mat4 u_mvp;
-			varying vec4 v_color;
+	//// ** Create the colored unlit shader
+	//m_shaderColored = m_hal->createShader(
+	//	GLSL(
+	//		uniform mat4 u_mvp;
+	//		varying vec4 v_color;
 
-			void main()
-			{
-				v_color		= gl_Color;
-				gl_Position = u_mvp * gl_Vertex;
-			}
-		),
-		GLSL(
-			varying vec4 v_color;
+	//		void main()
+	//		{
+	//			v_color		= gl_Color;
+	//			gl_Position = u_mvp * gl_Vertex;
+	//		}
+	//	),
+	//	GLSL(
+	//		varying vec4 v_color;
 
-			void main()
-			{
-				gl_FragColor = v_color;
-			}
-		) );
+	//		void main()
+	//		{
+	//			gl_FragColor = v_color;
+	//		}
+	//	) );
 
-	// ** Create a normals shader
-	m_shaderNormals = m_hal->createShader(
-		GLSL(
-			uniform mat4 u_mvp;
-			varying vec4 v_color;
+	//// ** Create a normals shader
+	//m_shaderNormals = m_hal->createShader(
+	//	GLSL(
+	//		uniform mat4 u_mvp;
+	//		varying vec4 v_color;
 
-			void main()
-			{
-				v_color		= vec4( gl_Normal * 0.5 + 0.5, 1.0 );
-				gl_Position = u_mvp * gl_Vertex;
-			}
-		),
-		GLSL(
-			varying vec4 v_color;
+	//		void main()
+	//		{
+	//			v_color		= vec4( gl_Normal * 0.5 + 0.5, 1.0 );
+	//			gl_Position = u_mvp * gl_Vertex;
+	//		}
+	//	),
+	//	GLSL(
+	//		varying vec4 v_color;
 
-			void main()
-			{
-				gl_FragColor = v_color;
-			}
-		) );
+	//		void main()
+	//		{
+	//			gl_FragColor = v_color;
+	//		}
+	//	) );
 
-	// ** Create the lightmap shader
-	m_shaderLightmaped = m_hal->createShader(
-		GLSL(
-			uniform mat4 u_mvp;
-			varying vec2 v_tex0;
-			varying vec2 v_tex1;
+	//// ** Create the lightmap shader
+	//m_shaderLightmaped = m_hal->createShader(
+	//	GLSL(
+	//		uniform mat4 u_mvp;
+	//		varying vec2 v_tex0;
+	//		varying vec2 v_tex1;
 
-			void main()
-			{
-				v_tex0 = gl_MultiTexCoord0.xy;
-				v_tex1 = gl_MultiTexCoord1.xy;
-				// Transforming The Vertex
-				gl_Position = u_mvp * gl_Vertex;
-			} ),
-		GLSL(
-			uniform sampler2D u_diffuse;
-			uniform sampler2D u_lightmap;
-			uniform vec3	  u_diffuseColor;
-			varying vec2	  v_tex0;
-			varying vec2	  v_tex1;
+	//		void main()
+	//		{
+	//			v_tex0 = gl_MultiTexCoord0.xy;
+	//			v_tex1 = gl_MultiTexCoord1.xy;
+	//			// Transforming The Vertex
+	//			gl_Position = u_mvp * gl_Vertex;
+	//		} ),
+	//	GLSL(
+	//		uniform sampler2D u_diffuse;
+	//		uniform sampler2D u_lightmap;
+	//		uniform vec3	  u_diffuseColor;
+	//		varying vec2	  v_tex0;
+	//		varying vec2	  v_tex1;
 
-			void main()
-			{
-				// Setting Each Pixel To Red
-				gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 ) * u_diffuseColor;
-			} ) );
+	//		void main()
+	//		{
+	//			// Setting Each Pixel To Red
+	//			gl_FragColor = texture2D( u_diffuse, v_tex0 ) * texture2D( u_lightmap, v_tex1 ) * u_diffuseColor;
+	//		} ) );
 
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
@@ -155,6 +155,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 	// *******************************************
 
 	m_simpleScene = scene::Scene::create();
+	m_renderer    = new scene::Renderer( m_hal );
 
 	// *******************************************
 
@@ -203,15 +204,15 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         bool isSolid      = false;
 
         if( renderer->materials()[0]->shader() == "diffuse" ) {
-            m_solidRenderList.push_back( sceneObject );
+        //    m_solidRenderList.push_back( sceneObject );
             isSolid = true;
         }
         else if( renderer->materials()[0]->shader() == "additive" ) {
-            m_additiveRenderList.push_back( sceneObject );
+        //    m_additiveRenderList.push_back( sceneObject );
             addToRelight = false;
         }
         else {
-            m_transparentRenderList.push_back( sceneObject );
+        //    m_transparentRenderList.push_back( sceneObject );
         }
 
         SceneMeshInstance* instance = new SceneMeshInstance;
@@ -225,6 +226,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
 		scene::MaterialPtr material = scene::Material::create();
 		material->setColor( scene::Material::Diffuse, instance->m_mesh->m_diffuseColor );
+		material->setColor( scene::Material::Tint, instance->m_mesh->m_tintColor );
 		material->setTexture( scene::Material::Diffuse, instance->m_mesh->m_diffuse );
 
         if( renderer->materials()[0]->shader() == "diffuse" ) {
@@ -438,6 +440,7 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
         sceneMesh.m_material        = texture ? new relight::TexturedMaterial( texture, diffuse ) : new relight::Material( diffuse );
         sceneMesh.m_diffuse         = createTexture( texture );
 		sceneMesh.m_diffuseColor	= relight::Rgba( diffuse );
+		sceneMesh.m_tintColor		= relight::Rgba( material->color( uscene::Material::Tint ) );
     }
 
     // ** Create Relight mesh
@@ -545,20 +548,20 @@ struct Camera {
 Camera gCamera;
 
 // ** Lightmapping::renderBasis
-void Lightmapping::renderBasis( const math::Vec3& origin, const math::Vec3& front, const math::Vec3& up, const math::Vec3& right )
-{
-	m_hal->setDepthTest( true, renderer::Always );
-	m_hal->setShader( m_shaderColored );
-	m_shaderColored->setMatrix( m_shaderColored->findUniformLocation( "u_mvp" ), m_matrixProj * m_matrixView * math::Matrix4::translation( origin ) );
-
-	glBegin( GL_LINES );
-		glColor3f( 1, 0, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &right.x );
-		glColor3f( 0, 1, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &front.x );
-		glColor3f( 0, 0, 1 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &up.x );
-	glEnd();
-
-	m_hal->setDepthTest( true, renderer::Less );
-}
+//void Lightmapping::renderBasis( const math::Vec3& origin, const math::Vec3& front, const math::Vec3& up, const math::Vec3& right )
+//{
+//	m_hal->setDepthTest( true, renderer::Always );
+//	m_hal->setShader( m_shaderColored );
+//	m_shaderColored->setMatrix( m_shaderColored->findUniformLocation( "u_mvp" ), m_matrixProj * m_matrixView * math::Matrix4::translation( origin ) );
+//
+//	glBegin( GL_LINES );
+//		glColor3f( 1, 0, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &right.x );
+//		glColor3f( 0, 1, 0 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &front.x );
+//		glColor3f( 0, 0, 1 ); glVertex3f( 0, 0, 0 ); glVertex3fv( &up.x );
+//	glEnd();
+//
+//	m_hal->setDepthTest( true, renderer::Less );
+//}
 
 // ** Lightmapping::handleUpdate
 void Lightmapping::handleUpdate( platform::Window* window )
@@ -573,13 +576,13 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
 	gCamera.update();
 
-#if 0
-	Matrix4 camera = affineTransform( const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform() );
-	Vec4    pos    = camera * Vec4( 0, 0, 0, 1 );
-	Vec4	right  = camera * Vec4( -1, 0, 0, 0 );
-	Vec4	up     = camera * Vec4( 0, 1, 0, 0 );
-	Vec4	view   = camera * Vec4( 0, 0, 1, 0 );
-#endif
+//#if 0
+//	Matrix4 camera = affineTransform( const_cast<uscene::SceneObject*>( m_scene->findSceneObject( "Camera" ) )->transform() );
+//	Vec4    pos    = camera * Vec4( 0, 0, 0, 1 );
+//	Vec4	right  = camera * Vec4( -1, 0, 0, 0 );
+//	Vec4	up     = camera * Vec4( 0, 1, 0, 0 );
+//	Vec4	view   = camera * Vec4( 0, 0, 1, 0 );
+//#endif
 
 	m_matrixView = Matrix4::lookAt( gCamera.pos, gCamera.pos + gCamera.view, gCamera.up );
 	m_matrixProj = Matrix4::perspective( 60.0f, window->width() / float( window->height() ), 0.01f, 1000.0f );
@@ -594,10 +597,9 @@ void Lightmapping::handleUpdate( platform::Window* window )
         return;
     }
 
-	scene::Renderer r( m_hal );
 
-#if 1
-	r.render( m_matrixView, m_matrixProj, m_simpleScene );
+//#if 1
+	m_renderer->render( m_matrixView, m_matrixProj, m_simpleScene );
 
 	for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {
 		uscene::SceneObject* object   = m_scene->sceneObject( i );
@@ -621,90 +623,89 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
         instance->m_dirty = false;
     }
-#else
-//    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
-	m_hal->setShader( m_shaderLightmaped );
-
-    {
-        renderObjects( m_shaderLightmaped, m_solidRenderList );
-    }
-
-    {
-        m_hal->setAlphaTest( renderer::Greater, 0.5f );
-        renderObjects( m_shaderLightmaped, m_transparentRenderList );
-        m_hal->setAlphaTest( renderer::CompareDisabled );
-    }
-
-    {
-        m_hal->setDepthTest( false, renderer::Less );
-        m_hal->setBlendFactors( renderer::BlendOne, renderer::BlendOne );
-
-        renderObjects( m_shaderLightmaped, m_additiveRenderList );
-
-        m_hal->setDepthTest( true, renderer::Less );
-        m_hal->setBlendFactors( renderer::BlendDisabled, renderer::BlendDisabled );
-    }
-
-	for( int i = 0; i < m_relightScene->lightCount(); i++ ) {
-		renderBasis( m_relightScene->light( i )->position() );
-	}
-
-	renderBasis();
-#endif
-
-	m_hal->setShader( NULL );
+//#else
+////    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
+//	m_hal->setShader( m_shaderLightmaped );
+//
+//    {
+//        renderObjects( m_shaderLightmaped, m_solidRenderList );
+//    }
+//
+//    {
+//        m_hal->setAlphaTest( renderer::Greater, 0.5f );
+//        renderObjects( m_shaderLightmaped, m_transparentRenderList );
+//        m_hal->setAlphaTest( renderer::CompareDisabled );
+//    }
+//
+//    {
+//        m_hal->setDepthTest( false, renderer::Less );
+//        m_hal->setBlendFactors( renderer::BlendOne, renderer::BlendOne );
+//
+//        renderObjects( m_shaderLightmaped, m_additiveRenderList );
+//
+//        m_hal->setDepthTest( true, renderer::Less );
+//        m_hal->setBlendFactors( renderer::BlendDisabled, renderer::BlendDisabled );
+//    }
+//
+//	for( int i = 0; i < m_relightScene->lightCount(); i++ ) {
+//		renderBasis( m_relightScene->light( i )->position() );
+//	}
+//
+//	renderBasis();
+//#endif
+//	m_hal->setShader( NULL );
 
     m_hal->present();
 }
 
 // ** Lightmapping::renderObjects
-void Lightmapping::renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects )
-{
-	using namespace relight;
-
-    for( int i = 0; i < objects.size(); i++ ) {
-        uscene::SceneObject* object   = objects[i];
-        SceneMeshInstance*   instance = reinterpret_cast<SceneMeshInstance*>( object->userData() );
-
-        if( !instance ) {
-            continue;
-        }
-
-		Matrix4    mvp   = m_matrixProj * m_matrixView * instance->m_transform;
-		const Rgb& color = instance->m_mesh->m_material->color();
-
-		shader->setVec3( shader->findUniformLocation( "u_diffuseColor" ), Vec3( color.r, color.g, color.b ) );
-		shader->setMatrix( shader->findUniformLocation( "u_mvp" ), mvp );
-		shader->setInt( shader->findUniformLocation( "u_diffuse" ), 0 );
-		shader->setInt( shader->findUniformLocation( "u_lightmap" ), 1 );
-
-        const relight::Rgb& diffuse = instance->m_mesh->m_material->color();
-
-		m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
-		m_hal->setTexture( 1, instance->m_lightmap );
-
-        m_hal->setVertexBuffer( instance->m_mesh->m_vertexBuffer );
-        m_hal->renderIndexed( renderer::PrimTriangles, instance->m_mesh->m_indexBuffer, 0, instance->m_mesh->m_indexBuffer->size() );
-
-        if( instance->m_dirty ) {
-            relight::Lightmap* lm = instance->m_lm;
-
-			if( instance->m_lightmap == NULL ) {
-				instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
-			}
-
-			lm->expand();
-
-            float* pixels = lm->toRgb32F();
-            instance->m_lightmap->setData( 0, pixels );
-            delete[]pixels;
-
-            instance->m_dirty = false;
-        }
-    }
-
-    m_hal->setVertexBuffer( NULL );
-}
+//void Lightmapping::renderObjects( renderer::Shader* shader, const uscene::SceneObjectArray& objects )
+//{
+//	using namespace relight;
+//
+//    for( int i = 0; i < objects.size(); i++ ) {
+//        uscene::SceneObject* object   = objects[i];
+//        SceneMeshInstance*   instance = reinterpret_cast<SceneMeshInstance*>( object->userData() );
+//
+//        if( !instance ) {
+//            continue;
+//        }
+//
+//		Matrix4    mvp   = m_matrixProj * m_matrixView * instance->m_transform;
+//		const Rgb& color = instance->m_mesh->m_material->color();
+//
+//		shader->setVec3( shader->findUniformLocation( "u_diffuseColor" ), Vec3( color.r, color.g, color.b ) );
+//		shader->setMatrix( shader->findUniformLocation( "u_mvp" ), mvp );
+//		shader->setInt( shader->findUniformLocation( "u_diffuse" ), 0 );
+//		shader->setInt( shader->findUniformLocation( "u_lightmap" ), 1 );
+//
+//        const relight::Rgb& diffuse = instance->m_mesh->m_material->color();
+//
+//		m_hal->setTexture( 0, instance->m_mesh->m_diffuse );
+//		m_hal->setTexture( 1, instance->m_lightmap );
+//
+//        m_hal->setVertexBuffer( instance->m_mesh->m_vertexBuffer );
+//        m_hal->renderIndexed( renderer::PrimTriangles, instance->m_mesh->m_indexBuffer, 0, instance->m_mesh->m_indexBuffer->size() );
+//
+//        if( instance->m_dirty ) {
+//            relight::Lightmap* lm = instance->m_lm;
+//
+//			if( instance->m_lightmap == NULL ) {
+//				instance->m_lightmap = m_hal->createTexture2D( lm->width(), lm->height(), renderer::PixelRgb32F );
+//			}
+//
+//			lm->expand();
+//
+//            float* pixels = lm->toRgb32F();
+//            instance->m_lightmap->setData( 0, pixels );
+//            delete[]pixels;
+//
+//            instance->m_dirty = false;
+//        }
+//    }
+//
+//    m_hal->setVertexBuffer( NULL );
+//}
 
 // ** ThreadWorker::worker
 void ThreadWorker::worker( void* userData )
