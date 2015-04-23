@@ -82,14 +82,9 @@ void Baker::bakeFace( const Mesh* mesh, Index index )
     const Face& face      = mesh->face( index );
     Lightmap*   lightmap  = mesh->lightmap();
 
-    // ** Calculate UV bounds
-    Uv min, max;
-    face.uvRect( min, max );
-
-    int uStart = min.x * lightmap->width();
-    int uEnd   = max.x * lightmap->width();
-    int vStart = min.y * lightmap->height();
-    int vEnd   = max.y * lightmap->height();
+	// ** Get the UV bounding rect
+	int uStart, uEnd, vStart, vEnd;
+	lightmap->rect( face.uvRect(), uStart, vStart, uEnd, vEnd );
 
     // ** Initialize lumels
     for( int v = vStart; v <= vEnd; v++ ) {
@@ -212,14 +207,9 @@ bool FaceBakeIterator::next( void )
     
     const Face& face = m_mesh->face( m_index );
 
-    // ** Calculate UV bounds
-    Uv min, max;
-    face.uvRect( min, max );
-
-    int uStart = min.x * m_lightmap->width();
-    int uEnd   = max.x * m_lightmap->width();
-    int vStart = min.y * m_lightmap->height();
-    int vEnd   = max.y * m_lightmap->height();
+	// ** Get the UV bounding rect
+	int uStart, uEnd, vStart, vEnd;
+	m_lightmap->rect( face.uvRect(), uStart, vStart, uEnd, vEnd );
 
     // ** Process face lumels
     for( int v = vStart; v <= vEnd; v++ ) {

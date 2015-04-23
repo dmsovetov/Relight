@@ -76,6 +76,9 @@ namespace relight {
         Lumel&                  lumel( int x, int y );
         const Lumel&            lumel( int x, int y ) const;
 
+		//! Returns a pixel rect by a UV bounds.
+		void					rect( const Rect& uv, int& x1, int& y1, int& x2, int& y2 ) const;
+
         //! Adds an instance to this lightmap.
         /*!
          This function initializes all lumels corresponding to a given instance.

@@ -94,7 +94,7 @@ Rgb DirectLight::lightFromPointSet( const Lumel& lumel, const Light* light ) con
         }
     }
 
-    return color / vertexGenerator->vertexCount();
+    return color / static_cast<float>( vertexGenerator->vertexCount() );
 }
 
 // ** DirectLight::influenceFromPoint

@@ -333,7 +333,7 @@ PhotonEmitter::PhotonEmitter( const Light* light ) : m_light( light )
 // ** PhotonEmitter::photonCount
 int PhotonEmitter::photonCount( void ) const
 {
-    return m_light->intensity() * 25000;
+    return static_cast<int>( m_light->intensity() * 25000 );
 }
 
 // ** PhotonEmitter::emit
@@ -466,7 +466,7 @@ float LightSpotCutoff::cutoffForDirection( const Vec3& direction ) const
         return 0.0f;
     }
 
-    value = (1.0 - (1.0 - value) * 1.0/(1.0 - m_cutoff));
+    value = (1.0f - (1.0f - value) * 1.0f / (1.0f - m_cutoff));
 
     if( fabs( 1.0f - m_exponent ) > 0.01f ) {
         value = powf( value, m_exponent );

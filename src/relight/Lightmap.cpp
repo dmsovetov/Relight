@@ -114,18 +114,24 @@ void Lightmap::initializeLumels( const Mesh* mesh )
     }
 }
 
+// ** Lightmap::rect
+void Lightmap::rect( const Rect& uv, int& x1, int& y1, int& x2, int& y2 ) const
+{
+	const Vec2& min = uv.min();
+	const Vec2& max = uv.max();
+
+    x1 = static_cast<int>( min.x * m_width );
+    x2 = static_cast<int>( max.x * m_width );
+    y1 = static_cast<int>( min.y * m_height );
+    y2 = static_cast<int>( max.y * m_height );
+}
+
 // ** Lightmap::initializeLumels
 void Lightmap::initializeLumels( const Face& face )
 {
-    Uv   min, max;
-
-    // ** Calculate UV bounds
-    face.uvRect( min, max );
-
-    int uStart = static_cast<int>( min.x * m_width );
-    int uEnd   = static_cast<int>( max.x * m_width );
-    int vStart = static_cast<int>( min.y * m_height );
-    int vEnd   = static_cast<int>( max.y * m_height );
+	// ** Get the UV bounding rect
+	int uStart, uEnd, vStart, vEnd;
+	rect( face.uvRect(), uStart, vStart, uEnd, vEnd );
 
     // ** Initialize lumels
     for( int v = vStart; v <= vEnd; v++ ) {
@@ -358,7 +364,7 @@ Rgb Photonmap::gather( int x, int y, int radius ) const
         return Rgb( 0.0f, 0.0f, 0.0f );
     }
 
-    return color / photons;
+    return color / static_cast<float>( photons );
 }
 
 } // namespace relight

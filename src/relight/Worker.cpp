@@ -55,7 +55,7 @@ void FullBakeJob::execute( JobData* data )
 
     std::sort( meshes.begin(), meshes.end(), SortMesh::predicate );
 
-    for( int i = 0; i < meshes.size(); i++ ) {
+    for( int i = 0; i < ( int )meshes.size(); i++ ) {
         for( int j = 0, n = numWorkers; j < n; j++ ) {
             JobData* instanceData       = new JobData;
             instanceData->m_job         = m_job;
@@ -72,8 +72,8 @@ void FullBakeJob::execute( JobData* data )
             m_workers[j]->push( m_job, instanceData );
         }
 
-        for( int i = 0; i < numWorkers; i++ ) {
-            m_workers[i]->wait();
+        for( int j = 0; j < numWorkers; j++ ) {
+            m_workers[j]->wait();
         }
 
         printf( "%d/%d\n", i, data->m_scene->meshCount() );

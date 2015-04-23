@@ -27,6 +27,10 @@
 #ifndef __Relight_H__
 #define __Relight_H__
 
+#ifdef WIN32
+	#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <vector>
 #include <string>
 #include <map>
@@ -59,6 +63,7 @@ namespace relight {
 	typedef math::Matrix4	Matrix4;
 	typedef math::Quat		Quat;
 	typedef math::Bounds	Bounds;
+	typedef math::Rect		Rect;
     typedef Uv				Barycentric;
 
     class Scene;

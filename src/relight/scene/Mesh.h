@@ -120,7 +120,8 @@ namespace relight {
         bool            isUvInside( const Uv& uv, Barycentric& barycentric, Vertex::UvLayer layer ) const;
 
         //! Returns a UV rectangle for face.
-        void            uvRect( Uv& min, Uv& max ) const;
+   //     void            uvRect( Uv& min, Uv& max ) const;
+		Rect			uvRect( void ) const;
 
         //! Returns a vertex by index.
         const Vertex*   vertex( int index ) const;

@@ -366,17 +366,21 @@ float Face::area( void ) const
 }
 
 // ** Face::uvRect
-void Face::uvRect( Uv& min, Uv& max ) const
+Rect Face::uvRect( void ) const
 {
     const Uv& a = m_a->m_uv[Vertex::Lightmap];
     const Uv& b = m_b->m_uv[Vertex::Lightmap];
     const Uv& c = m_c->m_uv[Vertex::Lightmap];
+
+	Vec2 min, max;
 
     min.x = math::min3( a.x, b.x, c.x );
     max.x = math::max3( a.x, b.x, c.x );
 
     min.y = math::min3( a.y, b.y, c.y );
     max.y = math::max3( a.y, b.y, c.y );
+
+	return Rect( min, max );
 }
 
 // ** Face::isUvInside

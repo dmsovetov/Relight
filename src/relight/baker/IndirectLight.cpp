@@ -64,7 +64,7 @@ void IndirectLight::bakeLumel( Lumel& lumel )
         }
     }
 
-    lumel.m_color += gathered / m_samples;
+    lumel.m_color += gathered / static_cast<float>( m_samples );
 }
 
 } // namespace bake
