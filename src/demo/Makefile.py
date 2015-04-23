@@ -1,4 +1,4 @@
-demo = Executable( 'demo', sources = [ '.' ], paths = [ '../relight', '../../modules/dreemchest/src/dreemchest', '../../modules/uscene/src' ], link = [ 'relight', 'dRenderer', 'dThreads', 'dPlatform', 'uScene' ] )
+demo = Executable( 'demo', sources = [ '.' ], paths = [ '../relight', '../../modules/dreemchest/src/dreemchest', '../../modules/uscene/src' ], link = [ 'relight', 'dRenderer', 'dThreads', 'dScene', 'dPlatform', 'uScene' ] )
 demo.linkExternal( Library( 'OpenGL', True ), Library( 'fbx', True ), Library( 'yaml', True ) )
 
 if MacOS:

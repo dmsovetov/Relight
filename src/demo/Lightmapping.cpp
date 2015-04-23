@@ -270,6 +270,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     for( int i = 0; i < k_Workers; i++ ) {
         m_relightWorkers.push_back( new LmWorker );
     }
+
+	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::fast( m_scene->settings()->ambient(), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
 }
 
 // ** Lightmapping::affineTransform
@@ -530,9 +532,10 @@ void Lightmapping::handleUpdate( platform::Window* window )
     }
 
 	scene::Renderer r( m_hal );
-	r.render( m_matrixView, m_matrixProj, m_simpleScene );
 
-	/*
+#if 0
+	r.render( m_matrixView, m_matrixProj, m_simpleScene );
+#else
 //    m_hal->setFog( renderer::FogExp2, settings->fogDensity() * 7, fogColor, 0, 300 );
 	m_hal->setShader( m_shaderLightmaped );
 
@@ -558,9 +561,10 @@ void Lightmapping::handleUpdate( platform::Window* window )
 
 	for( int i = 0; i < m_relightScene->lightCount(); i++ ) {
 		renderBasis( m_relightScene->light( i )->position() );
-	}*/
+	}
 
 	renderBasis();
+#endif
 
 	m_hal->setShader( NULL );
 
