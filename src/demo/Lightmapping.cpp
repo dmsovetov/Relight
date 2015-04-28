@@ -144,8 +144,9 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
     m_assets = Assets::parse( "Assets/assets" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Scenes/Simple.scene" );
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
+//	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/Mine.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -192,7 +193,14 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 		// **********************************************************************************************
 
 		if( light ) {
-			m_relightScene->addLight( relight::Light::createPointLight( affineTransform( transform ) * math::Vec3(), light->range(), light->color(), light->intensity() ) );
+			switch( light->type() ) {
+			case Light::Point:			m_relightScene->addLight( relight::Light::createPointLight( affineTransform( transform ) * math::Vec3(), light->range(), light->color(), light->intensity() ) );
+										break;
+
+			case Light::Directional:	m_relightScene->addLight( relight::Light::createDirectionalLight( rotation.rotate( relight::Vec3(0, 0, 1) ), light->color(), light->intensity(), true ) );
+										break;
+			}
+			
 			continue;
 		}
 
@@ -329,7 +337,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         m_relightWorkers.push_back( new LmWorker );
     }
 
-	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::fast( m_scene->settings()->ambient(), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
+	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( m_scene->settings()->ambient(), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
 }
 
 // ** Lightmapping::extractTransform
@@ -616,6 +624,10 @@ void Lightmapping::handleUpdate( platform::Window* window )
 		}
 
 		lm->expand();
+
+		char buffer[256];
+		sprintf( buffer, "lightmaps/%d.tga", object->objectId() );
+		lm->save(buffer);
 
         float* pixels = lm->toRgb32F();
         instance->m_lightmap->setData( 0, pixels );
