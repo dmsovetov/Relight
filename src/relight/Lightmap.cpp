@@ -217,54 +217,95 @@ void Lightmap::blur( void )
 }
     
 // ** Lightmap::save
-bool Lightmap::save( const String& fileName ) const
+bool Lightmap::save( const String& fileName, StorageFormat format ) const
 {
     FILE	*file;
-    int		image_size = 0;
-
-    unsigned char tga_header_a[12]   = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-    unsigned char tga_info_header[6] = { 0, 0, 0, 0, 0, 0 };
 
     file = fopen( fileName.c_str(), "wb" );
     if( !file ) {
         return false;
     }
 
-    fwrite( tga_header_a, 1, sizeof( tga_header_a ), file );
+    if( format == RawHdr ) {
+        fwrite( &m_width,  1, sizeof( int ), file );
+        fwrite( &m_height, 1, sizeof( int ), file );
 
-    int channels = 3;
-
-    tga_info_header[0] = m_width  % 256;
-    tga_info_header[1] = m_width  / 256;
-    tga_info_header[2] = m_height % 256;
-    tga_info_header[3] = m_height / 256;
-    tga_info_header[4] = channels * 8;
-    tga_info_header[5] = 0;
-
-    fwrite( tga_info_header, 1, sizeof( tga_info_header ), file );
-    image_size = m_width * m_height * channels;
-
-    for( int j = 0; j < m_height; j++ ) {
-        for( int i = 0; i < m_width; i++ ) {
-            const Lumel& lumel   = m_lumels[j*m_width + i];
-            int          photons = lumel.m_photons ? lumel.m_photons : 1;
-
-            unsigned char r = static_cast<unsigned char>( math::min2( lumel.m_color.b / photons * 255.0f, 255.0f ) );
-            unsigned char g = static_cast<unsigned char>( math::min2( lumel.m_color.g / photons * 255.0f, 255.0f ) );
-            unsigned char b = static_cast<unsigned char>( math::min2( lumel.m_color.r / photons * 255.0f, 255.0f ) );
-
-            unsigned char pixel[] = { r, g, b };
-            fwrite( pixel, sizeof( pixel ), 1, file );
-        }
+        float* pixels = toHdr();
+        fwrite( pixels, sizeof( float ), m_width * m_height * 3, file );
+        delete[]pixels;
     }
-    
+    else {
+        unsigned char* pixels   = NULL;
+        unsigned int   channels = 0;
+
+        switch( format ) {
+        case TgaDoubleLdr:  pixels   = toDoubleLdr();
+                            channels = 3;
+                            break;
+
+        case TgaRgbm:       pixels = toRgbmLdr();
+                            channels = 4;
+                            break;
+        }
+
+        unsigned char tga_header_a[12]   = { 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        unsigned char tga_info_header[6] = { 0, 0, 0, 0, 0, 0 };
+
+        fwrite( tga_header_a, 1, sizeof( tga_header_a ), file );
+
+        tga_info_header[0] = m_width  % 256;
+        tga_info_header[1] = m_width  / 256;
+        tga_info_header[2] = m_height % 256;
+        tga_info_header[3] = m_height / 256;
+        tga_info_header[4] = channels * 8;
+        tga_info_header[5] = 0;
+
+        fwrite( tga_info_header, 1, sizeof( tga_info_header ), file );
+
+        for( int i = 0; i < m_width * m_height; i++ ) {
+            unsigned char* pixel = &pixels[i * channels];
+
+            fwrite( &pixel[2], 1, 1, file );
+            fwrite( &pixel[1], 1, 1, file );
+            fwrite( &pixel[0], 1, 1, file );
+
+            if( channels == 4 ) {
+                fwrite( &pixel[3], 1, 1, file );
+            }
+        }
+
+        delete[]pixels;
+    }
+
     fclose( file );
 
     return true;
 }
 
-// ** Lightmap::toRgb8
-unsigned char* Lightmap::toRgb8( void ) const
+// ** Lightmap::toRgbmLdr
+unsigned char* Lightmap::toRgbmLdr( void ) const
+{
+    unsigned char* pixels = new unsigned char[m_width * m_height * 4];
+    const int      stride = m_width * 4;
+
+    for( int y = 0; y < m_height; y++ ) {
+        for( int x = 0; x < m_width; x++ ) {
+            const Lumel&   lumel   = m_lumels[y * m_width + x];
+            unsigned char* pixel   = &pixels[y * stride + x * 3];
+            RgbmLdr        rgbm    = lumel.m_color.rgbm();
+
+            pixel[0] = rgbm.r;
+            pixel[1] = rgbm.g;
+            pixel[2] = rgbm.b;
+            pixel[3] = rgbm.m;
+        }
+    }
+
+    return pixels;
+}
+
+// ** Lightmap::toDoubleLdr
+unsigned char* Lightmap::toDoubleLdr( void ) const
 {
     unsigned char* pixels = new unsigned char[m_width * m_height * 3];
     const int      stride = m_width * 3;
@@ -273,18 +314,19 @@ unsigned char* Lightmap::toRgb8( void ) const
         for( int x = 0; x < m_width; x++ ) {
             const Lumel&    lumel   = m_lumels[y * m_width + x];
             unsigned char*  pixel   = &pixels[y * stride + x * 3];
+            DoubleLdr       dldr    = lumel.m_color.doubleLdr();
 
-            pixel[0] = static_cast<unsigned char>( math::min2( lumel.m_color.r * 255.0f, 255.0f ) );
-            pixel[1] = static_cast<unsigned char>( math::min2( lumel.m_color.g * 255.0f, 255.0f ) );
-            pixel[2] = static_cast<unsigned char>( math::min2( lumel.m_color.b * 255.0f, 255.0f ) );
+            pixel[0] = dldr.r;
+            pixel[1] = dldr.g;
+            pixel[2] = dldr.b;
         }
     }
 
     return pixels;
 }
 
-// ** Lightmap::toRgb32F
-float* Lightmap::toRgb32F( void ) const
+// ** Lightmap::toHdr
+float* Lightmap::toHdr( void ) const
 {
     float*    pixels = new float[m_width * m_height * 3];
     const int stride = m_width * 3;

@@ -60,6 +60,8 @@ namespace relight {
 	typedef math::Plane		Plane;
 	typedef math::Rgb		Rgb;
 	typedef math::Rgba		Rgba;
+    typedef math::DoubleLdr DoubleLdr;
+    typedef math::RgbmLdr   RgbmLdr;
 	typedef math::Matrix4	Matrix4;
 	typedef math::Quat		Quat;
 	typedef math::Bounds	Bounds;
@@ -114,6 +116,13 @@ namespace relight {
         RelightSuccess,         //!< Everything is OK.
         RelightInvalidCall,     //!< Invalid call.
         RelightNotImplemented   //!< The method is not implemented.
+    };
+
+    //! Lightmap storage file format.
+    enum StorageFormat {
+        RawHdr,
+        TgaDoubleLdr,
+        TgaRgbm,
     };
 
     //! Baker progress callback.

@@ -93,19 +93,32 @@ namespace relight {
         void                    blur( void );
 
         //! Saves a lightmap to file.
-        bool                    save( const String& fileName ) const;
+        bool                    save( const String& fileName, StorageFormat format ) const;
 
-        //! Converts a lightmap to buffer with 8-bit color.
+        //! Converts a lightmap to buffer with 8-bit RGB color with double LDR encoding.
+        /*!
+         In double LDR encoding each pixel component is divided by 2 and stored in puffer.
+         When rendering the final image with a dLDR-encoded lightmap it should be multiplied
+         by 2 to restore the original data.
+
+         Warning: you should free the resulting buffer by yourself.
+         */
+        unsigned char*          toDoubleLdr( void ) const;
+
+        //! Converts a lightmap to buffer with 8-bit RGBA color with RGBM encoding.
+        /*!
+         In RGBM encoding each pixel is represented by an LDR RGB color and a multiplier
+         to convert it to HDR at a runtime.
+
+         Warning: you should free the resulting buffer by yourself.
+        */
+        unsigned char*          toRgbmLdr( void ) const; 
+
+        //! Converts a lightmap to buffer with 32-bit floating point color HDR.
         /*!
          Warning: you should free the resulting buffer by yourself.
          */
-        unsigned char*          toRgb8( void ) const;
-
-        //! Converts a lightmap to buffer with 32-bit floating point color.
-        /*!
-         Warning: you should free the resulting buffer by yourself.
-         */
-        float*                  toRgb32F( void ) const;
+        float*                  toHdr( void ) const;
 
     protected:
 
