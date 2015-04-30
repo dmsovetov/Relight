@@ -135,8 +135,10 @@ void FbxLoader::loadGeometryInfo( FbxMesh* pFbxMesh )
             vidx.uv[0]    = fbxTexCoord0;
             vidx.uv[1]    = fbxTexCoord1;
 
-            m_vertexBuffer.push_back( vidx );
-            m_indexBuffer.push_back(m_vertexBuffer.size() - 1);
+            m_mesh += vidx;
+
+       //     m_vertexBuffer.push_back( vidx );
+       //     m_indexBuffer.push_back(m_vertexBuffer.size() - 1);
         }
     }
 }

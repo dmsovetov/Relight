@@ -9,6 +9,8 @@
 #include <fbxsdk.h>
 #include <vector>
 
+#include <math/Mesh.h>
+
 namespace fbx {
 
 struct Vertex {
@@ -17,17 +19,35 @@ struct Vertex {
     FbxVector2  uv[2];
 };
 
-typedef std::vector<unsigned short> IndexBuffer;
-typedef std::vector<Vertex>         VertexBuffer;
+struct VertexCompare {
+    bool operator()( const Vertex& a, const Vertex& b ) const
+    {
+        for( int i = 0; i < 3; i++ ) {
+            if( a.position[i] != b.position[i] ) return a.position[i] < b.position[i];
+        }
+        for( int i = 0; i < 3; i++ ) {
+            if( a.normal[i] != b.normal[i] ) return a.normal[i] < b.normal[i];
+        }
+        for( int j = 0; j < 2; j++ ) {
+            for( int i = 0; i < 2; i++ ) {
+                if( a.uv[j][i] != b.uv[j][i] ) return a.uv[j][i] < b.uv[j][i];
+            }
+        }
+
+        return false;
+    }
+};
 
 class FbxLoader {
 public:
 
+    typedef math::MeshIndexer<Vertex, VertexCompare> FbxMeshIndexer;
+
     //! Loads an FBX from file.
     bool            load( const char* filePath );
 
-    const VertexBuffer& vertexBuffer() const { return m_vertexBuffer; }
-    const IndexBuffer&  indexBuffer() const { return m_indexBuffer; }
+    const FbxMeshIndexer::VertexBuffer& vertexBuffer() const { return m_mesh.vertexBuffer(); }
+    const FbxMeshIndexer::IndexBuffer&  indexBuffer() const { return m_mesh.indexBuffer(); }
 
 private:
 
@@ -43,11 +63,14 @@ private:
     //! FBX scene.
     FbxScene*       m_scene;
 
+    //! Mesh indexer.
+    FbxMeshIndexer  m_mesh;
+
     //! Mesh vertex buffer.
-    VertexBuffer    m_vertexBuffer;
+//    VertexBuffer    m_vertexBuffer;
 
     //! Mesh index buffer.
-    IndexBuffer     m_indexBuffer;
+//    IndexBuffer     m_indexBuffer;
 };
 
 } // namespace fbx

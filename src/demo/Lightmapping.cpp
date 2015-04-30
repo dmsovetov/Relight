@@ -27,6 +27,8 @@
 #include "Lightmapping.h"
 #include "FbxLoader.h"
 
+#include <math/Mesh.h>
+
 #ifdef WIN32
 	#include <Windows.h>
 	#include <gl/GL.h>
@@ -80,7 +82,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/scenes/RogueCamp.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/Debug.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -144,12 +146,13 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
         bool addToRelight = sceneObject->isStatic();
         bool isSolid      = false;
+        std::string shader = renderer->materials()[0]->shader();
 
-        if( renderer->materials()[0]->shader() == "diffuse" ) {
+        if( shader == "diffuse" || shader == "specular" ) {
         //    m_solidRenderList.push_back( sceneObject );
             isSolid = true;
         }
-        else if( renderer->materials()[0]->shader() == "additive" ) {
+        else if( shader == "additive" ) {
         //    m_additiveRenderList.push_back( sceneObject );
             addToRelight = false;
         }
@@ -171,10 +174,10 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 		material->setColor( scene::Material::Tint, instance->m_mesh->m_tintColor );
 		material->setTexture( scene::Material::Diffuse, instance->m_mesh->m_diffuse );
 
-        if( renderer->materials()[0]->shader() == "diffuse" ) {
+        if( shader == "diffuse" || shader == "specular" ) {
 			material->setShader( scene::Material::Solid );
         }
-        else if( renderer->materials()[0]->shader() == "additive" ) {
+        else if( shader == "additive" ) {
 			material->setShader( scene::Material::Additive );
         }
         else {
@@ -278,7 +281,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         m_relightWorkers.push_back( new LmWorker );
     }
 
-	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( m_scene->settings()->ambient(), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
+	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( /*m_scene->settings()->ambient()*/relight::Rgb( 0.86f, 0.93f, 1.0f ), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
 #endif
 }
 
@@ -388,6 +391,8 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
     if( !loader.load( asset->fileName().c_str() ) ) {
         return NULL;
     }
+
+    math::HalfEdge<fbx::Vertex> halfEdge = math::HalfEdge<fbx::Vertex>::create( loader.vertexBuffer(), loader.indexBuffer() );
 
     relight::VertexBuffer vertices;
     relight::IndexBuffer  indices;
