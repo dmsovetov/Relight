@@ -82,7 +82,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/scenes/Debug.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/Crypt.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -281,13 +281,14 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         m_relightWorkers.push_back( new LmWorker );
     }
 
-	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( /*m_scene->settings()->ambient()*/relight::Rgb( 0.86f, 0.93f, 1.0f ), relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
+	const relight::Rgb kSkyColor( 0.86f, 0.93f, 1.0f );
+	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( m_scene->settings()->ambient()/*kSkyColor*/, relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
 #endif
 }
 
 renderer::Texture2D* Lightmapping::loadLightmapFromFile( const std::string& fileName )
 {
-    printf( "Loafing lightmap %s\n", fileName.c_str() );
+    printf( "Loading lightmap %s\n", fileName.c_str() );
 
     int width = 0, height = 0;
 
@@ -392,7 +393,7 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
         return NULL;
     }
 
-    math::HalfEdge<fbx::Vertex> halfEdge = math::HalfEdge<fbx::Vertex>::create( loader.vertexBuffer(), loader.indexBuffer() );
+ //   math::HalfEdge<fbx::Vertex> halfEdge = math::HalfEdge<fbx::Vertex>::create( loader.vertexBuffer(), loader.indexBuffer() );
 
     relight::VertexBuffer vertices;
     relight::IndexBuffer  indices;
@@ -454,10 +455,10 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
         const relight::Vertex& rv = mesh.m_mesh->vertex( i );
         SceneVertex&           sv = vertices[i];
 
-        sv.x  = rv.m_position.x; sv.y  = rv.m_position.y; sv.z  = rv.m_position.z;
-        sv.nx = rv.m_normal.x;   sv.ny = rv.m_normal.y;   sv.nz = rv.m_normal.z;
-        sv.u0 = rv.m_uv[0].x;    sv.v0 = rv.m_uv[0].y;
-        sv.u1 = rv.m_uv[1].x;    sv.v1 = rv.m_uv[1].y;
+        sv.position.x  = rv.m_position[0]; sv.position.y  = rv.m_position[1]; sv.position.z  = rv.m_position[2];
+        sv.normal.x    = rv.m_normal[0];   sv.normal.y    = rv.m_normal[1];   sv.normal.z    = rv.m_normal[2];
+        sv.uv[0].x	   = rv.m_uv[0][0];    sv.uv[0].y	  = rv.m_uv[0][1];
+        sv.uv[1].x	   = rv.m_uv[1][0];    sv.uv[1].y	  = rv.m_uv[1][1];
     }
     mesh.m_vertexBuffer->unlock();
 
@@ -565,7 +566,7 @@ void Lightmapping::handleUpdate( platform::Window* window )
         return;
     }
 
-	m_renderer->render( m_matrixView, m_matrixProj, m_simpleScene );
+	m_renderer->render( m_matrixView, m_matrixProj, m_simpleScene.get() );
 
 #if !USE_BACKED
 	for( int i = 0; i < m_scene->sceneObjectCount(); i++ ) {

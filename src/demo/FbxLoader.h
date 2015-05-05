@@ -46,8 +46,8 @@ public:
     //! Loads an FBX from file.
     bool            load( const char* filePath );
 
-    const FbxMeshIndexer::VertexBuffer& vertexBuffer() const { return m_mesh.vertexBuffer(); }
-    const FbxMeshIndexer::IndexBuffer&  indexBuffer() const { return m_mesh.indexBuffer(); }
+    FbxMeshIndexer::VertexBuffer& vertexBuffer() { return m_mesh.vertexBuffer(); }
+    FbxMeshIndexer::IndexBuffer&  indexBuffer() { return m_mesh.indexBuffer(); }
 
 private:
 

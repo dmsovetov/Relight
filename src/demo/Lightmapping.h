@@ -30,14 +30,6 @@
 #include "RelightDemo.h"
 #include <uscene/src/uScene.h>
 
-// ** struct SceneVertex
-struct SceneVertex {
-    float           x, y, z;
-    float           nx, ny, nz;
-    float           u0, v0;
-    float           u1, v1;
-};
-
 // ** struct SceneMesh
 struct SceneMesh {
     relight::Mesh*          m_mesh;

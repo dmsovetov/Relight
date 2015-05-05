@@ -24,53 +24,29 @@
 
  **************************************************************************/
 
-#ifndef __Relight_RelightDemo__
-#define __Relight_RelightDemo__
+#ifndef __Relight_Demo_GenerateUv__
+#define __Relight_Demo_GenerateUv__
 
+#include "RelightDemo.h"
 
-#include <Relight.h>
-#include <Dreemchest.h>
+// ** class GenerateUv
+class GenerateUv : public platform::WindowDelegate {
+public:
 
-DC_USE_DREEMCHEST
+                        GenerateUv( renderer::Hal* hal );
 
-// ** struct SceneVertex
-struct SceneVertex {
-    math::Vec3		position;
-    math::Vec3		normal;
-    math::Vec2      uv[2];
-};
-
-// ** SceneVertexCompare 
-struct SceneVertexCompare {
-    bool operator()( const SceneVertex& a, const SceneVertex& b ) const
-    {
-        for( int i = 0; i < 3; i++ ) {
-            if( a.position[i] != b.position[i] ) return a.position[i] < b.position[i];
-        }
-        for( int i = 0; i < 3; i++ ) {
-            if( a.normal[i] != b.normal[i] ) return a.normal[i] < b.normal[i];
-        }
-        for( int j = 0; j < 2; j++ ) {
-            for( int i = 0; i < 2; i++ ) {
-                if( a.uv[j][i] != b.uv[j][i] ) return a.uv[j][i] < b.uv[j][i];
-            }
-        }
-
-        return false;
-    }
-};
-
-// ** class RelightDemo
-class RelightDemo : public platform::ApplicationDelegate {
-private:
-
-    virtual void handleLaunched( platform::Application* application );
+    virtual void        handleUpdate( platform::Window* window );
 
 private:
 
-    platform::Window*		m_window;
-    renderer::Hal*			m_hal;
-    renderer::RenderView*	m_view;
+	scene::MeshPtr					createMeshFromFile( CString fileName );
+
+private:
+
+    renderer::Hal*                  m_hal;
+    renderer::VertexDeclaration*    m_meshVertexLayout;
+
+	scene::ScenePtr					m_simpleScene;
 };
 
-#endif /* defined(__Relight_RelightDemo__) */
+#endif /* defined(__Relight_Demo_GenerateUv__) */
