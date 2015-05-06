@@ -29,6 +29,9 @@
 
 #include "RelightDemo.h"
 
+#include <math/Mesh.h>
+#include <math/DCEL.h>
+
 // ** class GenerateUv
 class GenerateUv : public platform::WindowDelegate {
 public:
@@ -43,10 +46,26 @@ private:
 
 private:
 
+	typedef math::TriMesh<SceneVertex> SceneMesh;
+    typedef SceneMesh::Dcel::Edge HalfEdge;
+    typedef SceneMesh::Chart Chart;
+    typedef SceneMesh::Face  Face;
+	typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
+
+    int                             setChartIndex( const SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
 
 	scene::ScenePtr					m_simpleScene;
+
+    SceneMesh*                      m_loadedTriMesh;
+    SceneMesh::Vertices             m_loadedVertices;
+    SceneMesh::Indices              m_loadedIndices;
+
+    std::vector<Chart*>             m_charts;
+    std::map<int, int>              m_chartIndex;
+    std::map<int, math::Vec3>       m_chartColor;
 };
 
 #endif /* defined(__Relight_Demo_GenerateUv__) */

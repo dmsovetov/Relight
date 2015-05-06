@@ -27,9 +27,6 @@
 #include "GenerateUv.h"
 #include "FbxLoader.h"
 
-#include <math/Mesh.h>
-#include <math/DCEL.h>
-
 #ifdef WIN32
 	#include <Windows.h>
 	#include <gl/GL.h>
@@ -43,9 +40,9 @@ GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )
 	m_simpleScene = scene::Scene::create();
 	m_simpleScene->setRenderer( new scene::Renderer( hal ) );
 
-	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Rock03.fbx" );
+	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Column7.fbx" );
 
-	scene::SceneObjectPtr object = scene::SceneObject::create();
+	scene::SceneObjectPtr object = scene::SceneObject::create(); 
 	object->attach<scene::Transform>();
 	object->attach<scene::MeshRenderer>( mesh );
 
@@ -64,7 +61,66 @@ void GenerateUv::handleUpdate( platform::Window* window )
 	m_simpleScene->update( 0.1f );
 	m_simpleScene->render( f32( window->width() ) / window->height() );
 
+    SceneMesh::Dcel dcel = m_loadedTriMesh->dcel();
+
+    glDepthFunc( GL_LEQUAL );
+    glLineWidth( 3.0f );
+    for( int i = 0; i < dcel.edgeCount(); i++ )
+    {
+        const SceneMesh::Dcel::Edge* edge = dcel.edge( i );
+
+        glMatrixMode( GL_PROJECTION );
+        glLoadMatrixf( m_simpleScene->camera()->proj( f32( window->width() ) / window->height() ).m );
+
+        glMatrixMode( GL_MODELVIEW );
+        glLoadMatrixf( m_simpleScene->camera()->view().m );
+
+        glBegin( GL_LINES );
+            if( edge->isBoundary() )
+                glColor3f( 0, 1, 0 );
+            else
+                glColor3f( 1, 0, 0 );
+            glVertex3fv( &m_loadedVertices[edge->m_vertex].position.x );
+            glVertex3fv( &m_loadedVertices[edge->m_next->m_vertex].position.x );
+        glEnd();
+    }
+
     m_hal->present();
+}
+
+const float kHardAngle = 88;
+
+int GenerateUv::setChartIndex( const SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
+{
+    if( m_chartIndex.count( edge->m_face ) ) {
+        return 0;
+    }
+
+    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
+
+    if( angle > kHardAngle ) {
+        return 0;
+    }
+
+    m_chartIndex[edge->m_face] = index;
+
+    if( m_charts.size() <= index ) {
+        m_charts.resize( index + 1 );
+        m_charts[index] = new Chart( *m_loadedTriMesh );
+    }
+    m_charts[index]->add( edge->m_face );
+
+    const HalfEdge* i = edge;
+    int count = 1;
+
+    do {
+        if( i->twin() ) {
+            count += setChartIndex( mesh, axis, i->twin(), index );
+        }
+        i = i->m_next;
+    } while( i != edge );
+
+    return count;
 }
 
 // ** GenerateUv::createMeshFromFile
@@ -76,86 +132,146 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
         return scene::MeshPtr();
     }
 
-//	fbx::FbxLoader::FbxMeshIndexer::VertexBuffer& vertices = loader.vertexBuffer();
-//	fbx::FbxLoader::FbxMeshIndexer::IndexBuffer&  indices  = loader.indexBuffer();
-
-	typedef math::TriMesh<SceneVertex> SceneMesh;
-	typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
-
 	// ** Convert loaded mesh to scene mesh
-	SceneMesh::Vertices vertices;
-	SceneMesh::Indices  indices;
-
 	for( int i = 0, n = loader.vertexBuffer().size(); i < n; i++ ) {
         const fbx::Vertex& rv = loader.vertexBuffer()[i];
         SceneVertex        sv;
 
         sv.position.x  = rv.position[0]; sv.position.y  = rv.position[1]; sv.position.z  = rv.position[2];
         sv.normal.x    = rv.normal[0];   sv.normal.y    = rv.normal[1];   sv.normal.z    = rv.normal[2];
+
         sv.uv[0].x	   = rv.uv[0][0];    sv.uv[0].y		= rv.uv[0][1];
         sv.uv[1].x	   = rv.uv[1][0];    sv.uv[1].y		= rv.uv[1][1];
 
-		sv.position.x *= 0.01f;
-		sv.position.y *= 0.01f;
-		sv.position.z *= 0.01f;
+	//	sv.position.x *= 0.01f;
+	//	sv.position.y *= 0.01f;
+	//	sv.position.z *= 0.01f;
 
-		vertices.push_back( sv );
+		m_loadedVertices.push_back( sv );
 	}
 
 	for( int i = 0, n = loader.indexBuffer().size(); i < n; i++ ) {
-		indices.push_back( loader.indexBuffer()[i] );
+		m_loadedIndices.push_back( loader.indexBuffer()[i] );
 	}
 
 	// ** Process the mesh.
-	SceneMesh		 sceneMesh( vertices, indices );
+    m_loadedTriMesh = new SceneMesh( m_loadedVertices, m_loadedIndices );
 	SceneMeshIndexer sceneMeshIndexer;
 
-	for( int i = 0; i < sceneMesh.faceCount(); i++ ) {
-		SceneMesh::Face face	= sceneMesh.face( i );
-		math::Vec3      normal	= face.normal();
-		float			nx		= fabs( normal.x );
-		float			ny		= fabs( normal.y );
-		float			nz		= fabs( normal.z );
-		math::Vec3		axis;
+    SceneMesh::Dcel dcel = m_loadedTriMesh->dcel();
+    int chartIndex = 0;
 
-		math::Plane plane( axis );
-		math::Vec3  projected;
+    for( int i = 0; i < dcel.edgeCount(); i++ )
+    {
+        const HalfEdge* edge = dcel.edge( i );
+        int chartSize = setChartIndex( *m_loadedTriMesh, m_loadedTriMesh->face( edge->m_face ).normal(), edge, chartIndex );
 
-		for( int j = 0; j < 3; j++ ) {
-			SceneVertex v = face[j];
+        if( chartSize ) {
+            m_chartColor[chartIndex] = math::Vec3::randomDirection();
+            chartIndex++;
+        }
+    }
 
-			if( nx > ny && nx > nz ) {
-				axis		= math::Vec3( 1, 0, 0 );
-				projected	= plane * v.position;
-				v.position = math::Vec3( projected.y, 0, projected.z );
-			}
-			else if( ny > nx && ny > nz ) {
-				axis		= math::Vec3( 0, 1, 0 );
-				projected	= plane * v.position;
-				v.position = math::Vec3( projected.x, 0, projected.z );
-			}
-			else if( nz > ny && nz > nx ) {
-				axis		= math::Vec3( 0, 0, 1 );
-				projected	= plane * v.position;
-				v.position = math::Vec3( projected.x, 0, projected.y );
-			}
+    printf( "Mesh has %d charts\n", chartIndex );
+/*
+    RectanglePacker packer;
+    float           scale = 100000;
 
-			sceneMeshIndexer += v;
-		}
-	}
+    for( int i = 0; i < m_charts.size(); i++ )
+    {
+        Chart* chart = m_charts[i];
 
-	vertices = sceneMeshIndexer.vertexBuffer();
-	indices  = sceneMeshIndexer.indexBuffer();
+        float minx = FLT_MAX, maxx = -FLT_MAX;
+        float miny = FLT_MAX, maxy = -FLT_MAX;
 
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            math::Vec2 v[3];
+            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
+
+            for( int k = 0; k < 3; k++ ) {
+                minx = min( minx, v[k].x );
+                maxx = max( maxx, v[k].x );
+                miny = min( miny, v[k].y );
+                maxy = max( maxy, v[k].y );
+            }
+
+            for( int k = 0; k < 3; k++ ) {
+                face.vertex( k ).uv[0] = math::Vec2( v[k].x - minx, v[k].y - miny );
+            }
+        }
+
+        float w = (maxx - minx) * scale;
+        float h = (maxy - miny) * scale;
+        packer.add( w, h );
+    }
+
+    int w = 1;
+    int h = 1;
+    bool expandWidth = true;
+
+    while( !packer.place( w, h ) ) {
+        if( expandWidth ) {
+            w += 5;
+            expandWidth = false;
+        } else {
+            h += 5;
+            expandWidth = true;
+        }
+    }
+ 
+    for( int i = 0; i < m_charts.size(); i++ )
+    {
+        Chart* chart = m_charts[i];
+        const RectanglePacker::Rect& rect = packer.rect( i );
+
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            for( int k = 0; k < 3; k++ ) {
+                SceneVertex vtx = face.vertex( k );
+            
+                
+
+                    vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1f, vtx.uv[0].y );
+                    vtx.uv[0] = math::Vec2( 0, 0 );
+            //    vtx.position = math::Vec3( rect.x / scale + vtx.uv[0].x, 0, rect.y / scale + vtx.uv[0].y );
+                sceneMeshIndexer += vtx;
+            }
+        }
+    }
+*/
+/*
+    for( int i = 0; i < m_charts.size(); i++ )
+    {
+        Chart* chart = m_charts[i];
+        const RectanglePacker::Rect& rect = packer.rect( i );
+
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            for( int k = 0; k < 3; k++ ) {
+                SceneVertex vtx = face.vertex( k );
+                vtx.normal   = m_chartColor[i];
+                vtx.position = math::Vec3( rect.x / scale + vtx.uv[0].x, 0, rect.y / scale + vtx.uv[0].y );
+                sceneMeshIndexer += vtx;
+            }
+        }
+    }
+
+    m_loadedVertices = sceneMeshIndexer.vertexBuffer();
+    m_loadedIndices  = sceneMeshIndexer.indexBuffer();
+   */
 	// ** Create buffers
-    renderer::VertexBuffer* vertexBuffer = m_hal->createVertexBuffer( m_meshVertexLayout, vertices.size(), false );
-	renderer::IndexBuffer*	indexBuffer  = m_hal->createIndexBuffer( indices.size(), false );
+    renderer::VertexBuffer* vertexBuffer = m_hal->createVertexBuffer( m_meshVertexLayout, m_loadedVertices.size(), false );
+    renderer::IndexBuffer*	indexBuffer  = m_hal->createIndexBuffer( m_loadedIndices.size(), false );
 
 	// ** Upload data
-    memcpy( vertexBuffer->lock(), &vertices[0], vertices.size() * sizeof( vertices[0] ) );
+    memcpy( vertexBuffer->lock(), &m_loadedVertices[0], m_loadedVertices.size() * sizeof( m_loadedVertices[0] ) );
     vertexBuffer->unlock();
 
-    memcpy( indexBuffer->lock(), &indices[0], indices.size() * sizeof( indices[0] ) );
+    memcpy( indexBuffer->lock(), &m_loadedIndices[0], m_loadedIndices.size() * sizeof( m_loadedIndices[0] ) );
     indexBuffer->unlock();
 
 	// ** Create mesh
