@@ -161,7 +161,7 @@ Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags )
     Rgba        color   = face.colorAt( coord );
 
     if( flags & HitUseAlpha && color.a <= 0.1f ) {
-        return traceSegment( point + direction * 0.02f, end, flags );
+        return traceSegment( point + direction * 0.04f, end, flags );
     }
 
     Hit result;
