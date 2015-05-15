@@ -33,6 +33,8 @@
 #include <math/DCEL.h>
 
 typedef math::TriMesh<SceneVertex> SceneTriMesh;
+typedef math::AngleChartBuilder<SceneTriMesh> ChartBuilder;
+
 typedef SceneTriMesh::Dcel::Edge HalfEdge;
 typedef SceneTriMesh::Chart Chart;
 typedef SceneTriMesh::Face  Face;
@@ -55,8 +57,8 @@ public:
 
 private:
 
-	void						buildCharts( SceneTriMesh& mesh, Charts& charts );
-	int							setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+//	void						buildCharts( SceneTriMesh& mesh, Charts& charts );
+//	int							setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
 
 private:
 
@@ -83,8 +85,8 @@ private:
 
 private:
 
-    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
-    void                            buildCharts( SceneTriMesh& mesh, Charts& charts );
+//    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+//    void                            buildCharts( SceneTriMesh& mesh, Charts& charts );
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;

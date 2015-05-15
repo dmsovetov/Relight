@@ -40,7 +40,7 @@ GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )
 	m_simpleScene = scene::Scene::create();
 	m_simpleScene->setRenderer( new scene::Renderer( hal ) );
 
-	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Wall3B.fbx" );
+	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Column7.fbx" );
 //	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Barrel01.fbx" );
 
 	scene::SceneObjectPtr object = scene::SceneObject::create(); 
@@ -123,60 +123,60 @@ void GenerateUv::handleUpdate( platform::Window* window )
     m_hal->present();
 }
 
-const float kHardAngle = 88;
-
-void GenerateUv::buildCharts( SceneTriMesh& mesh, Charts& charts )
-{
-    charts.clear();
-
-    SceneTriMesh::Dcel dcel = mesh.dcel();
-    ChartByFace chartByFace;
-    //int chartIndex = 0;
-
-    for( int i = 0; i < dcel.edgeCount(); i++ )
-    {
-        const HalfEdge* edge = dcel.edge( i );
-        int chartSize = setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
-
-    //    if( chartSize ) {
-    //        m_chartColor[chartIndex] = math::Vec3::randomDirection();
-    //        chartIndex++;
-    //    }
-    }
-}
-
-int GenerateUv::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
-{
-    if( chartByFace.count( edge->m_face ) ) {
-        return 0;
-    }
-
-    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
-
-    if( angle > kHardAngle ) {
-        return 0;
-    }
-
-    chartByFace[edge->m_face] = index;
-
-    if( charts.size() <= index ) {
-        charts.resize( index + 1 );
-        charts[index] = new Chart( mesh );
-    }
-    charts[index]->add( edge->m_face );
-
-    const HalfEdge* i = edge;
-    int count = 1;
-
-    do {
-        if( i->twin() ) {
-            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
-        }
-        i = i->m_next;
-    } while( i != edge );
-
-    return count;
-}
+//const float kHardAngle = 88;
+//
+//void GenerateUv::buildCharts( SceneTriMesh& mesh, Charts& charts )
+//{
+//    charts.clear();
+//
+//    SceneTriMesh::Dcel dcel = mesh.dcel();
+//    ChartByFace chartByFace;
+//    //int chartIndex = 0;
+//
+//    for( int i = 0; i < dcel.edgeCount(); i++ )
+//    {
+//        const HalfEdge* edge = dcel.edge( i );
+//        int chartSize = setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
+//
+//    //    if( chartSize ) {
+//    //        m_chartColor[chartIndex] = math::Vec3::randomDirection();
+//    //        chartIndex++;
+//    //    }
+//    }
+//}
+//
+//int GenerateUv::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
+//{
+//    if( chartByFace.count( edge->m_face ) ) {
+//        return 0;
+//    }
+//
+//    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
+//
+//    if( angle > kHardAngle ) {
+//        return 0;
+//    }
+//
+//    chartByFace[edge->m_face] = index;
+//
+//    if( charts.size() <= index ) {
+//        charts.resize( index + 1 );
+//        charts[index] = new Chart( &mesh );
+//    }
+//    charts[index]->add( edge->m_face );
+//
+//    const HalfEdge* i = edge;
+//    int count = 1;
+//
+//    do {
+//        if( i->twin() ) {
+//            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
+//        }
+//        i = i->m_next;
+//    } while( i != edge );
+//
+//    return count;
+//}
 
 // ** GenerateUv::createMeshFromFile
 scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
@@ -401,24 +401,25 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
 	m_inputVertices = input.vertices();
 
 	// ** Flatten mesh
-    Charts				charts;
-	SceneTriMesh		mesh( m_inputVertices, m_inputIndices );
-	SceneMeshIndexer	sceneMeshIndexer;
+	SceneTriMesh		 mesh( m_inputVertices, m_inputIndices );
+	SceneMeshIndexer	 sceneMeshIndexer;
 
-    buildCharts( mesh, charts );
+//    buildCharts( mesh, charts );
 
-    for( int i = 0; i < charts.size(); i++ )
+	ChartBuilder::Result charts = mesh.charts( ChartBuilder() );
+
+    for( int i = 0; i < charts.m_charts.size(); i++ )
     {
-        Chart* chart = charts[i];
+        const Chart& chart = charts.m_charts[i];
 
         float minx = FLT_MAX, maxx = -FLT_MAX;
         float miny = FLT_MAX, maxy = -FLT_MAX;
 
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            Face face = chart.face( j );
 
             math::Vec2 v[3];
-            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
+            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
 
             for( int k = 0; k < 3; k++ ) {
                 minx = min( minx, v[k].x );
@@ -431,11 +432,11 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
         float w = maxx - minx;
         float h = maxy - miny;
 
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            Face face = chart.face( j );
 
             math::Vec2 v[3];
-            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
+            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
 
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
@@ -453,14 +454,15 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     m_inputVertices = sceneMeshIndexer.vertexBuffer();
     m_inputIndices  = sceneMeshIndexer.indexBuffer();
 
-	buildCharts( mesh, charts );
+	charts = mesh.charts( math::AngleChartBuilder<SceneTriMesh>() );
+//	buildCharts( mesh, charts );
 
-    for( int i = 0; i < charts.size(); i++ )
+    for( int i = 0; i < charts.m_charts.size(); i++ )
     {
-		Chart*		chart = charts[i];
-		math::Vec2	min, max;
+		const Chart& chart = charts.m_charts[i];
+		math::Vec2	 min, max;
 
-		chart->calculateUvRect( min, max );
+		chart.calculateUvRect( min, max );
 
 		float w = max.x - min.x;
         float h = max.y - min.y;
@@ -487,13 +489,13 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
 
     sceneMeshIndexer = SceneMeshIndexer();
 
-    for( int i = 0; i < charts.size(); i++ )
+    for( int i = 0; i < charts.m_charts.size(); i++ )
     {
-        Chart* chart = charts[i];
+        const Chart& chart = charts.m_charts[i];
         const SceneRectanglePacker::Rect& rect = m_packer.rect( i );
 
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            Face face = chart.face( j );
 
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
@@ -509,51 +511,51 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     indices  = sceneMeshIndexer.indexBuffer();
 }
 
-// ** UvGenerator::buildCharts
-void UvGenerator::buildCharts( SceneTriMesh& mesh, Charts& charts )
-{
-    charts.clear();
-
-    SceneTriMesh::Dcel dcel = mesh.dcel();
-    ChartByFace chartByFace;
-
-    for( int i = 0; i < dcel.edgeCount(); i++ )
-    {
-        const HalfEdge* edge = dcel.edge( i );
-        setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
-    }
-}
-
-// ** UvGenerator::setChartIndex
-int UvGenerator::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
-{
-    if( chartByFace.count( edge->m_face ) ) {
-        return 0;
-    }
-
-    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
-
-    if( angle > kHardAngle ) {
-        return 0;
-    }
-
-    chartByFace[edge->m_face] = index;
-
-    if( charts.size() <= index ) {
-        charts.resize( index + 1 );
-        charts[index] = new Chart( mesh );
-    }
-    charts[index]->add( edge->m_face );
-
-    const HalfEdge* i = edge;
-    int count = 1;
-
-    do {
-        if( i->twin() ) {
-            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
-        }
-        i = i->m_next;
-    } while( i != edge );
-
-    return count;
-}
+//// ** UvGenerator::buildCharts
+//void UvGenerator::buildCharts( SceneTriMesh& mesh, Charts& charts )
+//{
+//    charts.clear();
+//
+//    SceneTriMesh::Dcel dcel = mesh.dcel();
+//    ChartByFace chartByFace;
+//
+//    for( int i = 0; i < dcel.edgeCount(); i++ )
+//    {
+//        const HalfEdge* edge = dcel.edge( i );
+//        setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
+//    }
+//}
+//
+//// ** UvGenerator::setChartIndex
+//int UvGenerator::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
+//{
+//    if( chartByFace.count( edge->m_face ) ) {
+//        return 0;
+//    }
+//
+//    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
+//
+//    if( angle > kHardAngle ) {
+//        return 0;
+//    }
+//
+//    chartByFace[edge->m_face] = index;
+//
+//    if( charts.size() <= index ) {
+//        charts.resize( index + 1 );
+//        charts[index] = new Chart( &mesh );
+//    }
+//    charts[index]->add( edge->m_face );
+//
+//    const HalfEdge* i = edge;
+//    int count = 1;
+//
+//    do {
+//        if( i->twin() ) {
+//            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
+//        }
+//        i = i->m_next;
+//    } while( i != edge );
+//
+//    return count;
+//}
