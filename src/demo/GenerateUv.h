@@ -52,7 +52,11 @@ private:
     typedef SceneMesh::Face  Face;
 	typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
 
-    int                             setChartIndex( const SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+    typedef std::vector<Chart*> Charts;
+    typedef std::map<int, int>  ChartByFace;
+
+    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+    void                            buildCharts( SceneMesh& mesh, Charts& charts );
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
@@ -63,9 +67,13 @@ private:
     SceneMesh::Vertices             m_loadedVertices;
     SceneMesh::Indices              m_loadedIndices;
 
-    std::vector<Chart*>             m_charts;
-    std::map<int, int>              m_chartIndex;
-    std::map<int, math::Vec3>       m_chartColor;
+    float m_scale;
+    float m_width, m_height;
+    RectanglePacker m_packer;
+
+//    std::vector<Chart*>             m_charts;
+//    std::map<int, int>              m_chartIndex;
+//    std::map<int, math::Vec3>       m_chartColor;
 };
 
 #endif /* defined(__Relight_Demo_GenerateUv__) */
