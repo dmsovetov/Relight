@@ -40,7 +40,7 @@ GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )
 	m_simpleScene = scene::Scene::create();
 	m_simpleScene->setRenderer( new scene::Renderer( hal ) );
 
-	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Catacomb3.fbx" );
+	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Wall3B.fbx" );
 //	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Barrel01.fbx" );
 
 	scene::SceneObjectPtr object = scene::SceneObject::create(); 
@@ -97,27 +97,26 @@ void GenerateUv::handleUpdate( platform::Window* window )
 
 	int   w = m_generator.width();
 	int   h = m_generator.height();
-	float s = m_generator.scale();
 
     glColor3f( 1, 1, 1 );
     glBegin( GL_LINE_STRIP );
         glVertex3f( 0, 0, 0 );
-        glVertex3f( w / s, 0, 0 );
-        glVertex3f( w / s, 0, h / s );
-        glVertex3f( 0, 0, h / s );
+        glVertex3f( w, 0, 0 );
+        glVertex3f( w, 0, h );
+        glVertex3f( 0, 0, h );
         glVertex3f( 0, 0, 0 );
     glEnd();
 
     for( int i = 0; i < m_generator.packer().rectCount(); i++ ) {
-        const RectanglePacker::Rect& rect = m_generator.packer().rect( i );
+        const SceneRectanglePacker::Rect& rect = m_generator.packer().rect( i );
 
         glColor3f( 0, 1, 1 );
         glBegin( GL_LINE_STRIP );
-            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s );
-            glVertex3f( rect.x / s + rect.width / s,  i * 0.1 * 0.0, rect.y / s );
-            glVertex3f( rect.x / s + rect.width / s,  i * 0.1 * 0.0, rect.y / s + rect.height / s );
-            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s + rect.height / s );
-            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s );
+            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y );
+            glVertex3f( rect.x + rect.width, i * 0.1 * 0.0, rect.y );
+            glVertex3f( rect.x + rect.width, i * 0.1 * 0.0, rect.y + rect.height );
+            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y + rect.height );
+            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y );
         glEnd();
     }
 
@@ -398,15 +397,6 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 // ** UvGenerator::generate
 void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& vertices, SceneTriMesh::Indices& indices )
 {
-	// ** Prepare
-//	for( int i = 0; i < input.faceCount(); i++ ) {
-//		const Face& f = input.face( i );
-//
-//		for( int j = 0; j < 3; j++ ) {
-//			m_inputIndices.push_back( m_inputVertices.size() );
-//			m_inputVertices.push_back( f.vertex( j ) );
-//		}
-//	}
 	m_inputIndices = input.indices();
 	m_inputVertices = input.vertices();
 
@@ -416,10 +406,6 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
 	SceneMeshIndexer	sceneMeshIndexer;
 
     buildCharts( mesh, charts );
-
-    printf( "Mesh has %d charts\n", charts.size() );
-
-	m_scale = 1000.0f;
 
     for( int i = 0; i < charts.size(); i++ )
     {
@@ -462,21 +448,12 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
                 sceneMeshIndexer += vtx;
             }
         }
-
-		printf( "Flattened chart %d [%fx%f]:", i, max( w, h ) * m_scale, min( w, h ) * m_scale );
-		for( int i = 0; i < chart->faceCount(); i++ ) {
-			printf( " %d", chart->faces()[i] );
-		}
-		printf( "\n" );
-
-    //    m_packer.add( max( w, h ), min( w, h ) );
     }
 
     m_inputVertices = sceneMeshIndexer.vertexBuffer();
     m_inputIndices  = sceneMeshIndexer.indexBuffer();
 
 	buildCharts( mesh, charts );
-	printf( "%d charts after flattening\n", charts.size() );
 
     for( int i = 0; i < charts.size(); i++ )
     {
@@ -485,16 +462,10 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
 
 		chart->calculateUvRect( min, max );
 
-		float w = (max.x - min.x) * m_scale;
-        float h = (max.y - min.y) * m_scale;
+		float w = max.x - min.x;
+        float h = max.y - min.y;
 
 		m_packer.add( max( w, h ), min( w, h ) );
-
-		printf( "Packing chart %d [%fx%f]:", i, max( w, h ), min( w, h ) );
-		for( int i = 0; i < chart->faceCount(); i++ ) {
-			printf( " %d", chart->faces()[i] );
-		}
-		printf( "\n" );
 	}
 
     int w = 1;
@@ -519,7 +490,7 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     for( int i = 0; i < charts.size(); i++ )
     {
         Chart* chart = charts[i];
-        const RectanglePacker::Rect& rect = m_packer.rect( i );
+        const SceneRectanglePacker::Rect& rect = m_packer.rect( i );
 
         for( int j = 0; j < chart->faceCount(); j++ ) {
             Face face = chart->face( j );
@@ -527,7 +498,7 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
 
-                vtx.position = math::Vec3( rect.x / m_scale + vtx.uv[0].x, 0, rect.y / m_scale + vtx.uv[0].y );
+                vtx.position = math::Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
 			//	vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
                 sceneMeshIndexer += vtx;
             }
