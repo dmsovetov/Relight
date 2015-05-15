@@ -40,7 +40,8 @@ GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )
 	m_simpleScene = scene::Scene::create();
 	m_simpleScene->setRenderer( new scene::Renderer( hal ) );
 
-	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Column7.fbx" );
+	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Catacomb3.fbx" );
+//	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Barrel01.fbx" );
 
 	scene::SceneObjectPtr object = scene::SceneObject::create(); 
 	object->attach<scene::Transform>();
@@ -56,13 +57,17 @@ void GenerateUv::handleUpdate( platform::Window* window )
         return;
     }
 
+	const bool kShowMesh = true;
+
 //	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
 
 	m_simpleScene->update( 0.1f );
-	m_simpleScene->render( f32( window->width() ) / window->height() );
+	if( kShowMesh ) {
+		m_simpleScene->render( f32( window->width() ) / window->height() );
+	}
 
-    SceneMesh::Dcel dcel = m_loadedTriMesh->dcel();
+    SceneTriMesh::Dcel dcel = m_loadedTriMesh->dcel();
 
     glMatrixMode( GL_PROJECTION );
     glLoadMatrixf( m_simpleScene->camera()->proj( f32( window->width() ) / window->height() ).m );
@@ -74,7 +79,11 @@ void GenerateUv::handleUpdate( platform::Window* window )
     glLineWidth( 3.0f );
     for( int i = 0; i < dcel.edgeCount(); i++ )
     {
-        const SceneMesh::Dcel::Edge* edge = dcel.edge( i );
+		if( !kShowMesh ) {
+			continue;
+		}
+
+        const SceneTriMesh::Dcel::Edge* edge = dcel.edge( i );
 
         glBegin( GL_LINES );
             if( edge->isBoundary() )
@@ -86,25 +95,29 @@ void GenerateUv::handleUpdate( platform::Window* window )
         glEnd();
     }
 
+	int   w = m_generator.width();
+	int   h = m_generator.height();
+	float s = m_generator.scale();
+
     glColor3f( 1, 1, 1 );
     glBegin( GL_LINE_STRIP );
         glVertex3f( 0, 0, 0 );
-        glVertex3f( m_width / m_scale, 0, 0 );
-        glVertex3f( m_width / m_scale, 0, m_height / m_scale );
-        glVertex3f( 0, 0, m_height / m_scale );
+        glVertex3f( w / s, 0, 0 );
+        glVertex3f( w / s, 0, h / s );
+        glVertex3f( 0, 0, h / s );
         glVertex3f( 0, 0, 0 );
     glEnd();
 
-    for( int i = 0; i < m_packer.rectCount(); i++ ) {
-        const RectanglePacker::Rect& rect = m_packer.rect( i );
+    for( int i = 0; i < m_generator.packer().rectCount(); i++ ) {
+        const RectanglePacker::Rect& rect = m_generator.packer().rect( i );
 
         glColor3f( 0, 1, 1 );
         glBegin( GL_LINE_STRIP );
-            glVertex3f( rect.x / m_scale,                         0, rect.y / m_scale );
-            glVertex3f( rect.x / m_scale + rect.width / m_scale,  0, rect.y / m_scale );
-            glVertex3f( rect.x / m_scale + rect.width / m_scale,  0, rect.y / m_scale + rect.height / m_scale );
-            glVertex3f( rect.x / m_scale,                         0, rect.y / m_scale + rect.height / m_scale );
-            glVertex3f( rect.x / m_scale,                         0, rect.y / m_scale );
+            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s );
+            glVertex3f( rect.x / s + rect.width / s,  i * 0.1 * 0.0, rect.y / s );
+            glVertex3f( rect.x / s + rect.width / s,  i * 0.1 * 0.0, rect.y / s + rect.height / s );
+            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s + rect.height / s );
+            glVertex3f( rect.x / s,                   i * 0.1 * 0.0, rect.y / s );
         glEnd();
     }
 
@@ -113,11 +126,11 @@ void GenerateUv::handleUpdate( platform::Window* window )
 
 const float kHardAngle = 88;
 
-void GenerateUv::buildCharts( SceneMesh& mesh, Charts& charts )
+void GenerateUv::buildCharts( SceneTriMesh& mesh, Charts& charts )
 {
     charts.clear();
 
-    SceneMesh::Dcel dcel = mesh.dcel();
+    SceneTriMesh::Dcel dcel = mesh.dcel();
     ChartByFace chartByFace;
     //int chartIndex = 0;
 
@@ -133,7 +146,7 @@ void GenerateUv::buildCharts( SceneMesh& mesh, Charts& charts )
     }
 }
 
-int GenerateUv::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
+int GenerateUv::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
 {
     if( chartByFace.count( edge->m_face ) ) {
         return 0;
@@ -198,9 +211,10 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 	}
 
 	// ** Process the mesh.
-    m_loadedTriMesh = new SceneMesh( m_loadedVertices, m_loadedIndices );
+    m_loadedTriMesh = new SceneTriMesh( m_loadedVertices, m_loadedIndices );
 	SceneMeshIndexer sceneMeshIndexer;
 
+/*
     //SceneMesh::Dcel dcel = m_loadedTriMesh->dcel();
     //int chartIndex = 0;
 
@@ -246,8 +260,8 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
             }
         }
 
-        float w = (maxx - minx) * m_scale;
-        float h = (maxy - miny) * m_scale;
+        float w = (maxx - minx);
+        float h = (maxy - miny);
 
         for( int j = 0; j < chart->faceCount(); j++ ) {
             Face face = chart->face( j );
@@ -267,18 +281,42 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
             }
         }
 
-        m_packer.add( max( w, h ), min( w, h ) );
-    //    m_packer.add( w, h );
+		printf( "Flattened chart %d [%fx%f]:", i, max( w, h ) * m_scale, min( w, h ) * m_scale );
+		for( int i = 0; i < chart->faceCount(); i++ ) {
+			printf( " %d", chart->faces()[i] );
+		}
+		printf( "\n" );
+
+    //    m_packer.add( max( w, h ), min( w, h ) );
     }
 
     m_loadedVertices = sceneMeshIndexer.vertexBuffer();
     m_loadedIndices  = sceneMeshIndexer.indexBuffer();
 
-//    buildCharts( *m_loadedTriMesh, charts );
-//    printf( "%d charts after flattening\n", charts.size() );
+    buildCharts( *m_loadedTriMesh, charts );
+    printf( "%d charts after flattening\n", charts.size() );
 
-    int w = 3906;
-    int h = 3905;
+    for( int i = 0; i < charts.size(); i++ )
+    {
+		Chart*		chart = charts[i];
+		math::Vec2	min, max;
+
+		chart->calculateUvRect( min, max );
+
+		float w = (max.x - min.x) * m_scale;
+        float h = (max.y - min.y) * m_scale;
+
+		m_packer.add( max( w, h ), min( w, h ) );
+
+		printf( "Packing chart %d [%fx%f]:", i, max( w, h ), min( w, h ) );
+		for( int i = 0; i < chart->faceCount(); i++ ) {
+			printf( " %d", chart->faces()[i] );
+		}
+		printf( "\n" );
+	}
+
+    int w = 1;
+    int h = 1;
     bool expandWidth = true;
 
     while( !m_packer.place( w, h ) ) {
@@ -306,8 +344,6 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
-            
-                
 
             //    vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1f, vtx.uv[0].y );
             //    vtx.uv[0] = math::Vec2( 0, 0 );
@@ -335,8 +371,11 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
         }
     }
     */
+/*
     m_loadedVertices = sceneMeshIndexer.vertexBuffer();
-    m_loadedIndices  = sceneMeshIndexer.indexBuffer();
+    m_loadedIndices  = sceneMeshIndexer.indexBuffer();*/
+
+	m_generator.generate( *m_loadedTriMesh, m_loadedVertices, m_loadedIndices );
    
 	// ** Create buffers
     renderer::VertexBuffer* vertexBuffer = m_hal->createVertexBuffer( m_meshVertexLayout, m_loadedVertices.size(), false );
@@ -354,4 +393,196 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 	mesh->addChunk( vertexBuffer, indexBuffer );
 
 	return mesh;
+}
+
+// ** UvGenerator::generate
+void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& vertices, SceneTriMesh::Indices& indices )
+{
+	// ** Prepare
+//	for( int i = 0; i < input.faceCount(); i++ ) {
+//		const Face& f = input.face( i );
+//
+//		for( int j = 0; j < 3; j++ ) {
+//			m_inputIndices.push_back( m_inputVertices.size() );
+//			m_inputVertices.push_back( f.vertex( j ) );
+//		}
+//	}
+	m_inputIndices = input.indices();
+	m_inputVertices = input.vertices();
+
+	// ** Flatten mesh
+    Charts				charts;
+	SceneTriMesh		mesh( m_inputVertices, m_inputIndices );
+	SceneMeshIndexer	sceneMeshIndexer;
+
+    buildCharts( mesh, charts );
+
+    printf( "Mesh has %d charts\n", charts.size() );
+
+	m_scale = 1000.0f;
+
+    for( int i = 0; i < charts.size(); i++ )
+    {
+        Chart* chart = charts[i];
+
+        float minx = FLT_MAX, maxx = -FLT_MAX;
+        float miny = FLT_MAX, maxy = -FLT_MAX;
+
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            math::Vec2 v[3];
+            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
+
+            for( int k = 0; k < 3; k++ ) {
+                minx = min( minx, v[k].x );
+                maxx = max( maxx, v[k].x );
+                miny = min( miny, v[k].y );
+                maxy = max( maxy, v[k].y );
+            }
+        }
+
+        float w = maxx - minx;
+        float h = maxy - miny;
+
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            math::Vec2 v[3];
+            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
+
+            for( int k = 0; k < 3; k++ ) {
+                SceneVertex vtx = face.vertex( k );
+
+                if( w > h ) {
+                    vtx.uv[0] = math::Vec2( v[k].x - minx, v[k].y - miny );
+                } else {
+                    vtx.uv[0] = math::Vec2( v[k].y - miny, v[k].x - minx );
+                }
+                sceneMeshIndexer += vtx;
+            }
+        }
+
+		printf( "Flattened chart %d [%fx%f]:", i, max( w, h ) * m_scale, min( w, h ) * m_scale );
+		for( int i = 0; i < chart->faceCount(); i++ ) {
+			printf( " %d", chart->faces()[i] );
+		}
+		printf( "\n" );
+
+    //    m_packer.add( max( w, h ), min( w, h ) );
+    }
+
+    m_inputVertices = sceneMeshIndexer.vertexBuffer();
+    m_inputIndices  = sceneMeshIndexer.indexBuffer();
+
+	buildCharts( mesh, charts );
+	printf( "%d charts after flattening\n", charts.size() );
+
+    for( int i = 0; i < charts.size(); i++ )
+    {
+		Chart*		chart = charts[i];
+		math::Vec2	min, max;
+
+		chart->calculateUvRect( min, max );
+
+		float w = (max.x - min.x) * m_scale;
+        float h = (max.y - min.y) * m_scale;
+
+		m_packer.add( max( w, h ), min( w, h ) );
+
+		printf( "Packing chart %d [%fx%f]:", i, max( w, h ), min( w, h ) );
+		for( int i = 0; i < chart->faceCount(); i++ ) {
+			printf( " %d", chart->faces()[i] );
+		}
+		printf( "\n" );
+	}
+
+    int w = 1;
+    int h = 1;
+    bool expandWidth = true;
+
+    while( !m_packer.place( w, h ) ) {
+        if( expandWidth ) {
+            w += 1;
+            expandWidth = false;
+        } else {
+            h += 1;
+            expandWidth = true;
+        }
+    }
+
+    m_width = w;
+    m_height = h;
+
+    sceneMeshIndexer = SceneMeshIndexer();
+
+    for( int i = 0; i < charts.size(); i++ )
+    {
+        Chart* chart = charts[i];
+        const RectanglePacker::Rect& rect = m_packer.rect( i );
+
+        for( int j = 0; j < chart->faceCount(); j++ ) {
+            Face face = chart->face( j );
+
+            for( int k = 0; k < 3; k++ ) {
+                SceneVertex vtx = face.vertex( k );
+
+                vtx.position = math::Vec3( rect.x / m_scale + vtx.uv[0].x, 0, rect.y / m_scale + vtx.uv[0].y );
+			//	vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
+                sceneMeshIndexer += vtx;
+            }
+        }
+    }
+
+    vertices = sceneMeshIndexer.vertexBuffer();
+    indices  = sceneMeshIndexer.indexBuffer();
+}
+
+// ** UvGenerator::buildCharts
+void UvGenerator::buildCharts( SceneTriMesh& mesh, Charts& charts )
+{
+    charts.clear();
+
+    SceneTriMesh::Dcel dcel = mesh.dcel();
+    ChartByFace chartByFace;
+
+    for( int i = 0; i < dcel.edgeCount(); i++ )
+    {
+        const HalfEdge* edge = dcel.edge( i );
+        setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
+    }
+}
+
+// ** UvGenerator::setChartIndex
+int UvGenerator::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
+{
+    if( chartByFace.count( edge->m_face ) ) {
+        return 0;
+    }
+
+    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
+
+    if( angle > kHardAngle ) {
+        return 0;
+    }
+
+    chartByFace[edge->m_face] = index;
+
+    if( charts.size() <= index ) {
+        charts.resize( index + 1 );
+        charts[index] = new Chart( mesh );
+    }
+    charts[index]->add( edge->m_face );
+
+    const HalfEdge* i = edge;
+    int count = 1;
+
+    do {
+        if( i->twin() ) {
+            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
+        }
+        i = i->m_next;
+    } while( i != edge );
+
+    return count;
 }

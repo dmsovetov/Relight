@@ -32,6 +32,42 @@
 #include <math/Mesh.h>
 #include <math/DCEL.h>
 
+typedef math::TriMesh<SceneVertex> SceneTriMesh;
+typedef SceneTriMesh::Dcel::Edge HalfEdge;
+typedef SceneTriMesh::Chart Chart;
+typedef SceneTriMesh::Face  Face;
+typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
+
+typedef std::vector<Chart*> Charts;
+typedef std::map<int, int>  ChartByFace;
+
+//! Generates a second UV set for a lightmapping.
+class UvGenerator {
+public:
+
+	void					generate( const SceneTriMesh& mesh, SceneTriMesh::Vertices& vertices, SceneTriMesh::Indices& indices );
+
+	const RectanglePacker&	packer( void ) const { return m_packer; }
+	int						width( void ) const { return m_width; }
+	int						height( void ) const { return m_height; }
+	float					scale( void ) const { return m_scale; }
+
+private:
+
+	void					buildCharts( SceneTriMesh& mesh, Charts& charts );
+	int						setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+
+private:
+
+	SceneTriMesh::Vertices	m_inputVertices;
+	SceneTriMesh::Indices	m_inputIndices;
+
+	float					m_scale;
+	int						m_width;
+	int						m_height;
+	RectanglePacker			m_packer;
+};
+
 // ** class GenerateUv
 class GenerateUv : public platform::WindowDelegate {
 public:
@@ -46,30 +82,23 @@ private:
 
 private:
 
-	typedef math::TriMesh<SceneVertex> SceneMesh;
-    typedef SceneMesh::Dcel::Edge HalfEdge;
-    typedef SceneMesh::Chart Chart;
-    typedef SceneMesh::Face  Face;
-	typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
-
-    typedef std::vector<Chart*> Charts;
-    typedef std::map<int, int>  ChartByFace;
-
-    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
-    void                            buildCharts( SceneMesh& mesh, Charts& charts );
+    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
+    void                            buildCharts( SceneTriMesh& mesh, Charts& charts );
 
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
 
 	scene::ScenePtr					m_simpleScene;
 
-    SceneMesh*                      m_loadedTriMesh;
-    SceneMesh::Vertices             m_loadedVertices;
-    SceneMesh::Indices              m_loadedIndices;
+    SceneTriMesh*					m_loadedTriMesh;
+    SceneTriMesh::Vertices			m_loadedVertices;
+    SceneTriMesh::Indices			m_loadedIndices;
 
-    float m_scale;
-    float m_width, m_height;
-    RectanglePacker m_packer;
+	UvGenerator						m_generator;
+
+//    float m_scale;
+//    float m_width, m_height;
+//    RectanglePacker m_packer;
 
 //    std::vector<Chart*>             m_charts;
 //    std::map<int, int>              m_chartIndex;

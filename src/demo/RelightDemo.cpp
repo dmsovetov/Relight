@@ -39,8 +39,8 @@ void RelightDemo::handleLaunched( platform::Application* application )
     m_view   = renderer::Hal::createOpenGLView( m_window->handle() );
     m_hal    = renderer::Hal::create( renderer::OpenGL, m_view );
 
-    m_window->setDelegate( new Lightmapping( m_hal ) );
-//	m_window->setDelegate( new GenerateUv( m_hal ) );
+//    m_window->setDelegate( new Lightmapping( m_hal ) );
+	m_window->setDelegate( new GenerateUv( m_hal ) );
 }
 
 dcDeclareApplication( new RelightDemo )

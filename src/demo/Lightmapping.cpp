@@ -82,7 +82,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/scenes/Crypt.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/Graveyard.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
