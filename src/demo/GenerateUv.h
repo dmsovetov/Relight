@@ -53,19 +53,12 @@ public:
 	const SceneRectanglePacker&	packer( void ) const { return m_packer; }
 	int							width( void ) const { return m_width; }
 	int							height( void ) const { return m_height; }
-//	float						scale( void ) const { return m_scale; }
-
-private:
-
-//	void						buildCharts( SceneTriMesh& mesh, Charts& charts );
-//	int							setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
 
 private:
 
 	SceneTriMesh::Vertices	m_inputVertices;
 	SceneTriMesh::Indices	m_inputIndices;
 
-//	float					m_scale;
 	int						m_width;
 	int						m_height;
 	SceneRectanglePacker	m_packer;
@@ -85,9 +78,6 @@ private:
 
 private:
 
-//    int                             setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index );
-//    void                            buildCharts( SceneTriMesh& mesh, Charts& charts );
-
     renderer::Hal*                  m_hal;
     renderer::VertexDeclaration*    m_meshVertexLayout;
 
@@ -98,14 +88,6 @@ private:
     SceneTriMesh::Indices			m_loadedIndices;
 
 	UvGenerator						m_generator;
-
-//    float m_scale;
-//    float m_width, m_height;
-//    RectanglePacker m_packer;
-
-//    std::vector<Chart*>             m_charts;
-//    std::map<int, int>              m_chartIndex;
-//    std::map<int, math::Vec3>       m_chartColor;
 };
 
 #endif /* defined(__Relight_Demo_GenerateUv__) */

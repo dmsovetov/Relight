@@ -123,61 +123,6 @@ void GenerateUv::handleUpdate( platform::Window* window )
     m_hal->present();
 }
 
-//const float kHardAngle = 88;
-//
-//void GenerateUv::buildCharts( SceneTriMesh& mesh, Charts& charts )
-//{
-//    charts.clear();
-//
-//    SceneTriMesh::Dcel dcel = mesh.dcel();
-//    ChartByFace chartByFace;
-//    //int chartIndex = 0;
-//
-//    for( int i = 0; i < dcel.edgeCount(); i++ )
-//    {
-//        const HalfEdge* edge = dcel.edge( i );
-//        int chartSize = setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
-//
-//    //    if( chartSize ) {
-//    //        m_chartColor[chartIndex] = math::Vec3::randomDirection();
-//    //        chartIndex++;
-//    //    }
-//    }
-//}
-//
-//int GenerateUv::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
-//{
-//    if( chartByFace.count( edge->m_face ) ) {
-//        return 0;
-//    }
-//
-//    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
-//
-//    if( angle > kHardAngle ) {
-//        return 0;
-//    }
-//
-//    chartByFace[edge->m_face] = index;
-//
-//    if( charts.size() <= index ) {
-//        charts.resize( index + 1 );
-//        charts[index] = new Chart( &mesh );
-//    }
-//    charts[index]->add( edge->m_face );
-//
-//    const HalfEdge* i = edge;
-//    int count = 1;
-//
-//    do {
-//        if( i->twin() ) {
-//            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
-//        }
-//        i = i->m_next;
-//    } while( i != edge );
-//
-//    return count;
-//}
-
 // ** GenerateUv::createMeshFromFile
 scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 {
@@ -404,8 +349,6 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
 	SceneTriMesh		 mesh( m_inputVertices, m_inputIndices );
 	SceneMeshIndexer	 sceneMeshIndexer;
 
-//    buildCharts( mesh, charts );
-
 	ChartBuilder::Result charts = mesh.charts( ChartBuilder() );
 
     for( int i = 0; i < charts.m_charts.size(); i++ )
@@ -455,7 +398,6 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     m_inputIndices  = sceneMeshIndexer.indexBuffer();
 
 	charts = mesh.charts( math::AngleChartBuilder<SceneTriMesh>() );
-//	buildCharts( mesh, charts );
 
     for( int i = 0; i < charts.m_charts.size(); i++ )
     {
@@ -510,52 +452,3 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     vertices = sceneMeshIndexer.vertexBuffer();
     indices  = sceneMeshIndexer.indexBuffer();
 }
-
-//// ** UvGenerator::buildCharts
-//void UvGenerator::buildCharts( SceneTriMesh& mesh, Charts& charts )
-//{
-//    charts.clear();
-//
-//    SceneTriMesh::Dcel dcel = mesh.dcel();
-//    ChartByFace chartByFace;
-//
-//    for( int i = 0; i < dcel.edgeCount(); i++ )
-//    {
-//        const HalfEdge* edge = dcel.edge( i );
-//        setChartIndex( charts, chartByFace, mesh, mesh.face( edge->m_face ).normal(), edge, charts.size() );
-//    }
-//}
-//
-//// ** UvGenerator::setChartIndex
-//int UvGenerator::setChartIndex( Charts& charts, ChartByFace& chartByFace, SceneTriMesh& mesh, const math::Vec3& axis, const HalfEdge* edge, int index )
-//{
-//    if( chartByFace.count( edge->m_face ) ) {
-//        return 0;
-//    }
-//
-//    float angle = math::degrees( acosf( axis * mesh.face( edge->m_face ).normal() ) );
-//
-//    if( angle > kHardAngle ) {
-//        return 0;
-//    }
-//
-//    chartByFace[edge->m_face] = index;
-//
-//    if( charts.size() <= index ) {
-//        charts.resize( index + 1 );
-//        charts[index] = new Chart( &mesh );
-//    }
-//    charts[index]->add( edge->m_face );
-//
-//    const HalfEdge* i = edge;
-//    int count = 1;
-//
-//    do {
-//        if( i->twin() ) {
-//            count += setChartIndex( charts, chartByFace, mesh, axis, i->twin(), index );
-//        }
-//        i = i->m_next;
-//    } while( i != edge );
-//
-//    return count;
-//}
