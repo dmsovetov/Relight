@@ -27,8 +27,6 @@
 #include "Lightmapping.h"
 #include "FbxLoader.h"
 
-#include <math/Mesh.h>
-
 #ifdef WIN32
 	#include <Windows.h>
 	#include <gl/GL.h>
@@ -53,7 +51,7 @@ const bool k_DebugShowStatic = false;
 //const relight::Rgb k_BlueSky        = relight::Rgb( 0.52734375f, 0.8046875f, 0.91796875f );
 
 // ** Black sky
-const relight::Rgb k_BlackSky       = relight::Rgb( 0, 0, 0 );
+const Rgb k_BlackSky       = Rgb( 0, 0, 0 );
 
 // ** Sun light color
 //const relight::Rgb k_SunColor           = relight::Rgb( 0.75f, 0.74609375f, 0.67578125f );
@@ -64,7 +62,7 @@ const relight::Rgb k_BlackSky       = relight::Rgb( 0, 0, 0 );
 //const float         k_DarkLightIntensity    = 1.5f;
 
 // ** Scene ambient color
-const relight::Rgb k_AmbientColor = relight::Rgb( /*0.34f, 0.34f, 0.34f*/0, 0, 0 );
+const Rgb k_AmbientColor = Rgb( /*0.34f, 0.34f, 0.34f*/0, 0, 0 );
 
 // ** Indirect light settings
 const relight::IndirectLightSettings k_IndirectLight = relight::IndirectLightSettings::fast( k_BlackSky, k_AmbientColor, 100, 500 );
@@ -82,7 +80,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/scenes/Graveyard.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/RogueCamp.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -113,8 +111,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         Renderer*           renderer    = sceneObject->renderer();
 		Light*				light		= sceneObject->light();
 
-		relight::Vec3 position, scale;
-		relight::Quat rotation;
+		Vec3 position, scale;
+		Quat rotation;
 
 		extractTransform( transform, position, rotation, scale );
 
@@ -130,10 +128,10 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
 		if( light ) {
 			switch( light->type() ) {
-			case 2:			m_relightScene->addLight( relight::Light::createPointLight( affineTransform( transform ) * math::Vec3(), light->range(), light->color(), light->intensity() ) );
+			case 2:			m_relightScene->addLight( relight::Light::createPointLight( affineTransform( transform ) * Vec3(), light->range(), light->color(), light->intensity() ) );
 										break;
 
-			case 1:	m_relightScene->addLight( relight::Light::createDirectionalLight( rotation.rotate( relight::Vec3(0, 0, 1) ), light->color(), light->intensity(), true ) );
+			case 1:	m_relightScene->addLight( relight::Light::createDirectionalLight( rotation.rotate( Vec3(0, 0, 1) ), light->color(), light->intensity(), true ) );
 										break;
 			}
 			
@@ -199,8 +197,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
             instance->m_lightmap = loadLightmapFromFile( "lightmaps/" + std::to_string( sceneObject->objectId() ) + ".raw" );
         #else   
             float area = instance->m_mesh->m_mesh->area();
-		    maxArea	   = math::max2( maxArea, instance->m_mesh->m_mesh->area() );
-            int   size = math::nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
+		    maxArea	   = max2( maxArea, instance->m_mesh->m_mesh->area() );
+            int   size = nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
 
             totalLightmapPixels += size * size;
 
@@ -281,8 +279,8 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
         m_relightWorkers.push_back( new LmWorker );
     }
 
-	const relight::Rgb kSkyColor( 0.86f, 0.93f, 1.0f );
-	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( m_scene->settings()->ambient()/*kSkyColor*/, relight::Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
+	const Rgb kSkyColor( 0.86f, 0.93f, 1.0f );
+	m_relight->bake( m_relightScene, new Bake( relight::IndirectLightSettings::production( m_scene->settings()->ambient()/*kSkyColor*/, Rgb(0, 0, 0), 100, 500 ) ), m_rootWorker, m_relightWorkers );
 #endif
 }
 
@@ -304,12 +302,12 @@ renderer::Texture2D* Lightmapping::loadLightmapFromFile( const std::string& file
     unsigned char* ldr = new unsigned char[width * height * 3];
     for( int y = 0; y < height; y++ ) {
         for( int x = 0; x < width; x++ ) {
-            relight::Rgb   hdrPixel = &hdr[y * width * 3 + x * 3];
-            unsigned char* ldrPixel = &ldr[y * width * 3 + x * 3];
+            Rgb				hdrPixel = &hdr[y * width * 3 + x * 3];
+            unsigned char*	ldrPixel = &ldr[y * width * 3 + x * 3];
 
-            ldrPixel[0] = ( unsigned char )math::min2( 255.0f, hdrPixel.r * 255.0f * 0.5f );
-            ldrPixel[1] = ( unsigned char )math::min2( 255.0f, hdrPixel.g * 255.0f * 0.5f );
-            ldrPixel[2] = ( unsigned char )math::min2( 255.0f, hdrPixel.b * 255.0f * 0.5f );
+            ldrPixel[0] = ( unsigned char )min2( 255.0f, hdrPixel.r * 255.0f * 0.5f );
+            ldrPixel[1] = ( unsigned char )min2( 255.0f, hdrPixel.g * 255.0f * 0.5f );
+            ldrPixel[2] = ( unsigned char )min2( 255.0f, hdrPixel.b * 255.0f * 0.5f );
         }
     }
 
@@ -322,26 +320,26 @@ renderer::Texture2D* Lightmapping::loadLightmapFromFile( const std::string& file
 }
 
 // ** Lightmapping::extractTransform
-void Lightmapping::extractTransform( const uscene::Transform* transform, math::Vec3& position, math::Quat& rotation, math::Vec3& scale ) const
+void Lightmapping::extractTransform( const uscene::Transform* transform, Vec3& position, Quat& rotation, Vec3& scale ) const
 {
-	position = relight::Vec3( -transform->position()[0], transform->position()[1], transform->position()[2] );
-	scale    = relight::Vec3(  transform->scale()[0],	 transform->scale()[1],	   transform->scale()[2] );
-	rotation = relight::Quat( -transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], -transform->rotation()[3] );
+	position = Vec3( -transform->position()[0], transform->position()[1], transform->position()[2] );
+	scale    = Vec3(  transform->scale()[0],	 transform->scale()[1],	   transform->scale()[2] );
+	rotation = Quat( -transform->rotation()[0], transform->rotation()[1], transform->rotation()[2], -transform->rotation()[3] );
 }
 
 // ** Lightmapping::affineTransform
-relight::Matrix4 Lightmapping::affineTransform( const uscene::Transform *transform )
+Matrix4 Lightmapping::affineTransform( const uscene::Transform *transform )
 {
     if( !transform ) {
-        return relight::Matrix4();
+        return Matrix4();
     }
 
-	relight::Vec3 position, scale;
-	relight::Quat rotation;
+	Vec3 position, scale;
+	Quat rotation;
 
 	extractTransform( transform, position, rotation, scale );
 
-	return affineTransform( transform->parent() ) * relight::Matrix4::translation( position ) * relight::Matrix4::scale( scale ) *  rotation;
+	return affineTransform( transform->parent() ) * Matrix4::translation( position ) * Matrix4::scale( scale ) *  rotation;
 }
 
 // ** Lightmapping::createTexture
@@ -393,26 +391,24 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
         return NULL;
     }
 
- //   math::HalfEdge<fbx::Vertex> halfEdge = math::HalfEdge<fbx::Vertex>::create( loader.vertexBuffer(), loader.indexBuffer() );
-
     relight::VertexBuffer vertices;
     relight::IndexBuffer  indices;
-    relight::Matrix4      transform = relight::Matrix4::scale( meshAsset->scale(), meshAsset->scale(), meshAsset->scale() );
+    Matrix4				  transform = Matrix4::scale( meshAsset->scale(), meshAsset->scale(), meshAsset->scale() );
 
     for( int i = 0; i < loader.vertexBuffer().size(); i++ ) {
         const fbx::Vertex& fbxVertex = loader.vertexBuffer()[i];
         relight::Vertex    v;
 
-        v.m_position = relight::Vec3( fbxVertex.position[0], fbxVertex.position[1], fbxVertex.position[2] );
-        v.m_normal   = relight::Vec3( fbxVertex.normal[0], fbxVertex.normal[1], fbxVertex.normal[2] );
+        v.position = Vec3( fbxVertex.position[0], fbxVertex.position[1], fbxVertex.position[2] );
+        v.normal   = Vec3( fbxVertex.normal[0], fbxVertex.normal[1], fbxVertex.normal[2] );
 
         for( int j = 0; j < relight::Vertex::TotalUvLayers; j++ ) {
-            v.m_uv[j] = relight::Uv( fbxVertex.uv[j][0], fbxVertex.uv[j][1] );
+            v.uv[j] = relight::Uv( fbxVertex.uv[j][0], fbxVertex.uv[j][1] );
         }
 
-        v.m_position = transform * v.m_position;
-        v.m_normal   = transform * v.m_normal;
-        v.m_normal.normalize();
+        v.position = transform * v.position;
+        v.normal   = transform * v.normal;
+        v.normal.normalize();
 
         vertices.push_back( v );
     }
@@ -430,8 +426,8 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
         relight::Texture* texture   = findTexture( material->texture( uscene::Material::Diffuse ), solid );
         sceneMesh.m_material        = texture ? new relight::TexturedMaterial( texture, diffuse ) : new relight::Material( diffuse );
         sceneMesh.m_diffuse         = createTexture( texture );
-		sceneMesh.m_diffuseColor	= relight::Rgba( diffuse );
-		sceneMesh.m_tintColor		= relight::Rgba( material->color( uscene::Material::Tint ) );
+		sceneMesh.m_diffuseColor	= Rgba( diffuse );
+		sceneMesh.m_tintColor		= Rgba( material->color( uscene::Material::Tint ) );
     }
 
     // ** Create Relight mesh
@@ -455,10 +451,10 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
         const relight::Vertex& rv = mesh.m_mesh->vertex( i );
         SceneVertex&           sv = vertices[i];
 
-        sv.position.x  = rv.m_position[0]; sv.position.y  = rv.m_position[1]; sv.position.z  = rv.m_position[2];
-        sv.normal.x    = rv.m_normal[0];   sv.normal.y    = rv.m_normal[1];   sv.normal.z    = rv.m_normal[2];
-        sv.uv[0].x	   = rv.m_uv[0][0];    sv.uv[0].y	  = rv.m_uv[0][1];
-        sv.uv[1].x	   = rv.m_uv[1][0];    sv.uv[1].y	  = rv.m_uv[1][1];
+        sv.position.x  = rv.position[0]; sv.position.y  = rv.position[1]; sv.position.z  = rv.position[2];
+        sv.normal.x    = rv.normal[0];   sv.normal.y    = rv.normal[1];   sv.normal.z    = rv.normal[2];
+        sv.uv[0].x	   = rv.uv[0][0];    sv.uv[0].y		= rv.uv[0][1];
+        sv.uv[1].x	   = rv.uv[1][0];    sv.uv[1].y		= rv.uv[1][1];
     }
     mesh.m_vertexBuffer->unlock();
 
@@ -468,19 +464,19 @@ void Lightmapping::createBuffersFromMesh( SceneMesh& mesh )
 }
 
 struct Camera {
-	relight::Vec3	pos;
-	relight::Vec3	view;
-	relight::Vec3	right;
-	relight::Vec3	up;
+	Vec3	pos;
+	Vec3	view;
+	Vec3	right;
+	Vec3	up;
 
 	float			yRotation;
 
 	Camera( void ) : yRotation( 90 )
 	{
-		pos	  = relight::Vec3( 0, 1, 2 );
-		right = relight::Vec3( 1, 0, 0 );
-		up	  = relight::Vec3( 0, 1, 0 );
-		view  = relight::Vec3( 0, -0.447213590, -0.894427180 );
+		pos	  = Vec3( 0, 1, 2 );
+		right = Vec3( 1, 0, 0 );
+		up	  = Vec3( 0, 1, 0 );
+		view  = Vec3( 0, -0.447213590, -0.894427180 );
 	}
 
 	void update( void )
@@ -498,7 +494,7 @@ struct Camera {
 		if( input->keyDown( platform::Key::A ) ) pos = pos - right * speed;
 		if( input->keyDown( platform::Key::D ) ) pos = pos + right * speed;
 		
-		static relight::Vec2 mouse( -1, -1 );
+		static Vec2 mouse( -1, -1 );
 
 		s32 x = input->mouseX();
 		s32 y = input->mouseY();
@@ -526,13 +522,13 @@ struct Camera {
 
 			input->setMouse( mouse.x, mouse.y );
 		} else {
-			mouse = relight::Vec2( x, y );
+			mouse = Vec2( x, y );
 		}
 	}
 
-	void rotate( float angle, const relight::Vec3& axis )
+	void rotate( float angle, const Vec3& axis )
 	{
-		view = relight::Quat::rotateAroundAxis( angle, axis ).rotate( view );
+		view = Quat::rotateAroundAxis( angle, axis ).rotate( view );
 	}
 };
 

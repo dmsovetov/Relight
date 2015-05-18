@@ -4,12 +4,12 @@
 #ifndef __demo__FbxLoader__
 #define __demo__FbxLoader__
 
+#include <Foo/Foo.h>
+
 #include <stdio.h>
 #include <assert.h>
 #include <fbxsdk.h>
 #include <vector>
-
-#include <math/Mesh.h>
 
 namespace fbx {
 
@@ -41,7 +41,7 @@ struct VertexCompare {
 class FbxLoader {
 public:
 
-    typedef math::MeshIndexer<Vertex, VertexCompare> FbxMeshIndexer;
+    typedef MeshIndexer<Vertex, VertexCompare> FbxMeshIndexer;
 
     //! Loads an FBX from file.
     bool            load( const char* filePath );

@@ -186,7 +186,7 @@ void Embree::addMesh( const Mesh* mesh )
 
     for( int j = 0, n = mesh->vertexCount(); j < n; j++ ) {
         EmVertex&   dst = vertices[j];
-        Vec3        pos = mesh->vertex( j ).m_position;
+        Vec3        pos = mesh->vertex( j ).position;
 
         dst.x = pos.x;
         dst.y = pos.y;

@@ -126,7 +126,7 @@ Mesh* Mesh::createFromFile( const String& fileName )
 void Mesh::overrideMaterial( const Material* material )
 {
     for( int i = 0; i < vertexCount(); i++ ) {
-        m_vertices[i].m_material = material;
+        m_vertices[i].material = material;
     }
 }
 
@@ -157,7 +157,7 @@ void Mesh::addFaces( const VertexBuffer& vertices, const IndexBuffer& indices, c
 
     // ** Set vertex material
     for( int i = index, n = vertexCount(); i < n; i++ ) {
-        m_vertices[i].m_material = material;
+        m_vertices[i].material = material;
     }
 
     // ** Update face array
@@ -179,16 +179,16 @@ void Mesh::addFaces( const VertexBufferLayout& vertexBuffer, int vertexCount, co
         Vertex v;
 
         if( position ) {
-            v.m_position = Vec3( reinterpret_cast<const float*>( position + i * vertexBuffer.m_vertexSize ) );
+            v.position = Vec3( reinterpret_cast<const float*>( position + i * vertexBuffer.m_vertexSize ) );
         }
         if( normal ) {
-            v.m_normal = Vec3( reinterpret_cast<const float*>( normal + i * vertexBuffer.m_vertexSize ) );
+            v.normal = Vec3( reinterpret_cast<const float*>( normal + i * vertexBuffer.m_vertexSize ) );
         }
         if( uv0 ) {
-            v.m_uv[0] = Vec2( reinterpret_cast<const float*>( uv0 + i * vertexBuffer.m_vertexSize ) );
+            v.uv[0] = Vec2( reinterpret_cast<const float*>( uv0 + i * vertexBuffer.m_vertexSize ) );
         }
         if( uv1 ) {
-            v.m_uv[1] = Vec2( reinterpret_cast<const float*>( uv1 + i * vertexBuffer.m_vertexSize ) );
+            v.uv[1] = Vec2( reinterpret_cast<const float*>( uv1 + i * vertexBuffer.m_vertexSize ) );
         }
 
         vertices.push_back( v );
@@ -213,7 +213,7 @@ void Mesh::buildFaces( void )
 
     // ** Update mesh bounds
     for( int i = 0, n = vertexCount(); i < n; i++ ) {
-        m_bounds += m_vertices[i].m_position;
+        m_bounds += m_vertices[i].position;
     }
 }
 
@@ -223,6 +223,129 @@ const Face& Mesh::face( int index ) const
     assert( index >= 0 && index < faceCount() );
     assert( m_faces[index].faceIdx() == index );
     return m_faces[index];
+}
+
+// ** Mesh::generateUv
+void Mesh::generateUv( float angle )
+{
+    typedef TriMesh<Vertex>                       TriMesh;
+    typedef TriMesh::Chart                        Chart;
+    typedef MeshIndexer<Vertex, Vertex::Compare>  Indexer;
+    typedef AngleChartBuilder<TriMesh>            AngularChartBuilder;
+	typedef RectanglePacker<float>				  RectanglePacker;
+
+    TriMesh mesh( m_vertices, m_indices );
+	Indexer indexer;
+
+    AngularChartBuilder         chartBuilder( angle );
+	AngularChartBuilder::Result charts = mesh.charts( chartBuilder );
+	RectanglePacker				packer;
+
+    for( int i = 0; i < charts.m_charts.size(); i++ )
+    {
+        const Chart& chart = charts.m_charts[i];
+
+        float minx = FLT_MAX, maxx = -FLT_MAX;
+        float miny = FLT_MAX, maxy = -FLT_MAX;
+
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            TriMesh::Face face = chart.face( j );
+
+            Vec2 v[3];
+            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
+
+            for( int k = 0; k < 3; k++ ) {
+                minx = min2( minx, v[k].x );
+                maxx = max2( maxx, v[k].x );
+                miny = min2( miny, v[k].y );
+                maxy = max2( maxy, v[k].y );
+            }
+        }
+
+        float w = maxx - minx;
+        float h = maxy - miny;
+
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            TriMesh::Face face = chart.face( j );
+
+            Vec2 v[3];
+            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
+
+            for( int k = 0; k < 3; k++ ) {
+                Vertex vtx = face.vertex( k );
+
+                if( w > h ) {
+                    vtx.uv[Vertex::Lightmap] = Vec2( v[k].x - minx, v[k].y - miny );
+                } else {
+                    vtx.uv[Vertex::Lightmap] = Vec2( v[k].y - miny, v[k].x - minx );
+                }
+
+                indexer += vtx;
+            }
+        }
+    }
+
+    m_vertices = indexer.vertexBuffer();
+    m_indices  = indexer.indexBuffer();
+
+	charts = mesh.charts( chartBuilder );
+
+    for( int i = 0; i < charts.m_charts.size(); i++ )
+    {
+		const Chart& chart = charts.m_charts[i];
+		Vec2	 min, max;
+
+		chart.calculateUvRect( min, max );
+
+		float w = max.x - min.x;
+        float h = max.y - min.y;
+
+		packer.add( max2( w, h ), min2( w, h ) );
+	}
+
+    int w = 1;
+    int h = 1;
+    bool expandWidth = true;
+
+    while( !packer.place( w, h ) ) {
+        if( expandWidth ) {
+            w += 1;
+            expandWidth = false;
+        } else {
+            h += 1;
+            expandWidth = true;
+        }
+    }
+
+//    m_width = w;
+//    m_height = h;
+
+    indexer.clear();
+
+    for( int i = 0; i < charts.m_charts.size(); i++ )
+    {
+        const Chart& chart = charts.m_charts[i];
+        const RectanglePacker::Rect& rect = packer.rect( i );
+
+        Vec3 chartColor = Vec3::randomDirection();
+
+        for( int j = 0; j < chart.faceCount(); j++ ) {
+            TriMesh::Face face = chart.face( j );
+
+            for( int k = 0; k < 3; k++ ) {
+                Vertex vtx = face.vertex( k );
+
+            //    vtx.m_normal = chartColor * 0.5f + 0.5f;
+            //    vtx.position = math::Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
+			//	vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
+				vtx.uv[Vertex::Lightmap] = Vec2( rect.x + vtx.uv[Vertex::Lightmap].x, rect.y + vtx.uv[Vertex::Lightmap].y ) / Vec2( w, h );
+                indexer += vtx;
+            }
+        }
+    }
+
+    m_vertices = indexer.vertexBuffer();
+    m_indices  = indexer.indexBuffer();
 }
 
 // ** Mesh::lightmap
@@ -253,8 +376,8 @@ void Mesh::setPhotonmap( Photonmap* value )
 void Mesh::transform( const Matrix4& transform )
 {
     for( int i = 0, n = vertexCount(); i < n; i++ ) {
-        m_vertices[i].m_position = transform * m_vertices[i].m_position;
-        m_vertices[i].m_normal   = transform.rotate( m_vertices[i].m_normal );
+        m_vertices[i].position = transform * m_vertices[i].position;
+        m_vertices[i].normal   = transform.rotate( m_vertices[i].normal );
     }
 }
 
@@ -278,14 +401,14 @@ Vertex Vertex::interpolate( const Vertex& a, const Vertex& b, float scalar )
 {
     Vertex result;
 
-    result.m_position = a.m_position * scalar + b.m_position * (1.0f - scalar);
+    result.position = a.position * scalar + b.position * (1.0f - scalar);
 
     for( int i = 0; i < TotalUvLayers; i++ ) {
-        result.m_uv[i] = a.m_uv[i] * scalar + b.m_uv[i] * (1.0f - scalar);
+        result.uv[i] = a.uv[i] * scalar + b.uv[i] * (1.0f - scalar);
     }
 
-    result.m_normal = a.m_normal * scalar + b.m_normal * (1.0f - scalar);
-    result.m_normal.normalize();
+    result.normal = a.normal * scalar + b.normal * (1.0f - scalar);
+    result.normal.normalize();
 
     return result;
 }
@@ -295,17 +418,17 @@ Vertex Vertex::interpolate( const Vertex& a, const Vertex& b, float scalar )
 // ** Triangle::Triangle
 Triangle::Triangle( const Face& face ) : m_a( *face.vertex( 0 ) ), m_b( *face.vertex( 1 ) ), m_c( *face.vertex( 2 ) )
 {
-    m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
-    m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
-    m_centroid.m_normal.normalize();
+    m_centroid.position = (m_a.position + m_b.position + m_c.position)  / 3.0f;
+    m_centroid.normal   = (m_a.normal   + m_b.normal   + m_c.normal)    / 3.0f;
+    m_centroid.normal.normalize();
 }
 
 // ** Triangle::Triangle
 Triangle::Triangle( const Vertex& a, const Vertex& b, const Vertex& c ) : m_a( a ), m_b( b ), m_c( c )
 {
-    m_centroid.m_position = (m_a.m_position + m_b.m_position + m_c.m_position)  / 3.0f;
-    m_centroid.m_normal   = (m_a.m_normal   + m_b.m_normal   + m_c.m_normal)    / 3.0f;
-    m_centroid.m_normal.normalize();
+    m_centroid.position = (m_a.position + m_b.position + m_c.position)  / 3.0f;
+    m_centroid.normal   = (m_a.normal   + m_b.normal   + m_c.normal)    / 3.0f;
+    m_centroid.normal.normalize();
 }
 
 // ** Triangle::centroid
@@ -362,23 +485,23 @@ Index Face::faceIdx( void ) const
 // ** Face::area
 float Face::area( void ) const
 {
-    return Triangle::area( m_a->m_position, m_b->m_position, m_c->m_position );
+    return Triangle::area( m_a->position, m_b->position, m_c->position );
 }
 
 // ** Face::uvRect
 Rect Face::uvRect( void ) const
 {
-    const Uv& a = m_a->m_uv[Vertex::Lightmap];
-    const Uv& b = m_b->m_uv[Vertex::Lightmap];
-    const Uv& c = m_c->m_uv[Vertex::Lightmap];
+    const Uv& a = m_a->uv[Vertex::Lightmap];
+    const Uv& b = m_b->uv[Vertex::Lightmap];
+    const Uv& c = m_c->uv[Vertex::Lightmap];
 
 	Vec2 min, max;
 
-    min.x = math::min3( a.x, b.x, c.x );
-    max.x = math::max3( a.x, b.x, c.x );
+    min.x = min3( a.x, b.x, c.x );
+    max.x = max3( a.x, b.x, c.x );
 
-    min.y = math::min3( a.y, b.y, c.y );
-    max.y = math::max3( a.y, b.y, c.y );
+    min.y = min3( a.y, b.y, c.y );
+    max.y = max3( a.y, b.y, c.y );
 
 	return Rect( min, max );
 }
@@ -387,9 +510,9 @@ Rect Face::uvRect( void ) const
 bool Face::isUvInside( const Uv& uv, Barycentric& barycentric, Vertex::UvLayer layer ) const
 {
     // ** Compute vectors
-    Uv v0 = m_c->m_uv[layer] - m_a->m_uv[layer];
-    Uv v1 = m_b->m_uv[layer] - m_a->m_uv[layer];
-    Uv v2 = uv               - m_a->m_uv[layer];
+    Uv v0 = m_c->uv[layer] - m_a->uv[layer];
+    Uv v1 = m_b->uv[layer] - m_a->uv[layer];
+    Uv v2 = uv               - m_a->uv[layer];
 
     // ** Compute dot products
     float dot00 = v0 * v0;
@@ -425,9 +548,9 @@ const Vertex* Face::vertex( int index ) const
 // ** Face::normalAt
 Vec3 Face::normalAt( const Barycentric& uv ) const
 {
-    const Vec3& a = m_a->m_normal;
-    const Vec3& b = m_b->m_normal;
-    const Vec3& c = m_c->m_normal;
+    const Vec3& a = m_a->normal;
+    const Vec3& b = m_b->normal;
+    const Vec3& c = m_c->normal;
 
     return Vec3( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x, a.z + (b.z - a.z) * uv.y + (c.z - a.z) * uv.x );
 }
@@ -435,9 +558,9 @@ Vec3 Face::normalAt( const Barycentric& uv ) const
 // ** Face::positionAt
 Vec3 Face::positionAt( const Barycentric& uv ) const
 {
-    const Vec3& a = m_a->m_position;
-    const Vec3& b = m_b->m_position;
-    const Vec3& c = m_c->m_position;
+    const Vec3& a = m_a->position;
+    const Vec3& b = m_b->position;
+    const Vec3& c = m_c->position;
 
     return Vec3( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x, a.z + (b.z - a.z) * uv.y + (c.z - a.z) * uv.x );
 }
@@ -445,8 +568,8 @@ Vec3 Face::positionAt( const Barycentric& uv ) const
 // ** Face::colorAt
 Rgba Face::colorAt( const Barycentric& uv ) const
 {
-    if( m_a->m_material ) {
-        return m_a->m_material->colorAt( uvAt( uv, Vertex::Diffuse ) );
+    if( m_a->material ) {
+        return m_a->material->colorAt( uvAt( uv, Vertex::Diffuse ) );
     }
 
     return Rgba( 1.0f, 1.0f, 1.0f, 1.0f );
@@ -455,9 +578,9 @@ Rgba Face::colorAt( const Barycentric& uv ) const
 // ** Face::uvAt
 Uv Face::uvAt( const Barycentric& uv, Vertex::UvLayer layer ) const
 {
-    const Uv& a = m_a->m_uv[layer];
-    const Uv& b = m_b->m_uv[layer];
-    const Uv& c = m_c->m_uv[layer];
+    const Uv& a = m_a->uv[layer];
+    const Uv& b = m_b->uv[layer];
+    const Uv& c = m_c->uv[layer];
 
     return Uv( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x );
 }

@@ -51,7 +51,7 @@ void IndirectLight::bakeLumel( Lumel& lumel )
 
     for( int k = 0; k < m_samples; k++ ) {
         Vec3    dir       = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
-        float   influence = math::max2( lumel.m_normal * dir, 0.0f );
+        float   influence = max2( lumel.m_normal * dir, 0.0f );
         rt::Hit hit       = tracer->traceSegment( lumel.m_position, lumel.m_position + dir * m_maxDistance, rt::HitUv );
 
         if( !hit ) {

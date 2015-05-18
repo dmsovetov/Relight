@@ -274,8 +274,8 @@ void LightVertexGenerator::push( const Vertex& vertex )
 {
      LightVertex lightVertex;
 
-     lightVertex.m_position = vertex.m_position;
-     lightVertex.m_normal   = vertex.m_normal;
+     lightVertex.m_position = vertex.position;
+     lightVertex.m_normal   = vertex.normal;
 
      m_vertices.push_back( lightVertex );
 }
@@ -494,7 +494,7 @@ LinearLightAttenuation::LinearLightAttenuation( const Light* light, float radius
 // ** LinearLightAttenuation::calculate
 float LinearLightAttenuation::calculate( float distance ) const
 {
-    return math::max2( 1.0f - (distance / m_radius), 0.0f );
+    return max2( 1.0f - (distance / m_radius), 0.0f );
 }
 
 } // namespace relight

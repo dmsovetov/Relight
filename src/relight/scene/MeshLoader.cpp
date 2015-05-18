@@ -106,9 +106,9 @@ void MeshLoader::commit( void )
     for( Indexer::const_iterator i = indexer.begin(); i != indexer.end(); ++i ) {
         const Vertex& v = i->first;
 
-        vertices[i->second].m_position = Vec3( v.position[0], v.position[1], v.position[2] );
-        vertices[i->second].m_normal   = Vec3( v.normal[0], v.normal[1], v.normal[2] );
-        vertices[i->second].m_uv[::relight::Vertex::Lightmap] = Uv( v.uv[0], v.uv[1] );
+        vertices[i->second].position = Vec3( v.position[0], v.position[1], v.position[2] );
+        vertices[i->second].normal   = Vec3( v.normal[0], v.normal[1], v.normal[2] );
+        vertices[i->second].uv[::relight::Vertex::Lightmap] = Uv( v.uv[0], v.uv[1] );
     }
 
     m_mesh->addFaces( vertices, indices, 0 );

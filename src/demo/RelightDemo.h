@@ -35,9 +35,9 @@ DC_USE_DREEMCHEST
 
 // ** struct SceneVertex
 struct SceneVertex {
-    math::Vec3		position;
-    math::Vec3		normal;
-    math::Vec2      uv[2];
+    Vec3		position;
+    Vec3		normal;
+    Vec2      uv[2];
 };
 
 // ** SceneVertexCompare 

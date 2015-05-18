@@ -29,16 +29,13 @@
 
 #include "RelightDemo.h"
 
-#include <math/Mesh.h>
-#include <math/DCEL.h>
-
-typedef math::TriMesh<SceneVertex> SceneTriMesh;
-typedef math::AngleChartBuilder<SceneTriMesh> ChartBuilder;
+typedef TriMesh<SceneVertex> SceneTriMesh;
+typedef AngleChartBuilder<SceneTriMesh> ChartBuilder;
 
 typedef SceneTriMesh::Dcel::Edge HalfEdge;
 typedef SceneTriMesh::Chart Chart;
 typedef SceneTriMesh::Face  Face;
-typedef math::MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
+typedef MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
 typedef RectanglePacker<f32> SceneRectanglePacker;
 
 typedef std::vector<Chart*> Charts;

@@ -34,8 +34,8 @@
 struct SceneMesh {
     relight::Mesh*          m_mesh;
     relight::Material*      m_material;
-	relight::Rgba			m_diffuseColor;
-	relight::Rgba			m_tintColor;
+	Rgba					m_diffuseColor;
+	Rgba					m_tintColor;
     
     renderer::Texture*      m_diffuse;
     renderer::IndexBuffer*  m_indexBuffer;
@@ -46,7 +46,7 @@ struct SceneMesh {
 struct SceneMeshInstance {
     const SceneMesh*            m_mesh;
 
-    relight::Matrix4            m_transform;
+    Matrix4						m_transform;
     renderer::Texture2D*        m_lightmap;
     relight::Lightmap*          m_lm;
     relight::Photonmap*         m_pm;
@@ -97,8 +97,8 @@ private:
 
     SceneMesh*          findMesh( const uscene::Asset* asset, const uscene::Renderer* renderer, bool solid );
     relight::Texture*   findTexture( const uscene::Asset* asset, bool solid );
-    relight::Matrix4    affineTransform( const uscene::Transform* transform );
-	void				extractTransform( const uscene::Transform* transform, math::Vec3& position, math::Quat& rotation, math::Vec3& scale ) const;
+    Matrix4				affineTransform( const uscene::Transform* transform );
+	void				extractTransform( const uscene::Transform* transform, Vec3& position, Quat& rotation, Vec3& scale ) const;
     void                createBuffersFromMesh( SceneMesh& mesh );
     renderer::Texture*  createTexture( const relight::Texture* texture );
     renderer::Texture2D* loadLightmapFromFile( const std::string& fileName );
@@ -115,8 +115,8 @@ private:
 	scene::ScenePtr					m_simpleScene;
 	scene::Renderer*				m_renderer;
 
-	relight::Matrix4				m_matrixView;
-	relight::Matrix4				m_matrixProj;
+	Matrix4							m_matrixView;
+	Matrix4							m_matrixProj;
 
     uscene::Assets*                 m_assets;
     uscene::Scene*                  m_scene;

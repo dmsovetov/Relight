@@ -42,13 +42,33 @@ namespace relight {
             TotalUvLayers
         };
 
-        Vec3            m_position;
-        Vec3            m_normal;
-        Uv              m_uv[TotalUvLayers];
-        const Material* m_material;
+        Vec3            position;
+        Vec3            normal;
+        Uv              uv[TotalUvLayers];
+        const Material* material;
 
         //! Interpolates between two vertices.
         static Vertex   interpolate( const Vertex& a, const Vertex& b, float scalar );
+
+        //! Compares two vertices.
+        struct Compare {
+            bool operator()( const Vertex& a, const Vertex& b ) const
+            {
+                for( int i = 0; i < 3; i++ ) {
+                    if( a.position[i] != b.position[i] ) return a.position[i] < b.position[i];
+                }
+                for( int i = 0; i < 3; i++ ) {
+                    if( a.normal[i] != b.normal[i] ) return a.normal[i] < b.normal[i];
+                }
+                for( int j = 0; j < TotalUvLayers; j++ ) {
+                    for( int i = 0; i < 2; i++ ) {
+                        if( a.uv[j][i] != b.uv[j][i] ) return a.uv[j][i] < b.uv[j][i];
+                    }
+                }
+
+                return false;
+            }
+        };
     };
 
     /*!
@@ -120,7 +140,6 @@ namespace relight {
         bool            isUvInside( const Uv& uv, Barycentric& barycentric, Vertex::UvLayer layer ) const;
 
         //! Returns a UV rectangle for face.
-   //     void            uvRect( Uv& min, Uv& max ) const;
 		Rect			uvRect( void ) const;
 
         //! Returns a vertex by index.
@@ -213,6 +232,9 @@ namespace relight {
 
         //! Sets a user data.
         void                setUserData( void* value );
+
+        //! Generates the unique UV set for this mesh.
+        void                generateUv( float angle = 88.0f );
 
         /*!
          Creates a mesh data from a file. Only OBJ file format is supported.

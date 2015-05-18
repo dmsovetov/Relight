@@ -31,42 +31,29 @@
 	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <vector>
-#include <string>
-#include <map>
-#include <algorithm>
-#include <assert.h>
-#include <float.h>
-
-#include <math/Vec2.h>
-#include <math/Vec3.h>
-#include <math/Vec4.h>
-#include <math/Color.h>
-#include <math/Quat.h>
-#include <math/Matrix4.h>
-#include <math/Bounds.h>
-#include <math/Plane.h>
+#include <Foo/Foo.h>
 
 namespace relight {
 
-    template<typename T>
-    class Array : public std::vector<T> {};
+ //   template<typename T>
+ //   class Array : public std::vector<T> {};
 
-    typedef std::string		String;
-    typedef math::Vec2		Uv;
-	typedef math::Vec2		Vec2;
-	typedef math::Vec3		Vec3;
-	typedef math::Vec4		Vec4;
-	typedef math::Plane		Plane;
-	typedef math::Rgb		Rgb;
-	typedef math::Rgba		Rgba;
-    typedef math::DoubleLdr DoubleLdr;
-    typedef math::RgbmLdr   RgbmLdr;
-	typedef math::Matrix4	Matrix4;
-	typedef math::Quat		Quat;
-	typedef math::Bounds	Bounds;
-	typedef math::Rect		Rect;
-    typedef Uv				Barycentric;
+ //   typedef std::string		String;
+ //   typedef math::Vec2		Uv;
+	//typedef math::Vec2		Vec2;
+	//typedef math::Vec3		Vec3;
+	//typedef math::Vec4		Vec4;
+	//typedef math::Plane		Plane;
+	//typedef math::Rgb		Rgb;
+	//typedef math::Rgba		Rgba;
+ //   typedef math::DoubleLdr DoubleLdr;
+ //   typedef math::RgbmLdr   RgbmLdr;
+	//typedef math::Matrix4	Matrix4;
+	//typedef math::Quat		Quat;
+	//typedef math::Bounds	Bounds;
+	//typedef math::Rect		Rect;
+	typedef Vec2	Uv;
+    typedef Uv		Barycentric;
 
     class Scene;
     class Worker;

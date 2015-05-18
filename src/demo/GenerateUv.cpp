@@ -57,10 +57,9 @@ void GenerateUv::handleUpdate( platform::Window* window )
         return;
     }
 
-	const bool kShowMesh = true;
-
-//	glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-
+	const bool kShowMesh  = true;
+    const bool kShowSeams = true;
+    const bool kShowFaces = true;
 
 	m_simpleScene->update( 0.1f );
 	if( kShowMesh ) {
@@ -158,167 +157,6 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
     m_loadedTriMesh = new SceneTriMesh( m_loadedVertices, m_loadedIndices );
 	SceneMeshIndexer sceneMeshIndexer;
 
-/*
-    //SceneMesh::Dcel dcel = m_loadedTriMesh->dcel();
-    //int chartIndex = 0;
-
-    //for( int i = 0; i < dcel.edgeCount(); i++ )
-    //{
-    //    const HalfEdge* edge = dcel.edge( i );
-    //    int chartSize = setChartIndex( *m_loadedTriMesh, m_loadedTriMesh->face( edge->m_face ).normal(), edge, chartIndex );
-
-    //    if( chartSize ) {
-    //        m_chartColor[chartIndex] = math::Vec3::randomDirection();
-    //        chartIndex++;
-    //    }
-    //}
-
-    Charts charts;
-    buildCharts( *m_loadedTriMesh, charts );
-
-    printf( "Mesh has %d charts\n", charts.size() );
-
-    
-    m_scale = 1000;
-
-    sceneMeshIndexer = SceneMeshIndexer();
-
-    for( int i = 0; i < charts.size(); i++ )
-    {
-        Chart* chart = charts[i];
-
-        float minx = FLT_MAX, maxx = -FLT_MAX;
-        float miny = FLT_MAX, maxy = -FLT_MAX;
-
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
-
-            math::Vec2 v[3];
-            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                minx = min( minx, v[k].x );
-                maxx = max( maxx, v[k].x );
-                miny = min( miny, v[k].y );
-                maxy = max( maxy, v[k].y );
-            }
-        }
-
-        float w = (maxx - minx);
-        float h = (maxy - miny);
-
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
-
-            math::Vec2 v[3];
-            face.flatten( chart->normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                SceneVertex vtx = face.vertex( k );
-
-                if( w > h ) {
-                    vtx.uv[0] = math::Vec2( v[k].x - minx, v[k].y - miny );
-                } else {
-                    vtx.uv[0] = math::Vec2( v[k].y - miny, v[k].x - minx );
-                }
-                sceneMeshIndexer += vtx;
-            }
-        }
-
-		printf( "Flattened chart %d [%fx%f]:", i, max( w, h ) * m_scale, min( w, h ) * m_scale );
-		for( int i = 0; i < chart->faceCount(); i++ ) {
-			printf( " %d", chart->faces()[i] );
-		}
-		printf( "\n" );
-
-    //    m_packer.add( max( w, h ), min( w, h ) );
-    }
-
-    m_loadedVertices = sceneMeshIndexer.vertexBuffer();
-    m_loadedIndices  = sceneMeshIndexer.indexBuffer();
-
-    buildCharts( *m_loadedTriMesh, charts );
-    printf( "%d charts after flattening\n", charts.size() );
-
-    for( int i = 0; i < charts.size(); i++ )
-    {
-		Chart*		chart = charts[i];
-		math::Vec2	min, max;
-
-		chart->calculateUvRect( min, max );
-
-		float w = (max.x - min.x) * m_scale;
-        float h = (max.y - min.y) * m_scale;
-
-		m_packer.add( max( w, h ), min( w, h ) );
-
-		printf( "Packing chart %d [%fx%f]:", i, max( w, h ), min( w, h ) );
-		for( int i = 0; i < chart->faceCount(); i++ ) {
-			printf( " %d", chart->faces()[i] );
-		}
-		printf( "\n" );
-	}
-
-    int w = 1;
-    int h = 1;
-    bool expandWidth = true;
-
-    while( !m_packer.place( w, h ) ) {
-        if( expandWidth ) {
-            w += 1;
-            expandWidth = false;
-        } else {
-            h += 1;
-            expandWidth = true;
-        }
-    }
-
-    m_width = w;
-    m_height = h;
-
-    sceneMeshIndexer = SceneMeshIndexer();
-
-    for( int i = 0; i < charts.size(); i++ )
-    {
-        Chart* chart = charts[i];
-        const RectanglePacker::Rect& rect = m_packer.rect( i );
-
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
-
-            for( int k = 0; k < 3; k++ ) {
-                SceneVertex vtx = face.vertex( k );
-
-            //    vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1f, vtx.uv[0].y );
-            //    vtx.uv[0] = math::Vec2( 0, 0 );
-                vtx.position = math::Vec3( rect.x / m_scale + vtx.uv[0].x, 0, rect.y / m_scale + vtx.uv[0].y );
-                sceneMeshIndexer += vtx;
-            }
-        }
-    }
-/**/
-/*
-    for( int i = 0; i < m_charts.size(); i++ )
-    {
-        Chart* chart = m_charts[i];
-        const RectanglePacker::Rect& rect = packer.rect( i );
-
-        for( int j = 0; j < chart->faceCount(); j++ ) {
-            Face face = chart->face( j );
-
-            for( int k = 0; k < 3; k++ ) {
-                SceneVertex vtx = face.vertex( k );
-                vtx.normal   = m_chartColor[i];
-                vtx.position = math::Vec3( rect.x / scale + vtx.uv[0].x, 0, rect.y / scale + vtx.uv[0].y );
-                sceneMeshIndexer += vtx;
-            }
-        }
-    }
-    */
-/*
-    m_loadedVertices = sceneMeshIndexer.vertexBuffer();
-    m_loadedIndices  = sceneMeshIndexer.indexBuffer();*/
-
 	m_generator.generate( *m_loadedTriMesh, m_loadedVertices, m_loadedIndices );
    
 	// ** Create buffers
@@ -361,7 +199,7 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
         for( int j = 0; j < chart.faceCount(); j++ ) {
             Face face = chart.face( j );
 
-            math::Vec2 v[3];
+            Vec2 v[3];
             face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
 
             for( int k = 0; k < 3; k++ ) {
@@ -378,16 +216,16 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
         for( int j = 0; j < chart.faceCount(); j++ ) {
             Face face = chart.face( j );
 
-            math::Vec2 v[3];
+            Vec2 v[3];
             face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
 
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
 
                 if( w > h ) {
-                    vtx.uv[0] = math::Vec2( v[k].x - minx, v[k].y - miny );
+                    vtx.uv[0] = Vec2( v[k].x - minx, v[k].y - miny );
                 } else {
-                    vtx.uv[0] = math::Vec2( v[k].y - miny, v[k].x - minx );
+                    vtx.uv[0] = Vec2( v[k].y - miny, v[k].x - minx );
                 }
                 sceneMeshIndexer += vtx;
             }
@@ -397,12 +235,12 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
     m_inputVertices = sceneMeshIndexer.vertexBuffer();
     m_inputIndices  = sceneMeshIndexer.indexBuffer();
 
-	charts = mesh.charts( math::AngleChartBuilder<SceneTriMesh>() );
+	charts = mesh.charts( AngleChartBuilder<SceneTriMesh>() );
 
     for( int i = 0; i < charts.m_charts.size(); i++ )
     {
 		const Chart& chart = charts.m_charts[i];
-		math::Vec2	 min, max;
+		Vec2	 min, max;
 
 		chart.calculateUvRect( min, max );
 
@@ -436,14 +274,17 @@ void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& v
         const Chart& chart = charts.m_charts[i];
         const SceneRectanglePacker::Rect& rect = m_packer.rect( i );
 
+        Vec3 chartColor = Vec3::randomDirection();
+
         for( int j = 0; j < chart.faceCount(); j++ ) {
             Face face = chart.face( j );
 
             for( int k = 0; k < 3; k++ ) {
                 SceneVertex vtx = face.vertex( k );
 
-                vtx.position = math::Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
-			//	vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
+             //   vtx.normal = chartColor * 0.5f + 0.5f;
+                vtx.position = Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
+			//	vtx.position = Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
                 sceneMeshIndexer += vtx;
             }
         }
