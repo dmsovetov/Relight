@@ -6,3 +6,4 @@ like color bleeding or soft shadows.
 Core Relight features
 ---------------------
 
+### Direct light
