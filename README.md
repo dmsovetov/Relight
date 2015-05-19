@@ -6,4 +6,6 @@ like color bleeding or soft shadows.
 Core Relight features
 ---------------------
 
-### Direct light
+### Direct light.
+
+Relight can bake a direct light from point, spot, directional and area lights for you.
