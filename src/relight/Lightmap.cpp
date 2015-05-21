@@ -60,8 +60,8 @@ Lumel* Lightmap::lumels( void )
 // ** Lightmap::lumel
 Lumel& Lightmap::lumel( const Uv& uv )
 {
-	int x = static_cast<int>( uv.x * m_width );
-	int y = static_cast<int>( uv.y * m_height );
+	int x = static_cast<int>( uv.x * (m_width  - 1) );
+	int y = static_cast<int>( uv.y * (m_height - 1) );
 
     return lumel( x, y );
 }
@@ -69,8 +69,8 @@ Lumel& Lightmap::lumel( const Uv& uv )
 // ** Lightmap::lumel
 const Lumel& Lightmap::lumel( const Uv& uv ) const
 {
-	int x = static_cast<int>( uv.x * m_width );
-	int y = static_cast<int>( uv.y * m_height );
+	int x = static_cast<int>( uv.x * (m_width  - 1) );
+	int y = static_cast<int>( uv.y * (m_height - 1) );
 
     return lumel( x, y );
 }
@@ -78,14 +78,14 @@ const Lumel& Lightmap::lumel( const Uv& uv ) const
 // ** Lightmap::lumel
 Lumel& Lightmap::lumel( int x, int y )
 {
-    assert( x >= 0 && x < m_width && y >= 0 && y < m_height );
+    DC_BREAK_IF( x < 0 || x >= m_width || y < 0 || y >= m_height );
     return m_lumels[y * m_width + x];
 }
 
 // ** Lightmap::lumel
 const Lumel& Lightmap::lumel( int x, int y ) const
 {
-    assert( x >= 0 && x < m_width && y >= 0 && y < m_height );
+    DC_BREAK_IF( x < 0 || x >= m_width || y < 0 || y >= m_height );
     return m_lumels[y * m_width + x];
 }
 
@@ -120,6 +120,9 @@ void Lightmap::rect( const Rect& uv, int& x1, int& y1, int& x2, int& y2 ) const
 	const Vec2& min = uv.min();
 	const Vec2& max = uv.max();
 
+	DC_BREAK_IF( min.x < 0.0f || min.y < 0.0f );
+	DC_BREAK_IF( max.x > 1.0f || max.y > 1.0f );
+
     x1 = static_cast<int>( min.x * m_width );
     x2 = static_cast<int>( max.x * m_width );
     y1 = static_cast<int>( min.y * m_height );
@@ -130,12 +133,12 @@ void Lightmap::rect( const Rect& uv, int& x1, int& y1, int& x2, int& y2 ) const
 void Lightmap::initializeLumels( const Face& face )
 {
 	// ** Get the UV bounding rect
-	int uStart, uEnd, vStart, vEnd;
+	s32 uStart, uEnd, vStart, vEnd;
 	rect( face.uvRect(), uStart, vStart, uEnd, vEnd );
 
     // ** Initialize lumels
-    for( int v = vStart; v <= vEnd; v++ ) {
-        for( int u = uStart; u <= uEnd; u++ ) {
+    for( s32 v = vStart; v <= min2( vEnd, m_height - 1 ); v++ ) {
+        for( s32 u = uStart; u <= min2( uEnd, m_width - 1 ); u++ ) {
             Lumel& lumel = m_lumels[m_width * v + u];
 
             Uv uv( (u + 0.5f) / float( m_width ), (v + 0.5f) / float( m_height ) );

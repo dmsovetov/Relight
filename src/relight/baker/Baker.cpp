@@ -212,8 +212,8 @@ bool FaceBakeIterator::next( void )
 	m_lightmap->rect( face.uvRect(), uStart, vStart, uEnd, vEnd );
 
     // ** Process face lumels
-    for( int v = vStart; v <= vEnd; v++ ) {
-        for( int u = uStart; u <= uEnd; u++ ) {
+    for( int v = vStart; v <= min2( vEnd, m_lightmap->height() - 1 ); v++ ) {
+        for( int u = uStart; u <= min2( uEnd, m_lightmap->width() - 1 ); u++ ) {
             Lumel& lumel = m_lightmap->lumel( u, v );
             if( !lumel || lumel.m_faceIdx != m_index ) {
                 continue;
