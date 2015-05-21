@@ -35,25 +35,8 @@
 
 namespace relight {
 
- //   template<typename T>
- //   class Array : public std::vector<T> {};
-
- //   typedef std::string		String;
- //   typedef math::Vec2		Uv;
-	//typedef math::Vec2		Vec2;
-	//typedef math::Vec3		Vec3;
-	//typedef math::Vec4		Vec4;
-	//typedef math::Plane		Plane;
-	//typedef math::Rgb		Rgb;
-	//typedef math::Rgba		Rgba;
- //   typedef math::DoubleLdr DoubleLdr;
- //   typedef math::RgbmLdr   RgbmLdr;
-	//typedef math::Matrix4	Matrix4;
-	//typedef math::Quat		Quat;
-	//typedef math::Bounds	Bounds;
-	//typedef math::Rect		Rect;
-	typedef Vec2	Uv;
-    typedef Uv		Barycentric;
+	typedef Vec2 Uv;
+    typedef Uv	 Barycentric;
 
     class Scene;
     class Worker;
@@ -73,6 +56,7 @@ namespace relight {
     class Texture;
     class Lightmap;
         class Photonmap;
+		class Radiancemap;
     struct Lumel;
 
     //! Mesh vertex index.

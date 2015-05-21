@@ -412,4 +412,28 @@ Rgb Photonmap::gather( int x, int y, int radius ) const
     return color / static_cast<float>( photons );
 }
 
+// ------------------------------------------------ Radiancemap ------------------------------------------------ //
+
+// ** Radiancemap::Radiancemap
+Radiancemap::Radiancemap( int width, int height ) : Lightmap( width, height )
+{
+
+}
+
+// ** Radiancemap::addMesh
+RelightStatus Radiancemap::addMesh( const Mesh* mesh, bool copyVertexColor )
+{
+    if( mesh->radiancemap() ) {
+        return RelightInvalidCall;
+    }
+
+    // ** Attach this lightmap to an instance
+    const_cast<Mesh*>( mesh )->setRadiancemap( this );
+
+    // ** Initialize lumels
+    initializeLumels( mesh );
+
+    return RelightSuccess;
+}
+
 } // namespace relight

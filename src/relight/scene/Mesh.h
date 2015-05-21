@@ -174,6 +174,7 @@ namespace relight {
     class Mesh {
     friend class Lightmap;
     friend class Photonmap;
+	friend class Radiancemap;
     public:
 
         //! Returns a mesh bounds.
@@ -218,6 +219,9 @@ namespace relight {
         //! Returns a target photonmap.
         Photonmap*          photonmap( void ) const;
 
+		//! Returns a target radiosity map.
+		Radiancemap*		radiancemap( void ) const;
+
         //! Transforms a mesh with a affine matrix.
         void                transform( const Matrix4& transform );
 
@@ -257,6 +261,9 @@ namespace relight {
         //! Sets a target photon map.
         void                setPhotonmap( Photonmap* value );
 
+		//! Sets a target radiance map.
+		void				setRadiancemap( Radiancemap* value );
+
         //! Builds a mesh faces array.
         void                buildFaces( void );
 
@@ -279,6 +286,9 @@ namespace relight {
 
         //! Target photonmap.
         Photonmap*          m_photonmap;
+
+		//! Target radiancemap.
+		Radiancemap*		m_radiancemap;
 
         //! User data associated with this instance.
         void*               m_userData;

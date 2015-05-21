@@ -35,7 +35,7 @@ namespace relight {
 // ---------------------------------------------- Mesh ---------------------------------------------- //
 
 // ** Mesh::Mesh
-Mesh::Mesh( void ) : m_lightmap( NULL ), m_photonmap( NULL )
+Mesh::Mesh( void ) : m_lightmap( NULL ), m_photonmap( NULL ), m_radiancemap( NULL )
 {
 
 }
@@ -261,12 +261,25 @@ void Mesh::setPhotonmap( Photonmap* value )
     m_photonmap = value;
 }
 
+// ** Mesh::radiancemap
+Radiancemap* Mesh::radiancemap( void ) const
+{
+    return m_radiancemap;
+}
+
+// ** Mesh::setRadiancemap
+void Mesh::setRadiancemap( Radiancemap* value )
+{
+    m_radiancemap = value;
+}
+
 // ** Mesh::transform
 void Mesh::transform( const Matrix4& transform )
 {
     for( int i = 0, n = vertexCount(); i < n; i++ ) {
         m_vertices[i].position = transform * m_vertices[i].position;
         m_vertices[i].normal   = transform.rotate( m_vertices[i].normal );
+		m_vertices[i].normal.normalize();
     }
 }
 
@@ -363,6 +376,9 @@ void Triangle::tesselate( Triangle& center, Triangle triangles[3] ) const
 // ** Face::Face
 Face::Face( Index faceIdx, const Vertex* a, const Vertex* b, const Vertex* c ) : m_faceIdx( faceIdx ), m_a( a ), m_b( b ), m_c( c )
 {
+	DC_BREAK_IF( a->normal.length() >= 1.001f );
+	DC_BREAK_IF( b->normal.length() >= 1.001f );
+	DC_BREAK_IF( c->normal.length() >= 1.001f );
 }
 
 // ** Face::faceIdx
@@ -440,6 +456,10 @@ Vec3 Face::normalAt( const Barycentric& uv ) const
     const Vec3& a = m_a->normal;
     const Vec3& b = m_b->normal;
     const Vec3& c = m_c->normal;
+
+	DC_BREAK_IF( a.length() >= 1.001f );
+	DC_BREAK_IF( b.length() >= 1.001f );
+	DC_BREAK_IF( c.length() >= 1.001f );
 
     return Vec3( a.x + (b.x - a.x) * uv.y + (c.x - a.x) * uv.x, a.y + (b.y - a.y) * uv.y + (c.y - a.y) * uv.x, a.z + (b.z - a.z) * uv.y + (c.z - a.z) * uv.x );
 }

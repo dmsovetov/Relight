@@ -149,7 +149,7 @@ namespace relight {
         Array<Lumel>            m_lumels;
     };
 
-    // ** class Photonmap
+    //! Hold the results of a photon tracing.
     class Photonmap : public Lightmap {
     friend class Relight;
     public:
@@ -168,6 +168,20 @@ namespace relight {
         //! Gathers surrounding photons to lumel
         Rgb                     gather( int x, int y, int radius ) const;
     };
+
+	//! Radiance map is for creating a radiosity patches from it.
+	class Radiancemap : public Lightmap {
+	friend class Relight;
+	public:
+
+		//! Adds an instance to this radiancemap.
+		virtual RelightStatus	addMesh( const Mesh* mesh, bool copyVertexColor = false );
+
+	private:
+
+								//! Constructs a new Radiancemap instance.
+								Radiancemap( int width, int height );
+	};
 
 } // namespace relight
 
