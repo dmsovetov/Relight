@@ -122,15 +122,17 @@ namespace relight {
                              \param light Parent light source.
                              \param radius Light influence radius.
                              */
-                            LinearLightAttenuation( const Light* light, float radius );
+                            LinearLightAttenuation( const Light* light, float radius, float constant = 0.0f, float linear = 0.0f, float quadratic = 25.0f );
 
         // ** LinearLightAttenuation
         virtual float       calculate( float distance ) const;
 
     private:
 
-        //! Light influence radius.
-        float               m_radius;
+        float               m_radius;		//!< Light influence radius.
+		float				m_const;		//!< Constant light attenuation factor.
+		float				m_linear;		//!< Linear light attenuation factor.
+		float				m_quadratic;	//!< Quadratic light attenuation factor.
     };
 
     /*!

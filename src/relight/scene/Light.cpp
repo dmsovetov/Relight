@@ -486,7 +486,8 @@ LightAttenuation::LightAttenuation( const Light* light ) : m_light( light )
 // ---------------------------------------------------- LinearLightAttenuation ---------------------------------------------------- //
 
 // ** LinearLightAttenuation::LinearLightAttenuation
-LinearLightAttenuation::LinearLightAttenuation( const Light* light, float radius ) : LightAttenuation( light ), m_radius( radius )
+LinearLightAttenuation::LinearLightAttenuation( const Light* light, float radius, float constant, float linear, float quadratic )
+	: LightAttenuation( light ), m_radius( radius ), m_const( constant ), m_linear( linear ), m_quadratic( quadratic )
 {
 
 }
@@ -494,7 +495,8 @@ LinearLightAttenuation::LinearLightAttenuation( const Light* light, float radius
 // ** LinearLightAttenuation::calculate
 float LinearLightAttenuation::calculate( float distance ) const
 {
-    return max2( 1.0f - (distance / m_radius), 0.0f );
+	float r = distance / m_radius;
+	return max2( 1.0f / (1.0f + m_const + m_linear * r + m_quadratic * r * r), 0.0f );
 }
 
 } // namespace relight
