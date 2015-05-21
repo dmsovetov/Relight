@@ -226,126 +226,15 @@ const Face& Mesh::face( int index ) const
 }
 
 // ** Mesh::generateUv
-void Mesh::generateUv( float angle )
+void Mesh::generateUv( float angle, float margin, float padding )
 {
-    typedef TriMesh<Vertex>                       TriMesh;
-    typedef TriMesh::Chart                        Chart;
-    typedef MeshIndexer<Vertex, Vertex::Compare>  Indexer;
-    typedef AngleChartBuilder<TriMesh>            AngularChartBuilder;
-	typedef RectanglePacker<float>				  RectanglePacker;
+	typedef TriMesh<Vertex, u16, Vertex::Compare>	RelightMesh;
+	typedef AngularChartifier<RelightMesh>			Chartifier;
+	typedef RectanglePacker<float>					Packer;
 
-    TriMesh mesh( m_vertices, m_indices );
-	Indexer indexer;
-
-    AngularChartBuilder         chartBuilder( angle );
-	AngularChartBuilder::Result charts = mesh.charts( chartBuilder );
-	RectanglePacker				packer;
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-        const Chart& chart = charts.m_charts[i];
-
-        float minx = FLT_MAX, maxx = -FLT_MAX;
-        float miny = FLT_MAX, maxy = -FLT_MAX;
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            TriMesh::Face face = chart.face( j );
-
-            Vec2 v[3];
-            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                minx = min2( minx, v[k].x );
-                maxx = max2( maxx, v[k].x );
-                miny = min2( miny, v[k].y );
-                maxy = max2( maxy, v[k].y );
-            }
-        }
-
-        float w = maxx - minx;
-        float h = maxy - miny;
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            TriMesh::Face face = chart.face( j );
-
-            Vec2 v[3];
-            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                Vertex vtx = face.vertex( k );
-
-                if( w > h ) {
-                    vtx.uv[Vertex::Lightmap] = Vec2( v[k].x - minx, v[k].y - miny );
-                } else {
-                    vtx.uv[Vertex::Lightmap] = Vec2( v[k].y - miny, v[k].x - minx );
-                }
-
-                indexer += vtx;
-            }
-        }
-    }
-
-    m_vertices = indexer.vertexBuffer();
-    m_indices  = indexer.indexBuffer();
-
-	charts = mesh.charts( chartBuilder );
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-		const Chart& chart = charts.m_charts[i];
-		Vec2	 min, max;
-
-		chart.calculateUvRect( min, max );
-
-		float w = max.x - min.x;
-        float h = max.y - min.y;
-
-		packer.add( max2( w, h ), min2( w, h ) );
-	}
-
-    int w = 1;
-    int h = 1;
-    bool expandWidth = true;
-
-    while( !packer.place( w, h ) ) {
-        if( expandWidth ) {
-            w += 1;
-            expandWidth = false;
-        } else {
-            h += 1;
-            expandWidth = true;
-        }
-    }
-
-//    m_width = w;
-//    m_height = h;
-
-    indexer.clear();
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-        const Chart& chart = charts.m_charts[i];
-        const RectanglePacker::Rect& rect = packer.rect( i );
-
-        Vec3 chartColor = Vec3::randomDirection();
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            TriMesh::Face face = chart.face( j );
-
-            for( int k = 0; k < 3; k++ ) {
-                Vertex vtx = face.vertex( k );
-
-            //    vtx.m_normal = chartColor * 0.5f + 0.5f;
-            //    vtx.position = math::Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
-			//	vtx.position = math::Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
-				vtx.uv[Vertex::Lightmap] = Vec2( rect.x + vtx.uv[Vertex::Lightmap].x, rect.y + vtx.uv[Vertex::Lightmap].y ) / Vec2( w, h );
-                indexer += vtx;
-            }
-        }
-    }
-
-    m_vertices = indexer.vertexBuffer();
-    m_indices  = indexer.indexBuffer();
+	UvGenerator<RelightMesh, Chartifier, Packer> generator( RelightMesh( m_vertices, m_indices ), 1, Chartifier( angle ), Packer( padding, margin ) );
+	generator.generate( m_vertices, m_indices );
+	buildFaces();
 }
 
 // ** Mesh::lightmap

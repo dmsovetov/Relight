@@ -234,7 +234,7 @@ namespace relight {
         void                setUserData( void* value );
 
         //! Generates the unique UV set for this mesh.
-        void                generateUv( float angle = 88.0f );
+        void                generateUv( float angle = 88.0f, float margin = 0.0f, float padding = 0.0f );
 
         /*!
          Creates a mesh data from a file. Only OBJ file format is supported.
