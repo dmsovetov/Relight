@@ -33,15 +33,15 @@
 #endif
 
 // ** GenerateUv::GenerateUv
-GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )
+GenerateUv::GenerateUv( renderer::Hal* hal ) : m_hal( hal )//, m_cov( 2, 2 )
 {
     m_meshVertexLayout = m_hal->createVertexDeclaration( "P3:N:T0:T1", sizeof( SceneVertex ) );
 
 	m_simpleScene = scene::Scene::create();
 	m_simpleScene->setRenderer( new scene::Renderer( hal ) );
 
-	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Column7.fbx" );
-//	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Barrel01.fbx" );
+//	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/dungeon/Column7.fbx" );
+	scene::MeshPtr mesh = createMeshFromFile( "Assets/models/Stair01_c.fbx" );
 
 	scene::SceneObjectPtr object = scene::SceneObject::create(); 
 	object->attach<scene::Transform>();
@@ -94,31 +94,6 @@ void GenerateUv::handleUpdate( platform::Window* window )
         glEnd();
     }
 
-	int   w = m_generator.width();
-	int   h = m_generator.height();
-
-    glColor3f( 1, 1, 1 );
-    glBegin( GL_LINE_STRIP );
-        glVertex3f( 0, 0, 0 );
-        glVertex3f( w, 0, 0 );
-        glVertex3f( w, 0, h );
-        glVertex3f( 0, 0, h );
-        glVertex3f( 0, 0, 0 );
-    glEnd();
-
-    for( int i = 0; i < m_generator.packer().rectCount(); i++ ) {
-        const SceneRectanglePacker::Rect& rect = m_generator.packer().rect( i );
-
-        glColor3f( 0, 1, 1 );
-        glBegin( GL_LINE_STRIP );
-            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y );
-            glVertex3f( rect.x + rect.width, i * 0.1 * 0.0, rect.y );
-            glVertex3f( rect.x + rect.width, i * 0.1 * 0.0, rect.y + rect.height );
-            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y + rect.height );
-            glVertex3f( rect.x,              i * 0.1 * 0.0, rect.y );
-        glEnd();
-    }
-
     m_hal->present();
 }
 
@@ -142,9 +117,9 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
         sv.uv[0].x	   = rv.uv[0][0];    sv.uv[0].y		= rv.uv[0][1];
         sv.uv[1].x	   = rv.uv[1][0];    sv.uv[1].y		= rv.uv[1][1];
 
-	//	sv.position.x *= 0.01f;
-	//	sv.position.y *= 0.01f;
-	//	sv.position.z *= 0.01f;
+		sv.position.x *= 0.01f;
+		sv.position.y *= 0.01f;
+		sv.position.z *= 0.01f;
 
 		m_loadedVertices.push_back( sv );
 	}
@@ -157,8 +132,6 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
     m_loadedTriMesh = new SceneTriMesh( m_loadedVertices, m_loadedIndices );
 	SceneMeshIndexer sceneMeshIndexer;
 
-	m_generator.generate( *m_loadedTriMesh, m_loadedVertices, m_loadedIndices );
-   
 	// ** Create buffers
     renderer::VertexBuffer* vertexBuffer = m_hal->createVertexBuffer( m_meshVertexLayout, m_loadedVertices.size(), false );
     renderer::IndexBuffer*	indexBuffer  = m_hal->createIndexBuffer( m_loadedIndices.size(), false );
@@ -175,121 +148,4 @@ scene::MeshPtr GenerateUv::createMeshFromFile( CString fileName )
 	mesh->addChunk( vertexBuffer, indexBuffer );
 
 	return mesh;
-}
-
-// ** UvGenerator::generate
-void UvGenerator::generate( const SceneTriMesh& input, SceneTriMesh::Vertices& vertices, SceneTriMesh::Indices& indices )
-{
-	m_inputIndices = input.indices();
-	m_inputVertices = input.vertices();
-
-	// ** Flatten mesh
-	SceneTriMesh		 mesh( m_inputVertices, m_inputIndices );
-	SceneMeshIndexer	 sceneMeshIndexer;
-
-	ChartBuilder::Result charts = mesh.charts( ChartBuilder() );
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-        const Chart& chart = charts.m_charts[i];
-
-        float minx = FLT_MAX, maxx = -FLT_MAX;
-        float miny = FLT_MAX, maxy = -FLT_MAX;
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            Face face = chart.face( j );
-
-            Vec2 v[3];
-            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                minx = min( minx, v[k].x );
-                maxx = max( maxx, v[k].x );
-                miny = min( miny, v[k].y );
-                maxy = max( maxy, v[k].y );
-            }
-        }
-
-        float w = maxx - minx;
-        float h = maxy - miny;
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            Face face = chart.face( j );
-
-            Vec2 v[3];
-            face.flatten( chart.normal().ordinal(), v[0], v[1], v[2] );
-
-            for( int k = 0; k < 3; k++ ) {
-                SceneVertex vtx = face.vertex( k );
-
-                if( w > h ) {
-                    vtx.uv[0] = Vec2( v[k].x - minx, v[k].y - miny );
-                } else {
-                    vtx.uv[0] = Vec2( v[k].y - miny, v[k].x - minx );
-                }
-                sceneMeshIndexer += vtx;
-            }
-        }
-    }
-
-    m_inputVertices = sceneMeshIndexer.vertexBuffer();
-    m_inputIndices  = sceneMeshIndexer.indexBuffer();
-
-	charts = mesh.charts( AngleChartBuilder<SceneTriMesh>() );
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-		const Chart& chart = charts.m_charts[i];
-		Vec2	 min, max;
-
-		chart.calculateUvRect( min, max );
-
-		float w = max.x - min.x;
-        float h = max.y - min.y;
-
-		m_packer.add( max( w, h ), min( w, h ) );
-	}
-
-    int w = 1;
-    int h = 1;
-    bool expandWidth = true;
-
-    while( !m_packer.place( w, h ) ) {
-        if( expandWidth ) {
-            w += 1;
-            expandWidth = false;
-        } else {
-            h += 1;
-            expandWidth = true;
-        }
-    }
-
-    m_width = w;
-    m_height = h;
-
-    sceneMeshIndexer = SceneMeshIndexer();
-
-    for( int i = 0; i < charts.m_charts.size(); i++ )
-    {
-        const Chart& chart = charts.m_charts[i];
-        const SceneRectanglePacker::Rect& rect = m_packer.rect( i );
-
-        Vec3 chartColor = Vec3::randomDirection();
-
-        for( int j = 0; j < chart.faceCount(); j++ ) {
-            Face face = chart.face( j );
-
-            for( int k = 0; k < 3; k++ ) {
-                SceneVertex vtx = face.vertex( k );
-
-             //   vtx.normal = chartColor * 0.5f + 0.5f;
-                vtx.position = Vec3( rect.x + vtx.uv[0].x, 0, rect.y + vtx.uv[0].y );
-			//	vtx.position = Vec3( vtx.uv[0].x, i * 0.1, vtx.uv[0].y );
-                sceneMeshIndexer += vtx;
-            }
-        }
-    }
-
-    vertices = sceneMeshIndexer.vertexBuffer();
-    indices  = sceneMeshIndexer.indexBuffer();
 }

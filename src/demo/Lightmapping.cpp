@@ -34,12 +34,15 @@
 
 #define GLSL( ... ) #__VA_ARGS__
 
-#define USE_BAKED   (0)
-#define USE_HDR     (1)
+#define USE_BAKED		(0)
+#define USE_HDR			(1)
+
+#define BAKE_INDIRECT	(0)
+#define GENERATE_UV		(1)
 
 // ** Lightmap size
 const int k_LightmapMaxSize = 128;
-const int k_LightmapMinSize = 32;
+const int k_LightmapMinSize = 128;
 
 // ** Background workers
 const int k_Workers      = 8;
@@ -80,7 +83,7 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 //    m_scene  = Scene::parse( m_assets, "Assets/Crypt/Demo/NoTerrain.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Demo/Demo7.scene" );
 //	m_scene = Scene::parse( m_assets, "Assets/Test.scene" );
-	m_scene = Scene::parse( m_assets, "Assets/scenes/RogueCamp.scene" );
+	m_scene = Scene::parse( m_assets, "Assets/scenes/Crypt.scene" );
 
     if( !m_scene ) {
         printf( "Failed to create scene\n" );
@@ -197,16 +200,23 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
             instance->m_lightmap = loadLightmapFromFile( "lightmaps/" + std::to_string( sceneObject->objectId() ) + ".raw" );
         #else   
             float area = instance->m_mesh->m_mesh->area();
+
+			if( isNaN( area ) )
+			{
+				instance->m_mesh->m_mesh->area();
+			}
+
+            relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform, instance->m_mesh->m_material );
+            m->setUserData( instance );
+
 		    maxArea	   = max2( maxArea, instance->m_mesh->m_mesh->area() );
-            int   size = nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) );
+            int   size = min2( k_LightmapMaxSize, ( int )nextPowerOf2( ceil( k_LightmapMinSize + (k_LightmapMaxSize - k_LightmapMinSize) * (area / 170.0f) ) ) );
+			DC_BREAK_IF( size < k_LightmapMinSize || size > k_LightmapMaxSize );
 
             totalLightmapPixels += size * size;
 
             instance->m_lm = m_relight->createLightmap( size, size );
             instance->m_pm = m_relight->createPhotonmap( size, size );
-
-            relight::Mesh* m = m_relightScene->addMesh( instance->m_mesh->m_mesh, instance->m_transform, instance->m_mesh->m_material );
-            m->setUserData( instance );
 
             instance->m_lm->addMesh( m );
             instance->m_pm->addMesh( m );
@@ -251,9 +261,11 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 	printf( "%d instances added to relight scene, maximum mesh area %2.4f (%d lightmap pixels used, %d mb used)\n", m_relightScene->meshCount(), maxArea, totalLightmapPixels, totalLightmapPixels * sizeof( relight::Lumel ) / 1024 / 1024 );
 
 #if !USE_BAKED
-    printf( "Emitting photons...\n" );
-    m_relight->emitPhotons( m_relightScene, k_IndirectLight );
-    printf( "Done!\n" );
+	#if BAKE_INDIRECT
+		printf( "Emitting photons...\n" );
+		m_relight->emitPhotons( m_relightScene, k_IndirectLight );
+		printf( "Done!\n" );
+	#endif
 
     struct Bake : public relight::Job {
     public:
@@ -263,7 +275,9 @@ Lightmapping::Lightmapping( renderer::Hal* hal ) : m_hal( hal )
 
         virtual void execute( relight::JobData* data ) {
             data->m_relight->bakeDirectLight( data->m_scene, data->m_mesh, data->m_worker, data->m_iterator );
-            data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, m_indirect, data->m_iterator );
+		#if BAKE_INDIRECT
+			data->m_relight->bakeIndirectLight( data->m_scene, data->m_mesh, data->m_worker, m_indirect, data->m_iterator );
+		#endif
         }
 
 	private:
@@ -433,6 +447,9 @@ SceneMesh* Lightmapping::findMesh( const uscene::Asset* asset, const uscene::Ren
     // ** Create Relight mesh
     sceneMesh.m_mesh = relight::Mesh::create();
     sceneMesh.m_mesh->addFaces( vertices, indices );
+#if GENERATE_UV
+	sceneMesh.m_mesh->generateUv( 88.0f, 0.0f, 0.2f );
+#endif
 
     // ** Create HAL vertex & index buffers
     createBuffersFromMesh( sceneMesh );

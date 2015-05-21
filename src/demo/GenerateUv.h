@@ -30,36 +30,10 @@
 #include "RelightDemo.h"
 
 typedef TriMesh<SceneVertex> SceneTriMesh;
-typedef AngleChartBuilder<SceneTriMesh> ChartBuilder;
-
 typedef SceneTriMesh::Dcel::Edge HalfEdge;
 typedef SceneTriMesh::Chart Chart;
 typedef SceneTriMesh::Face  Face;
 typedef MeshIndexer<SceneVertex, SceneVertexCompare> SceneMeshIndexer;
-typedef RectanglePacker<f32> SceneRectanglePacker;
-
-typedef std::vector<Chart*> Charts;
-typedef std::map<int, int>  ChartByFace;
-
-//! Generates a second UV set for a lightmapping.
-class UvGenerator {
-public:
-
-	void						generate( const SceneTriMesh& mesh, SceneTriMesh::Vertices& vertices, SceneTriMesh::Indices& indices );
-
-	const SceneRectanglePacker&	packer( void ) const { return m_packer; }
-	int							width( void ) const { return m_width; }
-	int							height( void ) const { return m_height; }
-
-private:
-
-	SceneTriMesh::Vertices	m_inputVertices;
-	SceneTriMesh::Indices	m_inputIndices;
-
-	int						m_width;
-	int						m_height;
-	SceneRectanglePacker	m_packer;
-};
 
 // ** class GenerateUv
 class GenerateUv : public platform::WindowDelegate {
@@ -83,8 +57,6 @@ private:
     SceneTriMesh*					m_loadedTriMesh;
     SceneTriMesh::Vertices			m_loadedVertices;
     SceneTriMesh::Indices			m_loadedIndices;
-
-	UvGenerator						m_generator;
 };
 
 #endif /* defined(__Relight_Demo_GenerateUv__) */
