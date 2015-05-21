@@ -84,7 +84,7 @@ namespace rt {
          \param result Ray tracing result.
          \return True if a ray intersects a scene, otherwise false.
          */
-        virtual Hit            traceSegment( const Vec3& start, const Vec3& end, int flags = HitAll ) = 0;
+        virtual Hit            traceSegment( const Vec3& start, const Vec3& end, int flags = HitAll, int step = 0 ) = 0;
 
         //! Test a given segment for intersection with scene.
         /*!

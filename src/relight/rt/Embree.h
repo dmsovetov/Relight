@@ -44,7 +44,7 @@ namespace rt {
         virtual         ~Embree( void );
 
         // ** ITracer
-        virtual Hit     traceSegment( const Vec3& start, const Vec3& end, int flags = HitPoint );
+        virtual Hit     traceSegment( const Vec3& start, const Vec3& end, int flags = HitPoint, int step = 0 );
         virtual bool    test( const Vec3& start, const Vec3& end );
         virtual void    traceSegments( Segment segments[4] );
         virtual void    addMesh( const Mesh* mesh );

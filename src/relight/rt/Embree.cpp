@@ -142,7 +142,7 @@ bool Embree::test( const Vec3& start, const Vec3& end )
 }
 
 // ** Embree::traceSegment
-Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags )
+Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags, int step )
 {
     Vec3   direction;
     RTCRay ray;
@@ -160,8 +160,8 @@ Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags )
     Barycentric coord   = Barycentric( ray.u, ray.v );
     Rgba        color   = face.colorAt( coord );
 
-    if( flags & HitUseAlpha && color.a <= 0.1f ) {
-        return traceSegment( point + direction * 0.04f, end, flags );
+    if( flags & HitUseAlpha && color.a <= 0.1f && step < 25 ) {
+        return traceSegment( point + direction, end, flags, step + 1 );
     }
 
     Hit result;
