@@ -154,7 +154,7 @@ Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags, int ste
         return Hit();
     }
 
-    Vec3        point   = start + direction * ray.time;
+    Vec3        point   = start + direction * ray.tfar;
     const Mesh* mesh    = m_meshes[ray.geomID];
     Face        face    = mesh->face( ray.primID );
     Barycentric coord   = Barycentric( ray.u, ray.v );
@@ -170,7 +170,8 @@ Hit Embree::traceSegment( const Vec3& start, const Vec3& end, int flags, int ste
     if( flags & HitColor )  result.m_color  = face.colorAt( coord );
     if( flags & HitUv )     result.m_uv     = face.uvAt( coord, Vertex::Lightmap );
 
-    result.m_mesh = mesh;
+	result.m_point = point;
+    result.m_mesh  = mesh;
 
     return result;
 }
