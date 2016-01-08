@@ -213,7 +213,7 @@ void Mesh::buildFaces( void )
 
     // ** Update mesh bounds
     for( int i = 0, n = vertexCount(); i < n; i++ ) {
-        m_bounds += m_vertices[i].position;
+        m_bounds << m_vertices[i].position;
     }
 }
 

@@ -50,7 +50,7 @@ void IndirectLight::bakeLumel( Lumel& lumel )
     rt::ITracer* tracer = m_scene->tracer();
 
     for( int k = 0; k < m_samples; k++ ) {
-        Vec3    dir       = Vec3::randomHemisphereDirection( lumel.m_position, lumel.m_normal );
+        Vec3    dir       = Vec3::randomHemisphereDirection( lumel.m_normal );
 
         float   influence = max2( lumel.m_normal * dir, 0.0f );
 		DC_BREAK_IF( influence > 1.0f );

@@ -31,7 +31,7 @@
 	#define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <Foo/Foo.h>
+#include "Types.h"
 
 namespace relight {
 

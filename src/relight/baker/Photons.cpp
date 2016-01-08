@@ -122,7 +122,7 @@ void Photons::trace( const LightAttenuation* attenuation, const Vec3& position, 
     store( hit.m_mesh->photonmap(), hitColor, hit.m_uv );
 
     // ** Keep tracing
-    trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_point, hit.m_normal ), hitColor, depth + 1 );
+    trace( attenuation, hit.m_point, Vec3::randomHemisphereDirection( hit.m_normal ), hitColor, depth + 1 );
 }
 
 // ** Photons::store
