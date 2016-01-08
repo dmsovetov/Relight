@@ -35,9 +35,23 @@
 #pragma warning( push )
 #pragma warning( disable : 4244 4018 )
 
-#define assert( expr )		_ASSERTE( expr )
-#define DC_BREAK_IF( expr )	assert( !(expr) )
-#define BIT( bit )          ( 1 << bit )
+#ifdef RELIGHT_BUILD_LIBRARY
+	#define assert( expr )		_ASSERTE( expr )
+	#define DC_BREAK_IF( expr )	assert( !(expr) )
+	#define BIT( bit )          ( 1 << bit )
+#endif
+
+#ifdef min
+	#undef min	
+#endif
+
+#ifdef max
+	#undef max
+#endif
+
+#ifdef emit
+	#undef emit
+#endif
 
 namespace relight {
 
