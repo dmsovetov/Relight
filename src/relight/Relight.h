@@ -27,10 +27,6 @@
 #ifndef __Relight_H__
 #define __Relight_H__
 
-#ifdef WIN32
-	#define _CRT_SECURE_NO_WARNINGS
-#endif
-
 #include "Types.h"
 
 namespace relight {
