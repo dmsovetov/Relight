@@ -14,3 +14,13 @@ Relight can bake a direct light from point, spot, directional and area lights fo
 ## Radiosity
 
 ## Ambient occlusion
+
+## Screenshots
+![screenshot]
+(screenshots/01.jpg)
+
+![screenshot]
+(screenshots/02.jpg)
+
+![screenshot]
+(screenshots/03.jpg)
